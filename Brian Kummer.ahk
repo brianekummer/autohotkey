@@ -85,14 +85,7 @@ global secrets_jiraUrl := secrets.selectSingleNode("//configuration/jiraUrl").te
   StartInterceptingWindowsUnlock()
 
   ; Configure wallpapers for Windows virtual desktops
-  virtualDesktops=
-	(
-    Main    |C:\Users\Brian-Kummer\Personal\Pictures\mosaic-green-2560x1600.jpg    |
-	  Personal|C:\Users\Brian-Kummer\Personal\Pictures\mosaic-orange-2560x1600.jpg   |
-	  Temp-1  |C:\Users\Brian-Kummer\Personal\Pictures\mosaic-turquoise-2560x1600.jpg|
-	  Temp-2  |C:\Users\Brian-Kummer\Personal\Pictures\mosaic-red-2560x1600.jpg      |
-	  Temp-3  |C:\Users\Brian-Kummer\Personal\Pictures\mosaic-yellow-2560x1600.jpg
-  )
+  virtualDesktops := secrets.selectSingleNode("//configuration/virtualDesktopWallpapers").text
 	VirtualDesktopAccessor_Initialize(virtualDesktops)
 
 	; Configure Slack status updates based on the network
@@ -628,6 +621,8 @@ printscreen::
 ::vanya::Vanya
 ::sanath::Sanath
 ::kyle::Kyle
+::senthil::Senthil
+::mason::Mason
 
 ::xt::XT
 ::cms::CMS
