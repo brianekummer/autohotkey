@@ -2,6 +2,7 @@
 <configuration>
   <!-- Get a "legacy" Slack security token here: https://api.slack.com/custom-integrations/legacy-tokens -->
   <mySlackToken>xxxxxxxxxxxxxxxxxxxxxxxxx</mySlackToken>
+  <myLastName>MyLastName</myLastName>
 
 	<slackWindowTitle>Slack - my_company_name</slackWindowTitle>
 	
