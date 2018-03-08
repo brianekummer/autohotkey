@@ -12,61 +12,32 @@
 ; Define global variables 
 ;---------------------------------------------------------------------------------------------------------------------
 global SlackStatusUpdate_MySlackToken
-global SlackStatusUpdate_NetworkOffice
+global SlackStatusUpdate_OfficeNetworks
 global SlackStatusUpdate_SlackStatuses
 global SlackStatusUpdate_WindowTitles
 
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; PUBLIC - Read config file and initialize global variables 
+; PUBLIC - Initialize global variables from Windows environment variables
 ;---------------------------------------------------------------------------------------------------------------------
 SlackStatusUpdate_Initialize() 
 {
-  ; Read the config file
-	;   <configuration>
-  ;     <mySlackToken>xxxxxxxxxx_get_a_legacy_slack_token_from_https://api.slack.com/custom-integrations/legacy-tokens_xxxxxxxxxx</mySlackToken>
-	;     <slackWindowTitle>Slack - companyName</slackWindowTitle>
-  ;     <networkOffice>(company_network_1|company_network_2|ethernet)</networkOffice>
-  ;     <meeting>
-  ;       <text>In a meeting</text>
-  ;       <emoji>:spiral_calendar_pad:</emoji>
-  ;     </meeting>
-  ;     <workingInOffice>
-  ;       <text></text>
-  ;       <emoji></emoji>
-  ;     </workingInOffice>
-  ;     <workingRemotely>
-  ;       <text>Working remotely</text>
-  ;       <emoji>:house_with_garden:</emoji>
-  ;     </workingRemotely>
-  ;     <vacation>
-  ;       <text>Vacationing</text>
-  ;       <emoji>:palm_tree:</emoji>
-  ;     </vacation>
-  ;     <lunch>
-  ;       <text>At lunch</text>
-  ;       <emoji>:hamburger:</emoji>
-  ;     </lunch>
-  ;   </configuration>
-	FileRead, tempXmlData, Slack Status Update.xml
-	slackStatusConfig := ComObjCreate("MSXML2.DOMDocument.6.0")
-	slackStatusConfig.async := false
-	slackStatusConfig.loadXML(tempXmlData)
-
-	global SlackStatusUpdate_MySlackToken := slackStatusConfig.selectSingleNode("//configuration/mySlackToken").text
-	global SlackStatusUpdate_NetworkOffice := slackStatusConfig.selectSingleNode("//configuration/networkOffice").text
+	; Variables are read from environment variables, see "Slack Status Update Config.bat" for more details
+	EnvGet, SlackStatusUpdate_MySlackToken, SLACK_TOKEN
+	EnvGet, SlackStatusUpdate_OfficeNetworks, SLACK_OFFICE_NETWORKS
 	
-	slackStatusMeeting := SlackStatusUpdate_BuildSlackStatus(slackStatusConfig, "meeting")
-	slackStatusWorkingInOffice := SlackStatusUpdate_BuildSlackStatus(slackStatusConfig, "workingInOffice")
-	slackStatusWorkingRemotely := SlackStatusUpdate_BuildSlackStatus(slackStatusConfig, "workingRemotely")
-	slackStatusVacation := SlackStatusUpdate_BuildSlackStatus(slackStatusConfig, "vacation")
-	slackStatusLunch := SlackStatusUpdate_BuildSlackStatus(slackStatusConfig, "lunch")
+	slackStatusMeeting := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_MEETING", "In a meeting|:spiral_salendar_pad:")
+	slackStatusWorkingInOffice := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_OFFICE", "|")
+	slackStatusWorkingRemotely := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_REMOTELY", "Working remotely|:house_with_garden:")
+	slackStatusVacation := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_VACATION", "Vacationing|:palm_tree:")
+	slackStatusLunch := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_LUNCH", "At lunch|:hamburger:")
 	global SlackStatusUpdate_SlackStatuses := {"meeting": slackStatusMeeting, "workingInOffice": slackStatusWorkingInOffice, "workingRemotely": slackStatusWorkingRemotely, "vacation": slackStatusVacation, "lunch": slackStatusLunch}
 	
 	; Create an AHK "window group" named "SlackUpdateStatus_WindowTitles" that contains the pattern
 	; to find the Slack window
-  slackWindowTitle := slackStatusConfig.selectSingleNode("//configuration/slackWindowTitle").text
+	EnvGet, slackWindowTitle, SLACK_WINDOW_TITLE
+	
 	GroupAdd, SlackStatusUpdate_WindowTitles, %slackWindowTitle%
 }
 
@@ -118,17 +89,22 @@ SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Private - Read a configuration for a single Slack status from the config file and return an object
+; Private - Build a slack status object by reading the environment variable envVarName. If this variable is blank or 
+;           not set, use the default value provided. 
+;             - The text obtained from the environment variable and/or defaultValue should be a pipe-delimited string 
+;               with the name and the emoji, such as "At lunch|:hamburger:". It does not matter the order of these.
 ;---------------------------------------------------------------------------------------------------------------------
-SlackStatusUpdate_BuildSlackStatus(slackStatusConfig, statusName)
+SlackStatusUpdate_BuildSlackStatus(envVarName, defaultValue)
 {
-  textName = //configuration/%statusName%/text
-	emojiName = //configuration/%statusName%/emoji
+  EnvGet, slackStatus, %envVarName%
+	
+  If(slackStatus = "") 
+	  slackStatus = %defaultValue%
 
-  myText := slackStatusConfig.selectSingleNode(textName).text
-	myEmoji := slackStatusConfig.selectSingleNode(emojiName).text
-
-	slackStatus := {"text": myText, "emoji": myEmoji}
+	parts := StrSplit(slackStatus, "|")
+ 	slackStatus := RegExMatch(parts[1], "^:.*:$")
+	  ? {"text": parts[2], "emoji": parts[1]}
+	  : {"text": parts[1], "emoji": parts[2]}
 	
 	Return slackStatus
 }
@@ -152,7 +128,7 @@ SlackStatusUpdate_SetSlackStatusViaKeyboard(slackStatus)
 ;           Once the user is connected, the Slack status will be changed and this method will stop running.
 ;---------------------------------------------------------------------------------------------------------------------
 SlackStatusUpdate_CheckNetworkStatus() {
-	officeNetworkSearchExpr = i)connected-%SlackStatusUpdate_NetworkOffice%
+	officeNetworkSearchExpr = i)connected-%SlackStatusUpdate_OfficeNetworks%
 
 	done := False
 	Loop
@@ -163,8 +139,6 @@ SlackStatusUpdate_CheckNetworkStatus() {
 		;    disconnected
   	networkStatus := SlackStatusUpdate_GetNetworkStatus()
 
-;msgbox Network status is %networkStatus%
-		
 		If (RegExMatch(networkStatus, officeNetworkSearchExpr)) 
 		{
 			SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["workingInOffice"])
@@ -195,7 +169,7 @@ SlackStatusUpdate_CheckNetworkStatus() {
 SlackStatusUpdate_GetNetworkStatus() 
 {
   wifiStatus := SlackStatusUpdate_GetWifiStatus()
-	Return (RegExMatch(wifiStatus, "connected-"))
+	Return RegExMatch(wifiStatus, "i)connected-")
 	  ? wifiStatus
 		: SlackStatusUpdate_GetEthernetStatus()
 }

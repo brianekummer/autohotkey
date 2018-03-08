@@ -32,7 +32,7 @@
 ;     Win+t                     Typora
 ;     Win+z                     noiZe- Open SimplyNoise.com
 ;
-;   Modifying application behavior
+	;   Modifying application behavior
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
 ;     Slack                     Typing "/lunch" gets changed to "/status :hamburger: At lunch"
@@ -49,7 +49,7 @@
 ;     Win+Shift+v               VISUAL Studio 2017
 ;     Win+Shift+w               WIKI
 
-; OLD JUNK---
+	; OLD JUNK---
 ;     Win-k:                    KLOVE- Open K-Love in Media Player, or if already open, open K-Love website
 
 ;---------------------------------------------------------------------------------------------------------------------
@@ -59,19 +59,23 @@
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Global variables
+; Global variables - configured from Windows environment variables
 ;---------------------------------------------------------------------------------------------------------------------
-FileRead, tempXmlData, Secrets.xml
-secrets := ComObjCreate("MSXML2.DOMDocument.6.0")
-secrets.async := false
-secrets.loadXML(tempXmlData)
 
-global secrets_WindowsUserName := secrets.selectSingleNode("//configuration/windowsUserName").text
-global secrets_companyName := secrets.selectSingleNode("//configuration/companyName").text
-global secrets_timesheetUrl := secrets.selectSingleNode("//configuration/timesheetUrl").text
-global secrets_bitBucketUrl := secrets.selectSingleNode("//configuration/bitBucketUrl").text
-global secrets_wikiUrl := secrets.selectSingleNode("//configuration/wikiUrl").text
-global secrets_jiraUrl := secrets.selectSingleNode("//configuration/jiraUrl").text
+; These come from Windows-defined environment variables
+EnvGet, WindowsLocalAppDataFolder, LOCALAPPDATA
+EnvGet, WindowsProgramFilesX86Folder, PROGRAMFILES(X86)
+EnvGet, WindowsProgramFilesFolder, PROGRAMFILES
+EnvGet, WindowsUserName, USERNAME
+EnvGet, WindowsDnsDomain, USERDNSDOMAIN
+UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
+
+; These come from my own Windows environment variables; see "My Automations Config.bat" for details
+EnvGet, BitBucketUrl, AHK_URL_BITBUCKET
+EnvGet, JiraUrl, AHK_URL_JIRA
+EnvGet, TimesheetUrl, AHK_URL_TIMESHEET
+EnvGet, WikiUrl, AHK_URL_WIKI
+	
 	
 
 
@@ -84,11 +88,15 @@ global secrets_jiraUrl := secrets.selectSingleNode("//configuration/jiraUrl").te
   RunAsAdmin()
   StartInterceptingWindowsUnlock()
 
-  ; Configure wallpapers for Windows virtual desktops
-  virtualDesktops := secrets.selectSingleNode("//configuration/virtualDesktopWallpapers").text
-	VirtualDesktopAccessor_Initialize(virtualDesktops)
+  ; Configure wallpapers for Windows virtual desktops - 
+	; REQUIRES Windows environment variables AHK_VIRTUAL_DESKTOP_WALLPAPER_x such as:
+	;   AHK_VIRTUAL_DESKTOP_WALLPAPER_1 = Main    |C:\Pictures\wallpaper1.jpg
+  ;   AHK_VIRTUAL_DESKTOP_WALLPAPER_2 = Personal|C:\Pictures\wallpaper2.jpg
+	; See "Virtual Desktop Accessor.ahk" for details
+	VirtualDesktopAccessor_Initialize()
 
 	; Configure Slack status updates based on the network
+  ; REQUIRES some Windows environment variables - see "Slack Status Update.ahk" for details
   SlackStatusUpdate_Initialize()
   SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 	
@@ -154,9 +162,26 @@ OnWindowsUnlock(wParam, lParam)
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Temporary stuff goes here. Uses Windows key + dash on numeric keypad as hotkey.
+; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
 ;---------------------------------------------------------------------------------------------------------------------
 #NumpadSub::
+  Loop, 25
+	{
+	  ; Open Configuration -> Administration
+    SendInput {alt}{right}{right}{down}{down}{enter}
+	  Sleep, 1250
+		
+		; Ctrl-Tab through a bunch of tabs
+		;Loop, 20 
+		;{
+		;  SendInput, ^{tab}
+		;	Sleep, 500
+		;}
+		
+		; Close the configuration screen
+	  SendInput !{f4}
+	  Sleep, 1250
+  }
 	Return
 
 	
@@ -173,21 +198,27 @@ OnWindowsUnlock(wParam, lParam)
 #k::
   If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
   {
-    Run, "C:\Users\%secrets_windowsUserName%\AppData\Local\slack\slack.exe"
+    Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
+  	
+		WinActivate, ahk_group SlackStatusUpdate_WindowTitles
+	  Sleep, 1000
+  	WinMaximize
   }
-	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
-	Sleep,1000
-	WinMaximize
+  WinActivate
+	;WinMaximize
   Return
 
 +#k::
-  If Not WinExist("hk_group SlackStatusUpdate_WindowTitles")
+  If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
+  ;If Not WinExist("Slack - teletracking")
   {
-    Run, "C:\Users\%secrets_windowsUserName%\AppData\Local\slack\slack.exe"
+    Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
+  	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
+	  Sleep, 1000
+  	WinMaximize
   }
-	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
-	Sleep,1000
-	WinMaximize
+	WinActivate
+	;WinMaximize
 	SendInput ^k
   Return
 	
@@ -258,7 +289,7 @@ XButton2::
 #IfWinActive
 
 #n::
-	Run "C:\Program Files (x86)\Notepad++\notepad++.exe"
+	Run "%WindowsProgramFilesX86Folder%\Notepad++\notepad++.exe"
   Return
 
 +#n::
@@ -268,7 +299,7 @@ XButton2::
   ClipWait, 1
   If (!ErrorLevel)
   {
-    Run "C:\Program Files (x86)\Notepad++\notepad++.exe"
+    Run "%WindowsProgramFilesX86Folder%\Notepad++\notepad++.exe"
 	  WinWaitActive, "Notepad++",,2     ; Wait up to 2 seconds for Notepad++ to open
 
     SendInput ^v
@@ -311,7 +342,7 @@ XButton2::
 #t::
   If Not WinExist("\.(md|txt)•? - Typora")
 	{
-  	Run "C:\Program Files\Typora\Typora.exe"
+  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe"
 	}
   WinActivate, Typora
   WinMaximize, Typora
@@ -339,7 +370,7 @@ XButton2::
 +#g::
   If Not WinExist("ahk_class VirtualConsoleClass")
   {
-    Run "C:\Program Files\ConEmu\ConEmu64.exe" -run {Shells::Git Bash}
+    Run "%WindowsProgramFilesFolder%\ConEmu\ConEmu64.exe" -run {Shells::Git Bash}
     WinWait ahk_class VirtualConsoleClass
   }
   WinActivate
@@ -353,7 +384,7 @@ XButton2::
 +#v::
 	If Not WinExist("Microsoft Visual Studio")
 	{
-	  Run *RunAs "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe"
+	  Run *RunAs "%WindowsProgramFilesX86Folder%\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe"
 	}
   WinActivate, Microsoft Visual Studio
   Return  
@@ -386,10 +417,10 @@ XButton2::
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+a: ADP - Go to ADP website to enter my timesheet. 
+; Win+Shift+a: ADP - Go to ADP website to enter my timesheet
 ;---------------------------------------------------------------------------------------------------------------------
 +#a::
-	Run, "%secrets_timesheetUrl%",, Max
+	Run, "%TimesheetUrl%",, Max
   Return
 
 	
@@ -397,7 +428,7 @@ XButton2::
 ; Win+Shift+b: BitBucket
 ;---------------------------------------------------------------------------------------------------------------------
 +#b::
-	Run, "%secrets_bitBucketUrl%",, Max
+	Run, "%BitBucketUrl%",, Max
   Return
 
 	
@@ -406,7 +437,7 @@ XButton2::
 ; Win+Shift+w: Wiki
 ;---------------------------------------------------------------------------------------------------------------------
 +#w::
-	Run, "%secrets_wikiUrl%",, Max
+	Run, "%WikiUrl%",, Max
   Return
 	
 	
@@ -427,7 +458,7 @@ printscreen::
 #m::
 	If Not WinExist("Windows Media Player")
 	{
-	  Run "C:\Program Files (x86)\Windows Media Player\wmplayer.exe"
+	  Run "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe"
 	}
   WinActivate, ahk_class WMPlayerApp
   Return  
@@ -453,12 +484,12 @@ printscreen::
 	If StrLen(storyId) = 0
   {
 	  ; Team PathFinders
-    ;Run, %secrets_jiraUrl%/secure/RapidBoard.jspa?rapidView=235     ;TCIQ
-		Run, %secrets_jiraUrl%/secure/RapidBoard.jspa?rapidView=49      ;OPTC
+    ;Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=235     ;TCIQ
+		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=49      ;OPTC
   }
   Else
   {
-    Run, %secrets_jiraUrl%/browse/%storyId%
+    Run, %JiraUrl%/browse/%storyId%
   }
   Return
 
@@ -471,11 +502,11 @@ printscreen::
 ;                administrator, we cannot simply run Outlook. Instead, we must run it as a standard user.
 ;---------------------------------------------------------------------------------------------------------------------
 #i::	
-  outlookTitle = i)%secrets_windowsUserName%@%secrets_companyName%`.com.*Outlook
+  outlookTitle = i)%UserEmailAddress%\s-\sOutlook
   If Not WinExist(outlookTitle)
   {
-	  ;Run, "C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE",, Max
-		ShellRun("C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE")
+	  outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
+		ShellRun(outlookExe)
 		WinWaitActive, outlookTitle,,5
 	}
   WinActivate
@@ -492,11 +523,11 @@ printscreen::
 ;                   user.
 ;---------------------------------------------------------------------------------------------------------------------
 #c::
-  outlookTitle = i)%secrets_windowsUserName%@%secrets_companyName%`.com.*Outlook
+  outlookTitle = i)%UserEmailAddress%\s-\sOutlook
   If Not WinExist(outlookTitle)
   {
-	  ;Run, "C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE",, Max
-		ShellRun("C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE")
+	  outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
+		ShellRun(outlookExe)
 		WinWaitActive, outlookTitle,,5
 	}
   WinActivate
@@ -513,11 +544,11 @@ printscreen::
 ;                   user.
 ;---------------------------------------------------------------------------------------------------------------------
 #p::
-  outlookTitle = i)%secrets_windowsUserName%@%secrets_companyName%`.com.*Outlook
+  outlookTitle = i)%UserEmailAddress%\s-\sOutlook
   If Not WinExist(outlookTitle)
   {
-	  ;Run, "C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE",, Max
-		ShellRun("C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE")
+	  outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
+		ShellRun(outlookExe)
 		WinWaitActive, outlookTitle,,5
 	}
   WinActivate
@@ -543,7 +574,7 @@ printscreen::
 ;                               replacement console (https://code.google.com/p/conemu-maximus5)
 ;---------------------------------------------------------------------------------------------------------------------
 #+c::
-	Run C:\Program Files\ConEmu\ConEmu64.exe -run {Shells::cmd (Admin)}
+	Run %WindowsProgramFilesFolder%\ConEmu\ConEmu64.exe -run {Shells::cmd (Admin)}
   Return
 
   
@@ -552,7 +583,7 @@ printscreen::
 ; Win+Shift+s: SURROUND - Open Surround
 ;---------------------------------------------------------------------------------------------------------------------
 +#s::
-  Run C:\Program Files\Seapine\Surround SCM\Surround SCM Client.exe
+  Run %WindowsProgramFilesFolder%\Seapine\Surround SCM\Surround SCM Client.exe
   Return
 	
 
@@ -579,7 +610,7 @@ printscreen::
 	
 	
 	
-#Include %A_ScriptDir%\Brian Kummer Utilities.ahk
+#Include %A_ScriptDir%\My Automations Utilities.ahk
 #Include %A_ScriptDir%\Slack Status Update.ahk
 #Include %A_ScriptDir%\Virtual Desktop Accessor.ahk
 

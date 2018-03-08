@@ -38,15 +38,15 @@ global UnregisterPostMessageHookProc
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; PUBLIC - Declare global variables and initialize the hooks into Windows to monitor virtual desktop changes.
-;          virtualDesktops contains a pipe-delimited string of desktop names and wallpapers, such as
-;            Main|C:\Pictures\wallpaper1.jpg|Personal|C:\Pictures\wallpaper2.jpg|Temp|C:\Pictures\wallpaper3.jpg
+;          Windows environment variables named AHK_VIRTUAL_DESKTOP_WALLPAPER_x are expected to contain a pipe-delimited 
+;          string containing the desktop name and the path to the wallpaper, such as:
+;            AHK_VIRTUAL_DESKTOP_WALLPAPER_1 = Main    |C:\Pictures\wallpaper1.jpg
+;            AHK_VIRTUAL_DESKTOP_WALLPAPER_2 = Personal|C:\Pictures\wallpaper2.jpg
+;            ...
+;            AHK_VIRTUAL_DESKTOP_WALLPAPER_x = xxxxx   |C:\Pictures\wallpaperx.jpg
 ;---------------------------------------------------------------------------------------------------------------------
-VirtualDesktopAccessor_Initialize(virtualDesktops)
+VirtualDesktopAccessor_Initialize()
 {
-	; Save virtualDesktops as an environment variable, because VirtualDesktopAccessor_VirtualDesktopChanged runs in
-	; a separate thread
-	EnvSet, VirtualDesktopAccessor_VirtualDesktops, %virtualDesktops%
-	
   DetectHiddenWindows, On
   hwnd:=WinExist("ahk_pid " . DllCall("GetCurrentProcessId","Uint"))
   hwnd+=0x1000<<32
@@ -97,19 +97,14 @@ VirtualDesktopAccessor_Initialize(virtualDesktops)
 VirtualDesktopAccessor_VirtualDesktopChanged(wParam, lParam, msg, hwnd) 
 {
  	new_desktop_index := lParam+1
+
+  ; Get desktop name and path to wallpaper from Windows environment variable AHK_VIRTUAL_DESKTOP_WALLPAPER_x
+	envVarName = AHK_VIRTUAL_DESKTOP_WALLPAPER_%new_desktop_index%
+	EnvGet, virtualDesktop, %envVarName%
+	parts := StrSplit(virtualDesktop, "|")
+	new_desktop_name := parts[1]
+	new_wallpaper := parts[2]
 	
-	; Read variable with names and wallpapers from environmental variable "VirtualDesktopAccessor_VirtualDesktops",
-	; and parse out the name and wallpaper for the desired virtual desktop
-	;   property    is in elements    formula
-	;   --------    --------------    -----------------------
-	;   name        1, 3, 5, 7, 9     (new_desktop_index*2)-1
-	;   wallpaper   2, 4, 6, 8, 10    new_desktop_index*2
-	EnvGet, virtualDesktops, VirtualDesktopAccessor_VirtualDesktops
-	StringReplace, virtualDesktops, virtualDesktops, `n, , All
-  virtualDesktops := StrSplit(virtualDesktops, "|")  ; Omits periods.
-	new_desktop_name := virtualDesktops[(new_desktop_index*2)-1]
-	new_wallpaper := virtualDesktops[new_desktop_index*2]
- 
   ; Let AHK's auto-trim feature trim leading and trailing spaces 
 	new_desktop_name = %new_desktop_name%
 	new_wallpaper = %new_wallpaper%
