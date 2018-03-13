@@ -471,28 +471,44 @@ printscreen::
 ;   - If the Git Bash window has text that looks like a JIRA story number, then open that story
 ;---------------------------------------------------------------------------------------------------------------------
 +#j::
-  regexString := "i)\b(tran|iqtc|ocs|da)-[0-9]{1,4}\b"
+  regexString := "i)\b(tran|iqtc|ocs|da)[-_]?\d{1,4}\b"
   RegExMatch(GetSelectedTextUsingClipboard(), regexString, storyId)
+
   If StrLen(storyId) = 0
   { 
-	  ; ConEmu can have several windows open with several titles, so we're specifically looking for the one with class 
-		; VirtualConsoleClass for ConEmu64.exe, using a case-insensitive regular expression to match the exe name
+	  ; Search for a ConEmu terminal with a JIRA story number
 		WinGetTitle, git_window_title, ahk_exe i)\\conemu64\.exe$ ahk_class VirtualConsoleClass
 		RegExMatch(git_window_title, regexString, storyId)
 	}
-	
+
+  If StrLen(storyId) = 0
+  { 
+	  ; Search for a Mintty terminal (comes with Git) with a JIRA story number
+		WinGetTitle, git_window_title, ahk_exe i)\\mintty\.exe$ ahk_class mintty
+		RegExMatch(git_window_title, regexString, storyId)
+  }  
+		
 	If StrLen(storyId) = 0
   {
-	  ; Team PathFinders
-    ;Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=235     ;TCIQ
-		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=49      ;OPTC
+	  ; Could not find any JIRA story number
+		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=49
   }
   Else
   {
+	  ; Handle if there is an underscore instead of a hyphen, or if there is no hyphen
+		storyId := StrReplace(storyId, "_", "-")
+		If Not RegExMatch(storyId, "-")
+		{
+		  storyId := RegExReplace(storyId, "(\d+)", "-$1")
+		}
+		
     Run, %JiraUrl%/browse/%storyId%
   }
-  Return
 
+
+
+
+	
 
 	
 ;---------------------------------------------------------------------------------------------------------------------
@@ -654,6 +670,7 @@ printscreen::
 ::kyle::Kyle
 ::senthil::Senthil
 ::mason::Mason
+::tej::Tej
 
 ::xt::XT
 ::cms::CMS

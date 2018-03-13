@@ -37,7 +37,6 @@ SlackStatusUpdate_Initialize()
 	; Create an AHK "window group" named "SlackUpdateStatus_WindowTitles" that contains the pattern
 	; to find the Slack window
 	EnvGet, slackWindowTitle, SLACK_WINDOW_TITLE
-	
 	GroupAdd, SlackStatusUpdate_WindowTitles, %slackWindowTitle%
 }
 
