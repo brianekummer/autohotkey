@@ -313,7 +313,7 @@ XButton2::
   regExSql = %regExSql%(\bdrop\b.*\b(function|procedure|view|index)\b)|
   regExSql = %regExSql%(\bselect\b.*\bfrom\b))+
 
-  ClipSaved := ClipboardAll
+	ClipSaved := ClipboardAll
   Clipboard = 
   SendInput ^c
   ClipWait, 1
@@ -323,7 +323,7 @@ XButton2::
     WinWaitActive, "Notepad++",,2     ; Wait up to 2 seconds for Notepad++ to open
 
     SendInput ^v
-    Sleep, 500
+	Sleep, 500
 		
     ; We can do some extra formatting of some types of data using Notepad++ plugins, 
     ; based on the type of the data we're viewing
