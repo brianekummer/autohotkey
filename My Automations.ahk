@@ -75,6 +75,7 @@ EnvGet, BitBucketUrl, AHK_URL_BITBUCKET
 EnvGet, JiraUrl, AHK_URL_JIRA
 EnvGet, TimesheetUrl, AHK_URL_TIMESHEET
 EnvGet, WikiUrl, AHK_URL_WIKI
+EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
 	
 	
 
@@ -460,7 +461,16 @@ XButton2::
 +#w::
 	Run, "%WikiUrl%",, Max
   Return
-	
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Win+Shift+y: centrifY
+;---------------------------------------------------------------------------------------------------------------------
++#y::
+	Run, "%CentrifyUrl%",, Max
+  Return
+
 	
   
 ;---------------------------------------------------------------------------------------------------------------------

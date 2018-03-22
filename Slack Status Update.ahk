@@ -27,7 +27,7 @@ SlackStatusUpdate_Initialize()
 	EnvGet, SlackStatusUpdate_MySlackToken, SLACK_TOKEN
 	EnvGet, SlackStatusUpdate_OfficeNetworks, SLACK_OFFICE_NETWORKS
 	
-	slackStatusMeeting := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_MEETING", "In a meeting|:spiral_salendar_pad:")
+	slackStatusMeeting := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_MEETING", "In a meeting|:spiral_calendar_pad:")
 	slackStatusWorkingInOffice := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_OFFICE", "|")
 	slackStatusWorkingRemotely := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_REMOTELY", "Working remotely|:house_with_garden:")
 	slackStatusVacation := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_VACATION", "Vacationing|:palm_tree:")
@@ -117,6 +117,7 @@ SlackStatusUpdate_SetSlackStatusViaKeyboard(slackStatus)
 {
   slackText := slackStatus["text"]
   slackEmoji := slackStatus["emoji"]
+
   SendInput /status %slackEmoji% %slackText%{enter}
 }
 
@@ -194,7 +195,7 @@ SlackStatusUpdate_GetWifiStatus()
   If (networkStatus = "connected")
 	{
 	  ; Get the name of the wifi network
-		networkSSID = % RegExReplace(result, "s).*?\R\s+SSID\s+:(\V+).*", "$1")
+		networkSSID := RegExReplace(result, "s).*?\R\s+SSID\s+:(\V+).*", "$1")
 	  networkSSID := RegExReplace(networkSSID, "\s+")
 	  StringLower, networkSSID, networkSSID
 		
