@@ -61,13 +61,14 @@ SlackStatusUpdate_Initialize()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; PUBLIC - Set Slack status, based on what network user is connected to
+; PUBLIC - Set Slack status, based on what wifi networks are available to the user. I can be connected to a network;
+;          by a wired ethernet cable in the office or at home, so looking at what wifi networks are nearby/available 
+;          seems like an accurate method of determining where I'm connected from. 
 ;---------------------------------------------------------------------------------------------------------------------
 SlackStatusUpdate_SetSlackStatusBasedOnNetwork() 
 {
-  ; Get current Slack status. Network errors are returned as emoji "???"
+  ; Get current Slack status (network errors are returned as emoji "???")
   mySlackStatusEmoji := SlackStatusUpdate_GetSlackStatusEmoji()
-
 	While (mySlackStatusEmoji = "???") 
 	{
 	  Sleep, 30000
@@ -81,7 +82,26 @@ SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 	}
 	Else 
 	{
-		SlackStatusUpdate_CheckNetworkStatus()
+	  ; I'm not in a meeting, so we need to set my Slack status
+		done := False
+		Loop
+		{
+			If (Dllcall("Sensapi.dll\IsNetworkAlive", "UintP", lpdwFlags)) 
+			{
+			  ; I'm connected to a network
+			  done := True
+			  If (AmNearOfficeWifiNetwork()) 
+				  SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["workingInOffice"])
+				Else
+				  SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["workingRemotely"])
+			}
+			Else
+			{
+				; Wait for 30 seconds and check again
+				Sleep, 30000
+			}
+		}
+		Until done
 	}
 }	
 
@@ -124,104 +144,40 @@ SlackStatusUpdate_SetSlackStatusViaKeyboard(slackStatus)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Private - Check the network status. If user is not connected to any network, then keep checking every 30 seconds. 
-;           Once the user is connected, the Slack status will be changed and this method will stop running.
+; Private - Am I near an office wifi network? Return true if any of the available wifi networks match the regular
+;           expression in SlackStatusUpdate_OfficeNetworks.
+;             - Command NETSH WLAN SHOW NETWORKS to show all the available wifi networks, which has output like this:
+;                 Interface name : Wi-Fi
+;                 There are 13 networks currently visible.
+;                 
+;                 SSID 1 : xfinitywifi
+;                 Network type            : Infrastructure
+;                 Authentication          : Open
+;                 Encryption              : None
+;                 
+;                 ...
 ;---------------------------------------------------------------------------------------------------------------------
-SlackStatusUpdate_CheckNetworkStatus() {
-	officeNetworkSearchExpr = i)connected-%SlackStatusUpdate_OfficeNetworks%
+AmNearOfficeWifiNetwork()
+{
+	atWork := False
 
-	done := False
-	Loop
+	cmd = %comspec% /c netsh wlan show networks
+	allNetworks := SlackStatusUpdate_RunWaitHidden(cmd)
+	
+	; This may not be the BEST was to do it, but it works
+  officeNetworkPattern = i)%SlackStatusUpdate_OfficeNetworks%
+	pos=1
+  While pos := RegExMatch(allNetworks, "i)\Rssid.+?:\s(.*)\R", oneNetwork, pos+StrLen(oneNetwork)) 
 	{
-	  ; Get user's network status. Will be one of these values:
-		;    connected-NAME_OF_WIFI_NETWORK
-		;    connected-ethernet
-		;    disconnected
-  	networkStatus := SlackStatusUpdate_GetNetworkStatus()
+	  ; oneNetwork is the line like "SSID x : network_ssid", so parse out the network's SSID
+	  networkSSID := RegExReplace(oneNetwork, "\R.*?:\s(\V+)\R", "$1")
 
-		If (RegExMatch(networkStatus, officeNetworkSearchExpr)) 
-		{
-			SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["workingInOffice"])
-			done := True
-		} 
-		Else If (RegExMatch(networkStatus, "i)connected-")) 
-		{
-			SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["workingRemotely"])
-			done := True
-		}
-		Else
-		{
-		  ; Wait for 30 seconds and check again
-		  Sleep, 30000
-		}
-	}
-	Until done
+	  If RegExMatch(networkSSID, officeNetworkPattern)
+	    atWork := True
+  }	
+
+	Return %atWork%
 }	
-
-
-
-;---------------------------------------------------------------------------------------------------------------------
-; Private - Get the user's network status. Return values are:
-;   disconnected.........User is not connected to a wifi network or via wired ethernet
-;   connected-ethernet...User is connected to network via wired ethernet cable
-;   connected-xxxxx......Where xxxxx is the SSID of the network
-;---------------------------------------------------------------------------------------------------------------------
-SlackStatusUpdate_GetNetworkStatus() 
-{
-  wifiStatus := SlackStatusUpdate_GetWifiStatus()
-	Return RegExMatch(wifiStatus, "i)connected-")
-	  ? wifiStatus
-		: SlackStatusUpdate_GetEthernetStatus()
-}
-
-
-
-;---------------------------------------------------------------------------------------------------------------------
-; Private - Get the user's wifi network status. Return values are:
-;   disconnected......User is not connected to a wifi network
-;   connected-xxxxx...Where xxxxx is the wifi network's SSID
-;---------------------------------------------------------------------------------------------------------------------
-SlackStatusUpdate_GetWifiStatus() 
-{
-	cmd = %comspec% /c netsh wlan show interface
-	result := SlackStatusUpdate_RunWaitHidden(cmd)    ; Hidden, but get clipboard error many times when I login
-	;result := SlackStatusUpdate_RunWaitOne(cmd)        ; IF this doesn't fix my errors, then maybe wait 30 sec after login
-
-  ; Decide if the user is connected or not	
-	networkStatus := RegExReplace(result, "s).*?\R\s+State\s+:(\V+).*", "$1")
-	networkStatus := RegExReplace(networkStatus, "\s+")
-	StringLower, networkStatus, networkStatus
-	
-  If (networkStatus = "connected")
-	{
-	  ; Get the name of the wifi network
-		networkSSID := RegExReplace(result, "s).*?\R\s+SSID\s+:(\V+).*", "$1")
-	  networkSSID := RegExReplace(networkSSID, "\s+")
-	  StringLower, networkSSID, networkSSID
-		
-		networkStatus = %networkStatus%-%networkSSID%
-	}
-	
-	Return networkStatus
-}
-
-
-
-;---------------------------------------------------------------------------------------------------------------------
-; Private - Get the user's ethernet network status. Return values are:
-;   disconnected.........User is not connected to wired ethernet
-;   connected-ethernet...User is connected to wired ethernet
-;---------------------------------------------------------------------------------------------------------------------
-SlackStatusUpdate_GetEthernetStatus() 
-{
-	cmd = %comspec% /c netsh lan show interface
-	ethernetStatus := SlackStatusUpdate_RunWaitHidden(cmd)    ; Hidden, but get clipboard error many times when I login
-	;ethernetStatus := SlackStatusUpdate_RunWaitOne(cmd)
-
-  Return RegExMatch(ethernetStatus, "i)name\s*: ethernet\R[a-zA-Z0-9 -:]*?\R[a-zA-Z0-9 -:]*?\R[a-zA-Z0-9 -:]*?\R\s*?state\s*: connected.")
-	  ? "connected-ethernet" 
-		: "disconnected"
-}
 
 
 

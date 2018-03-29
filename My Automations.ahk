@@ -7,15 +7,14 @@
 ;   - Definition of AutoHotKey keys: http://www.autohotkey.com/docs/KeyList.htm
 ;   - Send, SendInput modifiers: ^ = Ctrl, ! = Alt, + = Shift, # = Windows
 ;
-; Summary (1/4/2018)
+; Summary (3/22/2018)
 ; -------------------
 ;   Add auto-correct to EVERY application (http://www.biancolo.com/articles/autocorrect/)
 ;
 ;   Modifying System Behavior:
-;     printscreen               Open the Windows snipping tool- Shift+Prt Scr still takes a screenshot of the whole screen.
+;     printscreen               Starts Windows snipping tool in rectangle mode. Shift+Prt Scr still takes a screenshot of the whole screen.
 ;     Win+down                  Minimize the active window instead of making it unmaximized, then minimize
 ;     Shift+mousewheel          Adjusts system volume 
-;     Win+Shift                 Shows mouse cursor
 ;
 ;   Mouse Behavior
 ;     XButton1                  Minimizes the current application
@@ -23,16 +22,16 @@
 ;                               or closes the application (Alt-F4)
 ;
 ;   Other hotkeys
-;     Win+c                     CALENDAR- Activate Outlook and goto Calendar
-;     Win+i                     INBOX- Activate Outlook and goto my Inbox
-;     Win+k                     slacK- Activate Slack and press Ctrl-K
+;     Win+c                     Calendar- Activate Outlook and goto Calendar
+;     Win+i                     Inbox- Activate Outlook and goto my Inbox
+;     Win+k                     slacK- Activate Slack and opens "Jump to"
 ;     Win+m                     windows Media player
-;     Win+n                     NOTEPAD++- Open Notepad++
-;     Win+p                     PROGRESS- Activate Outlook and goto Tasks
-;     Win+t                     Typora
+;     Win+n                     Notepad++- Opens Notepad++
+;     Win+p                     Progress- Activate Outlook and goto Tasks
+;     Win+t                     Activate Typora
 ;     Win+z                     noiZe- Open SimplyNoise.com
 ;
-	;   Modifying application behavior
+;   Modifying application behavior
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
 ;     Slack                     Typing "/lunch" gets changed to "/status :hamburger: At lunch"
@@ -40,14 +39,14 @@
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
 ;  For development (Win-Shift and some key)
-;     Win+Shift+c               COMMAND prompt- Open a command prompt (because we're using RunAsAdmin() in this script is as admin)
-;     Win+Shift+a               ADP- website
+;     Win+Shift+c               Command prompt- Open a command prompt (because we're using RunAsAdmin() in this script is as admin)
+;     Win+Shift+a               ADP
 ;     Win+Shift+b               BitBucket
 ;     Win+Shift+g               Git
-;     Win+Shift+j               JIRA- web site, default to Rapid Board
-;     Win+Shift+n               NOTEPAD++- Open Notepad++, and paste the selected text into the newly opened window
-;     Win+Shift+v               VISUAL Studio 2017
-;     Win+Shift+w               WIKI
+;     Win+Shift+j               JIRA
+;     Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
+;     Win+Shift+v               Visual Studio 2017
+;     Win+Shift+w               Wiki
 
 	; OLD JUNK---
 ;     Win-k:                    KLOVE- Open K-Love in Media Player, or if already open, open K-Love website
@@ -166,23 +165,25 @@ OnWindowsUnlock(wParam, lParam)
 ; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
 ;---------------------------------------------------------------------------------------------------------------------
 #NumpadSub::
-  Loop, 25
-	{
-	  ; Open Configuration -> Administration
-    SendInput {alt}{right}{right}{down}{down}{enter}
-	  Sleep, 1250
+  SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
+
+  ;Loop, 25
+	;{
+	;  ; Open Configuration -> Administration
+  ;  SendInput {alt}{right}{right}{down}{down}{enter}
+	;  Sleep, 1250
+	;	
+	;	; Ctrl-Tab through a bunch of tabs
+	;	;Loop, 20 
+	;	;{
+	;	;  SendInput, ^{tab}
+	;	;	Sleep, 500
+	;	;}
 		
-		; Ctrl-Tab through a bunch of tabs
-		;Loop, 20 
-		;{
-		;  SendInput, ^{tab}
-		;	Sleep, 500
-		;}
-		
-		; Close the configuration screen
-	  SendInput !{f4}
-	  Sleep, 1250
-  }
+	;	; Close the configuration screen
+	;  SendInput !{f4}
+	;  Sleep, 1250
+  ;}
 	Return
 
 	
@@ -702,6 +703,9 @@ printscreen::
 ::senthil::Senthil
 ::mason::Mason
 ::tej::Tej
+
+::telstrat::TelStrat
+::Telstrat::TelStrat
 
 ::xt::XT
 ::cms::CMS
