@@ -164,7 +164,6 @@ AmNearOfficeWifiNetwork()
 	cmd = %comspec% /c netsh wlan show networks
 	allNetworks := SlackStatusUpdate_RunWaitHidden(cmd)
 	
-	; This may not be the BEST was to do it, but it works
   officeNetworkPattern = i)%SlackStatusUpdate_OfficeNetworks%
 	pos=1
   While pos := RegExMatch(allNetworks, "i)\Rssid.+?:\s(.*)\R", oneNetwork, pos+StrLen(oneNetwork)) 

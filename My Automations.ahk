@@ -75,6 +75,7 @@ EnvGet, JiraUrl, AHK_URL_JIRA
 EnvGet, TimesheetUrl, AHK_URL_TIMESHEET
 EnvGet, WikiUrl, AHK_URL_WIKI
 EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
+EnvGet, CitrixUrl, AHK_URL_CITRIX
 	
 	
 
@@ -100,22 +101,6 @@ EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
   SlackStatusUpdate_Initialize()
   SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 	
-	
-	; Looking into replacing RunWaitOne - I don't want the black box appearing
-	;
-	; I was unable to get it working using CreateProcess, etc. The clipboard stuff
-	; had issues when screen unlocks, but this may be fixable.
-	;
-	; This opens black box briefly
-	;MsgBox % ComObjCreate("WScript.Shell").Exec("cmd.exe /q /c netsh wlan show interface").StdOut.ReadAll()
-	;MsgBox % ComObjCreate("WScript.Shell").Exec("netsh wlan show interface").StdOut.ReadAll()
-	
-	;Msgbox % StdOutToVar( "cmd.exe /c netsh wlan show interface" )
-	
-	;briana = cmd.exe /c /q netsh wlan show interface
-	;brian := CMDret_RunReturn( "cmd.exe /c netsh wlan show interface" )
-	;msgbox %brian%
-	
   Return
 
 	
@@ -137,6 +122,7 @@ ExitFunc(ExitReason, ExitCode)
 StartInterceptingWindowsUnlock() 
 {
   WM_WTSSESSION_CHANGE := 0x02B1
+	NOTIFY_FOR_ALL_SESSIONS := 0
   OnMessage(WM_WTSSESSION_CHANGE, "OnWindowsUnlock")
 
   hw_ahk := FindWindowEx(0, 0, "AutoHotkey", a_ScriptFullPath " - AutoHotkey v" a_AhkVersion)
@@ -165,25 +151,6 @@ OnWindowsUnlock(wParam, lParam)
 ; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
 ;---------------------------------------------------------------------------------------------------------------------
 #NumpadSub::
-  SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
-
-  ;Loop, 25
-	;{
-	;  ; Open Configuration -> Administration
-  ;  SendInput {alt}{right}{right}{down}{down}{enter}
-	;  Sleep, 1250
-	;	
-	;	; Ctrl-Tab through a bunch of tabs
-	;	;Loop, 20 
-	;	;{
-	;	;  SendInput, ^{tab}
-	;	;	Sleep, 500
-	;	;}
-		
-	;	; Close the configuration screen
-	;  SendInput !{f4}
-	;  Sleep, 1250
-  ;}
 	Return
 
 	
@@ -212,7 +179,6 @@ OnWindowsUnlock(wParam, lParam)
 
 +#k::
   If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
-  ;If Not WinExist("Slack - teletracking")
   {
     Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
   	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
@@ -235,13 +201,8 @@ OnWindowsUnlock(wParam, lParam)
 ;   which has an option to change desktops when you mouse over the system tray and scroll the mouse wheel, I had
 ;   to turn that setting off in its settings.ini (set TaskbarScrollSwitching=0)
 ;---------------------------------------------------------------------------------------------------------------------
-+WheelUp::
-  SendInput {Volume_Up 1}
-	Return
-		
- +WheelDown:: 
-  SendInput {Volume_Down 1}
-	Return
++WheelUp::   SendInput {Volume_Up 1}
++WheelDown:: SendInput {Volume_Down 1}
 
 
 
@@ -472,6 +433,15 @@ XButton2::
 	Run, "%CentrifyUrl%",, Max
   Return
 
+
+	
+;---------------------------------------------------------------------------------------------------------------------
+; Win+Shift+x: citriX
+;---------------------------------------------------------------------------------------------------------------------
++#x::
+	Run, "%CitrixUrl%",, Max
+  Return
+
 	
   
 ;---------------------------------------------------------------------------------------------------------------------
@@ -523,7 +493,7 @@ printscreen::
 	If StrLen(storyId) = 0
   {
 	  ; Could not find any JIRA story number
-		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=49
+		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=235&projectKey=IQTC
   }
   Else
   {
@@ -537,26 +507,13 @@ printscreen::
     Run, %JiraUrl%/browse/%storyId%
   }
 
-
-
-
 	
-
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+i: INBOX - Activate Outlook and goto my Inbox
-;                NOTE that Outlook is whiny, and the "instant search" feature (press Ctrl+E to search your mail items) 
-;                refuses to run when Outlook is run as an administrator. Because we are running this AHK script as an
-;                administrator, we cannot simply run Outlook. Instead, we must run it as a standard user.
 ;---------------------------------------------------------------------------------------------------------------------
 #i::	
-  outlookTitle = i)%UserEmailAddress%\s-\sOutlook
-  If Not WinExist(outlookTitle)
-  {
-	  outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
-		ShellRun(outlookExe)
-		WinWaitActive, outlookTitle,,5
-	}
+  ActivateOrStartMicrosoftOutlook()
   WinActivate
 	SendInput ^+I    ;Ctrl-Shift-I is "Switch to Inbox" shortcut key
 	Return
@@ -565,20 +522,9 @@ printscreen::
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+C: CALENDAR - Activate Outlook and goto my Calendar
-;                   NOTE that Outlook is whiny, and the "instant search" feature (press Ctrl+E to search your mail 
-;                   items) refuses to run when Outlook is run as an administrator. Because we are running this AHK 
-;                   script as an administrator, we cannot simply run Outlook. Instead, we must run it as a standard 
-;                   user.
 ;---------------------------------------------------------------------------------------------------------------------
 #c::
-  outlookTitle = i)%UserEmailAddress%\s-\sOutlook
-  If Not WinExist(outlookTitle)
-  {
-	  outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
-		ShellRun(outlookExe)
-		WinWaitActive, outlookTitle,,5
-	}
-  WinActivate
+  ActivateOrStartMicrosoftOutlook()
   SendInput ^2	
   Return
 
@@ -586,24 +532,32 @@ printscreen::
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+p: PROGRESS - Activate Outlook and goto Tasks
-;                   NOTE that Outlook is whiny, and the "instant search" feature (press Ctrl+E to search your mail 
-;                   items) refuses to run when Outlook is run as an administrator. Because we are running this AHK 
-;                   script as an administrator, we cannot simply run Outlook. Instead, we must run it as a standard 
-;                   user.
 ;---------------------------------------------------------------------------------------------------------------------
 #p::
+  ActivateOrStartMicrosoftOutlook()
+  SendInput ^4
+  Return
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; NOTE that Outlook is whiny, and the "instant search" feature (press Ctrl+E to search your mail items) 
+; refuses to run when Outlook is run as an administrator. Because we are running this AHK script as an
+; administrator, we cannot simply run Outlook. Instead, we must run it as a standard user.
+;---------------------------------------------------------------------------------------------------------------------
+ActivateOrStartMicrosoftOutlook()
+{
   outlookTitle = i)%UserEmailAddress%\s-\sOutlook
   If Not WinExist(outlookTitle)
   {
-	  outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
-		ShellRun(outlookExe)
-		WinWaitActive, outlookTitle,,5
-	}
+    outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
+	ShellRun(outlookExe)
+	WinWaitActive, outlookTitle,,5
+  }
   WinActivate
-  SendInput ^4
-  Return
-	
-	
+}	
+
+
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+down: MINIMIZE - Minimize the active window. This overrides the existing Windows hotkey that:
