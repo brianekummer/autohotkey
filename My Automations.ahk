@@ -473,7 +473,7 @@ printscreen::
 ;   - If the Git Bash window has text that looks like a JIRA story number, then open that story
 ;---------------------------------------------------------------------------------------------------------------------
 +#j::
-  regexString := "i)\b(tran|iqtc|ocs|da)[-_]?\d{1,4}\b"
+  regexString := "i)\b(tran|iqtc|ocs|da)([-_ ]|( - ))?\d{1,4}\b"
   RegExMatch(GetSelectedTextUsingClipboard(), regexString, storyId)
 
   If StrLen(storyId) = 0
@@ -497,8 +497,8 @@ printscreen::
   }
   Else
   {
-	  ; Handle if there is an underscore instead of a hyphen, or if there is no hyphen
-		storyId := StrReplace(storyId, "_", "-")
+	  ; Handle if there is an underscore or space instead of a hyphen, or no hyphen
+	  storyId := RegExReplace(storyId, "(\s-\s)[_ ]", "-")
 		If Not RegExMatch(storyId, "-")
 		{
 		  storyId := RegExReplace(storyId, "(\d+)", "-$1")
