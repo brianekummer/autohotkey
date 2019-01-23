@@ -52,6 +52,8 @@ VirtualDesktopAccessor_Initialize()
   hwnd+=0x1000<<32
 
   global hVirtualDesktopAccessor := DllCall("LoadLibrary", "Str", "Virtual Desktop Accessor.dll", "Ptr") 
+	global IsWindowOnCurrentVirtualDesktopProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "IsWindowOnCurrentVirtualDesktop", "Ptr")
+  global IsPinnedWindowProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "IsPinnedWindow", "Ptr")
   global GetCurrentDesktopNumberProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "GetCurrentDesktopNumber", "Ptr")
   global GetDesktopCountProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "GetDesktopCount", "Ptr")
   global GoToDesktopNumberProc := DllCall("GetProcAddress", Ptr, hVirtualDesktopAccessor, AStr, "GoToDesktopNumber", "Ptr")
@@ -114,7 +116,7 @@ VirtualDesktopAccessor_VirtualDesktopChanged(wParam, lParam, msg, hwnd)
 
   ; Display a toast message
   params := {}
-  params.message := "    "new_desktop_name
+  params.message := new_desktop_name
   params.lifespan := 1500
   params.position := 1
   params.fontSize := 18

@@ -1,13 +1,24 @@
 ﻿;---------------------------------------------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------------------------------------------
 ; Brian Kummer's AutoHotKey script
 ;
-; - Near the bottom of this script are a number of #include statements to include libraries of utility functions
+; Near the bottom of this script are a number of #include statements to include libraries of utility functions
 ;
-; Miscellaneous:
+; Miscellaneous
+; -------------
 ;   - Definition of AutoHotKey keys: http://www.autohotkey.com/docs/KeyList.htm
 ;   - Send, SendInput modifiers: ^ = Ctrl, ! = Alt, + = Shift, # = Windows
 ;
-; Summary (3/22/2018)
+; Known Issues
+; ------------
+;   - Win+Shift+n sometimes doesn't open new document
+;   - Hotkeys usually don't work when Git Bash is the active window
+;
+; To Do
+; -----
+;   - New hot key for personal notes (Edge window with title ending with "Kummer Cloud", started by "microsoft-edge:https://cluckcluck.us/index.php/login")
+;
+; Summary (1/23/2019)
 ; -------------------
 ;   Add auto-correct to EVERY application (http://www.biancolo.com/articles/autocorrect/)
 ;
@@ -24,12 +35,16 @@
 ;   Other hotkeys
 ;     Win+c                     Calendar- Activate Outlook and goto Calendar
 ;     Win+i                     Inbox- Activate Outlook and goto my Inbox
-;     Win+k                     slacK- Activate Slack and opens "Jump to"
+;     Win+k                     slacK- Activate Slack
+;     Win+Shift+k               slacK- Activate Slack and opens "Jump to"
 ;     Win+m                     windows Media player
 ;     Win+n                     Notepad++- Opens Notepad++
+;     Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
 ;     Win+p                     Progress- Activate Outlook and goto Tasks
 ;     Win+t                     Activate Typora
 ;     Win+z                     noiZe- Open SimplyNoise.com
+;
+;     Win+Ctrl+v:               Paste the clipboard as plain text
 ;
 ;   Modifying application behavior
 ;     Typora                    Ctrl+mousewheel to zoom
@@ -38,19 +53,22 @@
 ;                               Typing "/mtg" gets changed to "/status :spiral_calendar_pad: In a meeting"
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
-;  For development (Win-Shift and some key)
+;  For TeleTracking-specific stuff (Win-Shift and some key)
 ;     Win+Shift+c               Command prompt- Open a command prompt (because we're using RunAsAdmin() in this script is as admin)
 ;     Win+Shift+a               ADP
 ;     Win+Shift+b               BitBucket
-;     Win+Shift+g               Git
+;     Win+Shift+g               Git Bash
 ;     Win+Shift+j               JIRA
-;     Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
 ;     Win+Shift+v               Visual Studio 2017
 ;     Win+Shift+w               Wiki
-
-	; OLD JUNK---
-;     Win-k:                    KLOVE- Open K-Love in Media Player, or if already open, open K-Love website
-
+;     Win+Shift+x               citriX
+;     Win+Shift+y               centrifY
+;
+; Windows Virtual Desktop Improvements
+; ------------------------------------
+; Enhancements around Windows virtual desktops, which includes assigning specific wallpapers to specific virtual 
+; desktops. Based on code: https://github.com/Ciantic/VirtualDesktopAccessor
+;
 ;---------------------------------------------------------------------------------------------------------------------
 #NoEnv
 #Persistent
@@ -158,7 +176,8 @@ OnWindowsUnlock(wParam, lParam)
 ;---------------------------------------------------------------------------------------------------------------------
 ; Slack
 ; -----
-;   Win+k:    Open Slack and go to the "Jump to" window
+;   Win+k:        Open Slack
+;   Win+Shift+k:  Open Slack and go to the "Jump to" window
 ;
 ; Functionality in Slack-Status-Update.ahk
 ; -----------------------------------------
@@ -171,10 +190,10 @@ OnWindowsUnlock(wParam, lParam)
   	
 		WinActivate, ahk_group SlackStatusUpdate_WindowTitles
 	  Sleep, 1000
-  	WinMaximize
+  	WinMaximize, A
   }
   WinActivate
-	;WinMaximize
+	WinMaximize, A
   Return
 
 +#k::
@@ -183,15 +202,14 @@ OnWindowsUnlock(wParam, lParam)
     Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
   	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
 	  Sleep, 1000
-  	WinMaximize
+  	WinMaximize, A
   }
 	WinActivate
-	;WinMaximize
+	WinMaximize, A
 	SendInput ^k
   Return
 	
 	
-
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Shift+mousewheel: Change system volume
@@ -226,9 +244,9 @@ XButton2::
 	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora")
 		WinMinimize, A     ; Do not want to close these apps
   Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv") or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
-    SendInput ^{f4}         ; Close a WINDOW/TAB/DOCUMENT
+    SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
   Else
-    SendInput !{f4}         ; Close the APP
+    SendInput !{f4}    ; Close the APP
   Return
 
 	
@@ -316,23 +334,53 @@ XButton2::
 ;   Ctrl+mousewheel:  Zoom in and out
 ;   Win+T:            Open Typora if not already open
 ; Note that a "•" character will be displayed after the filename if the file has unsaved changes. Since I'm editing
-; NextCloud notes, those usually have a .txt extension.
+; NextCloud notes, those usually have a .md or .txt extension.
 ;---------------------------------------------------------------------------------------------------------------------
-#IfWinActive \.(md|txt)•? - Typora 
+#IfWinActive - Typora 
   ^WheelUp::   SendInput ^+{=}
   ^WheelDown:: SendInput ^+{-}
 #IfWinActive
 
 #t::
-  If Not WinExist("\.(md|txt)•? - Typora")
+  ; Determine if Typora is running in this virtual desktop, while ignoring the instance of my to do list
+	typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc)
+	If (typoraIdOnThisDesktop == 0)
 	{
-  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe"
+    n := _GetCurrentDesktopNumber()
+	  If (n == 1)         ; Virtual desktop "Main"
+    	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Documents\Always Open"
+		Else If (n == 2)    ; Virtual desktop "Personal"
+    	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes"
+    Sleep, 1000
+		
+		typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc)
 	}
-  WinActivate, Typora
-  WinMaximize, Typora
-  Return
+	
+	WinActivate, ahk_id %typoraIdOnThisDesktop%
+  WinMaximize, A
+  Return	
 
 
+GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
+{
+  n := _GetCurrentDesktopNumber()
+  typoraIdOnThisDesktop = 0
+
+	WinGet, id, List, - Typora, , My To Do List
+  Loop, %id%
+	{
+		typoraId := id%A_Index%
+	  isOnDesktop := DllCall(hIsWindowOnCurrentVirtualDesktopProc, UInt, typoraId, UInt)
+	  If (isOnDesktop == 1) 
+		{
+		  typoraIdOnThisDesktop := typoraId
+			Break
+		}
+	}
+	Return typoraIdOnThisDesktop
+}
+
+	
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Ctrl+v: Paste the clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
@@ -397,9 +445,6 @@ XButton2::
 
 
 
-
-
-
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Shift+a: ADP - Go to ADP website to enter my timesheet
 ;---------------------------------------------------------------------------------------------------------------------
@@ -407,6 +452,7 @@ XButton2::
 	Run, "%TimesheetUrl%",, Max
   Return
 
+	
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Shift+b: BitBucket
@@ -534,8 +580,20 @@ printscreen::
 ; Win+p: PROGRESS - Activate Outlook and goto Tasks
 ;---------------------------------------------------------------------------------------------------------------------
 #p::
-  ActivateOrStartMicrosoftOutlook()
-  SendInput ^4
+  ;ActivateOrStartMicrosoftOutlook()
+  ;SendInput ^4
+	
+	; Trying to use separate Typora instance for my to do list
+	title = i)My\sTo\sDo\sList.*\-.\Typora
+  If Not WinExist(title)
+	{
+  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes\My To Do List.md"
+  	WinWaitActive, %title%,,5
+		; I may or may not have to press Ctrl+Shift+3 to hide the file tree
+	}
+	
+  WinActivate, %title%
+ 	WinMaximize, A
   Return
 
 
