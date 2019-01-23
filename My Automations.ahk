@@ -16,7 +16,9 @@
 ;
 ; To Do
 ; -----
-;   - New hot key for personal notes (Edge window with title ending with "Kummer Cloud", started by "microsoft-edge:https://cluckcluck.us/index.php/login")
+;   - New hot key for personal notes 
+;      - Look for Microsoft Edge window with title ending with "Kummer Cloud"
+;      - Is started by "microsoft-edge:https://cluckcluck.us/index.php/login"
 ;
 ; Summary (1/23/2019)
 ; -------------------
@@ -36,11 +38,11 @@
 ;     Win+c                     Calendar- Activate Outlook and goto Calendar
 ;     Win+i                     Inbox- Activate Outlook and goto my Inbox
 ;     Win+k                     slacK- Activate Slack
-;     Win+Shift+k               slacK- Activate Slack and opens "Jump to"
+;       Win+Shift+k               slacK- Activate Slack and opens "Jump to"
 ;     Win+m                     windows Media player
 ;     Win+n                     Notepad++- Opens Notepad++
-;     Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
-;     Win+p                     Progress- Activate Outlook and goto Tasks
+;       Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
+;     Win+p                     Progress- my tasks/to-do list
 ;     Win+t                     Activate Typora
 ;     Win+z                     noiZe- Open SimplyNoise.com
 ;
@@ -54,10 +56,10 @@
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
 ;  For TeleTracking-specific stuff (Win-Shift and some key)
-;     Win+Shift+c               Command prompt- Open a command prompt (because we're using RunAsAdmin() in this script is as admin)
+;     Win+Shift+c               Command prompt as admin (because we're using RunAsAdmin() in this script)
 ;     Win+Shift+a               ADP
 ;     Win+Shift+b               BitBucket
-;     Win+Shift+g               Git Bash
+;     Win+Shift+g               Git Bash as admin
 ;     Win+Shift+j               JIRA
 ;     Win+Shift+v               Visual Studio 2017
 ;     Win+Shift+w               Wiki
@@ -333,8 +335,7 @@ XButton2::
 ; Typora
 ;   Ctrl+mousewheel:  Zoom in and out
 ;   Win+T:            Open Typora if not already open
-; Note that a "•" character will be displayed after the filename if the file has unsaved changes. Since I'm editing
-; NextCloud notes, those usually have a .md or .txt extension.
+;   Win+P:            Open my to-do list in a separate instance of Typora
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive - Typora 
   ^WheelUp::   SendInput ^+{=}
@@ -360,6 +361,31 @@ XButton2::
   WinMaximize, A
   Return	
 
+#p::
+	; Use a separate Typora instance for my to-do list
+	title = i)My\sTo\sDo\sList.*\-.\Typora
+  If Not WinExist(title)
+	{
+  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes\My To Do List.md"
+  	WinWaitActive, %title%,,5
+		; I may or may not have to press Ctrl+Shift+3 to hide the file tree
+	}
+	Else
+	{
+	  ; If the to-do list is open on a different virtual desktop, then move it to the current virtual desktop
+	  WinGet, toDoListId, ID, %title%
+		isOnCurrentVirtualDesktop := IsWindowOnCurrentVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc, toDoListId)
+		If (isOnCurrentVirtualDesktop == 0)
+		{
+      n := _GetCurrentDesktopNumber()
+			MoveWindowToDesktop(toDoListId, n)
+		}  
+	}
+	
+  WinActivate, %title%
+ 	WinMaximize, A
+  Return
+
 
 GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 {
@@ -380,7 +406,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 	Return typoraIdOnThisDesktop
 }
 
-	
+
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Ctrl+v: Paste the clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
@@ -576,28 +602,6 @@ printscreen::
 
 
 	
-;---------------------------------------------------------------------------------------------------------------------
-; Win+p: PROGRESS - Activate Outlook and goto Tasks
-;---------------------------------------------------------------------------------------------------------------------
-#p::
-  ;ActivateOrStartMicrosoftOutlook()
-  ;SendInput ^4
-	
-	; Trying to use separate Typora instance for my to do list
-	title = i)My\sTo\sDo\sList.*\-.\Typora
-  If Not WinExist(title)
-	{
-  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes\My To Do List.md"
-  	WinWaitActive, %title%,,5
-		; I may or may not have to press Ctrl+Shift+3 to hide the file tree
-	}
-	
-  WinActivate, %title%
- 	WinMaximize, A
-  Return
-
-
-
 ;---------------------------------------------------------------------------------------------------------------------
 ; NOTE that Outlook is whiny, and the "instant search" feature (press Ctrl+E to search your mail items) 
 ; refuses to run when Outlook is run as an administrator. Because we are running this AHK script as an

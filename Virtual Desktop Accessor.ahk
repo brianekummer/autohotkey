@@ -91,6 +91,26 @@ VirtualDesktopAccessor_Initialize()
 #^+Right:: _MoveAndSwitchToDesktop(_GetNextDesktopNumber())
 
 
+;---------------------------------------------------------------------------------------------------------------------
+; PUBLIC - Is a given window on the current virtual desktop
+;---------------------------------------------------------------------------------------------------------------------
+IsWindowOnCurrentVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc, hWnd) 
+{
+  isOnCurrentVirtualDesktop := DllCall(hIsWindowOnCurrentVirtualDesktopProc, UInt, hWnd, UInt)
+	Return %isOnCurrentVirtualDesktop%
+}
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; PUBLIC - Move a window to virtual desktop n
+;---------------------------------------------------------------------------------------------------------------------
+MoveWindowToDesktop(hWnd, n:=1) 
+{
+  activeHwnd := _GetCurrentWindowID()
+  DllCall(MoveWindowToDesktopNumberProc, UInt, hWnd, UInt, n-1)
+}
+
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Private - This function is called every time a virtual desktop changes. Because it is called via OnMessage, it runs
@@ -218,3 +238,5 @@ _MoveCurrentWindowToDesktop(n:=1)
   activeHwnd := _GetCurrentWindowID()
   DllCall(MoveWindowToDesktopNumberProc, UInt, activeHwnd, UInt, n-1)
 }
+
+
