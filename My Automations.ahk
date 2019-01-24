@@ -1,5 +1,4 @@
 ﻿;---------------------------------------------------------------------------------------------------------------------
-;---------------------------------------------------------------------------------------------------------------------
 ; Brian Kummer's AutoHotKey script
 ;
 ; Near the bottom of this script are a number of #include statements to include libraries of utility functions
@@ -11,8 +10,7 @@
 ;
 ; Known Issues
 ; ------------
-;   - Win+Shift+n sometimes doesn't open new document
-;   - Hotkeys usually don't work when Git Bash is the active window
+;   - None
 ;
 ; To Do
 ; -----
@@ -42,8 +40,9 @@
 ;     Win+m                     windows Media player
 ;     Win+n                     Notepad++- Opens Notepad++
 ;       Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
-;     Win+p                     Progress- my tasks/to-do list
+;     Win+Shift+p               Personal cloud - open in Edge
 ;     Win+t                     Activate Typora
+;     Win+Shift+t                 Activate my to-do list in Typora
 ;     Win+z                     noiZe- Open SimplyNoise.com
 ;
 ;     Win+Ctrl+v:               Paste the clipboard as plain text
@@ -96,6 +95,7 @@ EnvGet, TimesheetUrl, AHK_URL_TIMESHEET
 EnvGet, WikiUrl, AHK_URL_WIKI
 EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
 EnvGet, CitrixUrl, AHK_URL_CITRIX
+EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
 	
 	
 
@@ -177,13 +177,11 @@ OnWindowsUnlock(wParam, lParam)
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Slack
-; -----
-;   Win+k:        Open Slack
-;   Win+Shift+k:  Open Slack and go to the "Jump to" window
+;   Win+k         Open Slack
+;   Win+Shift+k   Open Slack and go to the "Jump to" window
 ;
 ; Functionality in Slack-Status-Update.ahk
-; -----------------------------------------
-;   /xxxxx    When in Slack, replace "/lunch", "/wfh", "/mtg" with the equivalent Slack command to change my status
+;   /xxxxx        When in Slack, replace "/lunch", "/wfh", "/mtg" with the equivalent Slack command to change my status
 ;---------------------------------------------------------------------------------------------------------------------
 #k::
   If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
@@ -214,7 +212,7 @@ OnWindowsUnlock(wParam, lParam)
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Shift+mousewheel: Change system volume
+; Shift+mousewheel   Change system volume
 ;   Other keystroke combinations (Win+mousewheel, or Ctrl+mousewheel) affect the current window
 ;
 ;   Because I also use Win-10-virtual-desktop-enhancer (https://github.com/sdias/win-10-virtual-desktop-enhancer),
@@ -260,18 +258,18 @@ XButton2::
 ; to reload the current script. This eliminates the need to right-click the AutoHotKey system tray icon and select
 ; "Reload This Script".
 ;
-; Win+n          Open Notepad++
-; Win+Shift+n    Open Notepad++ and paste the selected text into the new Notepad++ window
-;                  - I could have copied the selected text into a variable and done a "Send %variableName%", which 
-;                    would send each character as if it was typed, which would be very SLOW. Instead, I paste the 
-;                    selected text into the Notepad++ window.
-;                  - If the pasted text looks like a recognized type of text, format it using a Notepad++ plugin.
-;                    THESE PLUGINS -= MUST =- BE INSTALLED VIA PLUGINS => PLUGIN MANAGERS => SHOW PLUGIN MANAGER
-;                      Type       Plugin Name   Plugin Hot Key     Comments
-;                      --------   -----------   ----------------   ------------------------------------------------------
-;                      HTML/XML   XML Tools     Ctrl+Shift+Alt+b   Also sets Notepad++ language to "XML" to enable folding
-;                      JSON       JSTool        Ctrl+Alt+m
-;                      SQL        SQLinForm     Alt+Shift+f
+; Win+n           Open Notepad++
+; Win+Shift+n     Open Notepad++ and paste the selected text into the new Notepad++ window
+;                   - I could have copied the selected text into a variable and done a "Send %variableName%", which 
+;                     would send each character as if it was typed, which would be very SLOW. Instead, I paste the 
+;                     selected text into the Notepad++ window.
+;                   - If the pasted text looks like a recognized type of text, format it using a Notepad++ plugin.
+;                     THESE PLUGINS -= MUST =- BE INSTALLED VIA PLUGINS => PLUGIN MANAGERS => SHOW PLUGIN MANAGER
+;                       Type       Plugin Name   Plugin Hot Key     Comments
+;                       --------   -----------   ----------------   ------------------------------------------------------
+;                       HTML/XML   XML Tools     Ctrl+Shift+Alt+b   Also sets Notepad++ language to "XML" to enable folding
+;                       JSON       JSTool        Ctrl+Alt+m
+;                       SQL        SQLinForm     Alt+Shift+f
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive .ahk - Notepad++ 
 ~$^s:: 
@@ -296,17 +294,37 @@ XButton2::
   regExSql = %regExSql%(\bdrop\b.*\b(function|procedure|view|index)\b)|
   regExSql = %regExSql%(\bselect\b.*\bfrom\b))+
 
+	; Save the selected text to the clipboard
   ClipSaved := ClipboardAll
   Clipboard = 
   SendInput ^c
-  ClipWait, 1
+  ClipWait, 2
+	
   If (!ErrorLevel)
   {
-    Run "%WindowsProgramFilesX86Folder%\Notepad++\notepad++.exe"
-    WinWaitActive, "Notepad++",,2     ; Wait up to 2 seconds for Notepad++ to open
-
+	  If Not WinExist("- Notepad++") 
+		{
+		  ; Notepad++ isn't open, so start it, and wait up to 2 seconds for it to open
+		  Run "%WindowsProgramFilesX86Folder%\Notepad++\notepad++.exe"
+		  WinWaitActive, Notepad++,,2
+    
+		  WinGetTitle, notpadTitle, A
+			foundPos := RegExMatch(notpadTitle, "i)new \d+ - Notepad++")
+		  If (foundPos == 0)
+			  ; The active Notepad++ document is not new, so we need to create a new document
+				; to paste our text into
+		    SendInput ^n
+		}
+		Else
+		{
+		  ; Notepad++ is already open, so activate it and create a new document
+		  WinActivate, Notepad++
+		  SendInput ^n
+		}
+		
+		; Paste in our text
     SendInput ^v
-    Sleep, 500
+    Sleep, 750
 		
     ; We can do some extra formatting of some types of data using Notepad++ plugins, 
     ; based on the type of the data we're viewing
@@ -329,13 +347,34 @@ XButton2::
   ClipSaved =			        ; Free the memory in case the clipboard was very large
   Return	
 
+	
+;---------------------------------------------------------------------------------------------------------------------
+; Personal cloud
+;   Win+Shift+P   Open my personal cloud website in Microsoft Edge, or activate it
+;---------------------------------------------------------------------------------------------------------------------
++#p::
+  If WinExist(".* - Kummer Cloud ahk_exe ApplicationFrameHost.exe")
+  {
+	  WinActivate, - Kummer Cloud
+  }
+	Else
+	{
+	  currentDesktopNumber := _GetCurrentDesktopNumber()
+		If (currentDesktopNumber != 2)
+      _ChangeDesktop(2) 
+	  Run, "microsoft-edge:%PersonalCloudUrl%",, Max
+	  WinWaitActive, - Kummer Cloud,, 2
+		WinMaximize, A
+	}
+  Return
+
 
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Typora
-;   Ctrl+mousewheel:  Zoom in and out
-;   Win+T:            Open Typora if not already open
-;   Win+P:            Open my to-do list in a separate instance of Typora
+;   Ctrl+mousewheel   Zoom in and out
+;   Win+T             Open Typora if not already open
+;   Win+Shift+T       Open my to-do list in a separate instance of Typora
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive - Typora 
   ^WheelUp::   SendInput ^+{=}
@@ -361,7 +400,7 @@ XButton2::
   WinMaximize, A
   Return	
 
-#p::
++#t::
 	; Use a separate Typora instance for my to-do list
 	title = i)My\sTo\sDo\sList.*\-.\Typora
   If Not WinExist(title)
@@ -409,7 +448,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Ctrl+v: Paste the clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
+; Win+Ctrl+v      Paste clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
 ;---------------------------------------------------------------------------------------------------------------------
 ^#v::                            ; Text–only paste from ClipBoard
   Clip0 = %ClipBoardAll%
@@ -423,7 +462,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+g: Open Git. ConEmu has multiple windows, so cannot just use "WinActivate, Git Bash"
+; Win+Shift+g     Open Git. ConEmu has multiple windows, so cannot just use "WinActivate, Git Bash"
 ;---------------------------------------------------------------------------------------------------------------------
 +#g::
   If Not WinExist("ahk_class VirtualConsoleClass")
@@ -437,7 +476,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+v: Run VISUAL STUDIO
+; Win+Shift+v     Run VISUAL STUDIO
 ;---------------------------------------------------------------------------------------------------------------------
 +#v::
 	If Not WinExist("Microsoft Visual Studio")
@@ -451,9 +490,9 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; K-Love radio:
-;   #k:               Use Windows Media Player to open a playlist to play K-Love. If it's already open, open a browser
-;                     to K-Love's web site so I can see what song is playing. 
-;                       Unused right now: http://www.klove.com/listen/player.aspx
+;   Win+k         Use Windows Media Player to open a playlist to play K-Love. If it's already open, open a browser
+;                 to K-Love's web site so I can see what song is playing. 
+;                   Unused right now: http://www.klove.com/listen/player.aspx
 ;   Media Play Pause: When listening to K-LOVE, pause is disabled, so map the pause button to press media stop. This 
 ;                     requires using the Windows Media Player plug-in Windows Media Player Plus!
 ;---------------------------------------------------------------------------------------------------------------------
@@ -472,7 +511,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+a: ADP - Go to ADP website to enter my timesheet
+; Win+Shift+a     ADP - Go to ADP website to enter my timesheet
 ;---------------------------------------------------------------------------------------------------------------------
 +#a::
 	Run, "%TimesheetUrl%",, Max
@@ -481,7 +520,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+b: BitBucket
+; Win+Shift+b     BitBucket
 ;---------------------------------------------------------------------------------------------------------------------
 +#b::
 	Run, "%BitBucketUrl%",, Max
@@ -490,7 +529,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+w: Wiki
+; Win+Shift+w     Wiki
 ;---------------------------------------------------------------------------------------------------------------------
 +#w::
 	Run, "%WikiUrl%",, Max
@@ -499,7 +538,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+y: centrifY
+; Win+Shift+y     centrifY
 ;---------------------------------------------------------------------------------------------------------------------
 +#y::
 	Run, "%CentrifyUrl%",, Max
@@ -508,7 +547,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+x: citriX
+; Win+Shift+x     citriX
 ;---------------------------------------------------------------------------------------------------------------------
 +#x::
 	Run, "%CitrixUrl%",, Max
@@ -517,8 +556,8 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 	
   
 ;---------------------------------------------------------------------------------------------------------------------
-; Prt Scr: Open the Windows snipping tool in rectangular mode. Image is stored in the clipboard.
-;          Shift+Prt Scr still takes a screenshot of the whole screen.
+; Prt Scr         Open the Windows snipping tool in rectangular mode. Image is stored in the clipboard.
+;                 Shift+Prt Scr still takes a screenshot of the whole screen.
 ;---------------------------------------------------------------------------------------------------------------------
 printscreen::
   Run snippingtool /clip
@@ -527,7 +566,7 @@ printscreen::
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+m: Windows Media Player
+; Win+m           Windows Media Player
 ;---------------------------------------------------------------------------------------------------------------------
 #m::
 	If Not WinExist("Windows Media Player")
@@ -540,7 +579,7 @@ printscreen::
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+j: JIRA- Open JIRA
+; Win+Shift+j     JIRA- Open JIRA
 ;   - If the highlighted text looks like a JIRA story number (e.g. TRAN|IQTC|OCS|DA-x[xxx]), then open that story
 ;   - If the Git Bash window has text that looks like a JIRA story number, then open that story
 ;---------------------------------------------------------------------------------------------------------------------
@@ -582,7 +621,7 @@ printscreen::
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+i: INBOX - Activate Outlook and goto my Inbox
+; Win+i           INBOX - Activate Outlook and goto my Inbox
 ;---------------------------------------------------------------------------------------------------------------------
 #i::	
   ActivateOrStartMicrosoftOutlook()
@@ -593,7 +632,7 @@ printscreen::
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+C: CALENDAR - Activate Outlook and goto my Calendar
+; Win+C           CALENDAR - Activate Outlook and goto my Calendar
 ;---------------------------------------------------------------------------------------------------------------------
 #c::
   ActivateOrStartMicrosoftOutlook()
@@ -622,9 +661,9 @@ ActivateOrStartMicrosoftOutlook()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+down: MINIMIZE - Minimize the active window. This overrides the existing Windows hotkey that:
-;                        - First time you use it, un-maximizes (restores) the window
-;                        - Second second time you use it, it minimizes the window
+; Win+down        MINIMIZE - Minimize the active window. This overrides the existing Windows hotkey that:
+;                   - First time you use it, un-maximizes (restores) the window
+;                   - Second second time you use it, it minimizes the window
 ;---------------------------------------------------------------------------------------------------------------------
 #down::
   WinMinimize, A
@@ -633,9 +672,9 @@ ActivateOrStartMicrosoftOutlook()
 
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+c: COMMAND prompt - Open a command prompt. Because we're using RunAsAdmin() in this script to run as 
-;                               administrator, the command prompt has administrator privileges. I am using ConEmu as a
-;                               replacement console (https://code.google.com/p/conemu-maximus5)
+; Win+Shift+c     COMMAND prompt - Open a command prompt. Because we're using RunAsAdmin() in this script to run as 
+;                                  administrator, the command prompt has administrator privileges. I am using ConEmu
+;                                  as a replacement console (https://code.google.com/p/conemu-maximus5)
 ;---------------------------------------------------------------------------------------------------------------------
 #+c::
 	Run %WindowsProgramFilesFolder%\ConEmu\ConEmu64.exe -run {Shells::cmd (Admin)}
@@ -644,7 +683,7 @@ ActivateOrStartMicrosoftOutlook()
   
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+s: SURROUND - Open Surround
+; Win+Shift+s     SURROUND - Open Surround
 ;---------------------------------------------------------------------------------------------------------------------
 +#s::
   Run %WindowsProgramFilesFolder%\Seapine\Surround SCM\Surround SCM Client.exe
@@ -653,7 +692,7 @@ ActivateOrStartMicrosoftOutlook()
 
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+z: noiZe - Toggle SimplyNoise.com
+; Win+z           noiZe - Toggle SimplyNoise.com
 ;
 ; I'm having problems w/this site crashing Chrome, so I'll use IE for this instead. Plus, it segregates it out into a 
 ; separately controllable window.

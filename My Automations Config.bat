@@ -19,6 +19,7 @@ SETX AHK_URL_TIMESHEET "https://xxxxxxxxxx.com"
 SETX AHK_URL_WIKI "https://xxxxxxxxxx"
 SETX AHK_URL_CENTRIFY "https://centrify.com/xxxxxx"
 SETX AHK_URL_CITRIX "https://xxxxxxxxx"
+SETX AHK_URL_PERSONAL_CLOUD "https://xxxxxxxxx"
 
 SETX AHK_VIRTUAL_DESKTOP_WALLPAPER_1 "Main    |C:\Users\xxxxxxxxxx\Pictures\wallpaper_main.jpg"
 SETX AHK_VIRTUAL_DESKTOP_WALLPAPER_2 "Personal|C:\Users\xxxxxxxxxx\Pictures\wallpaper_personal.jpg"
