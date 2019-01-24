@@ -1,22 +1,25 @@
 ﻿;---------------------------------------------------------------------------------------------------------------------
 ; Brian Kummer's AutoHotKey script
 ;
+;
 ; Near the bottom of this script are a number of #include statements to include libraries of utility functions
+;
 ;
 ; Miscellaneous
 ; -------------
 ;   - Definition of AutoHotKey keys: http://www.autohotkey.com/docs/KeyList.htm
 ;   - Send, SendInput modifiers: ^ = Ctrl, ! = Alt, + = Shift, # = Windows
 ;
+;
 ; Known Issues
 ; ------------
 ;   - None
 ;
+;
 ; To Do
 ; -----
-;   - New hot key for personal notes 
-;      - Look for Microsoft Edge window with title ending with "Kummer Cloud"
-;      - Is started by "microsoft-edge:https://cluckcluck.us/index.php/login"
+;   - None
+;
 ;
 ; Summary (1/23/2019)
 ; -------------------
@@ -64,6 +67,7 @@
 ;     Win+Shift+w               Wiki
 ;     Win+Shift+x               citriX
 ;     Win+Shift+y               centrifY
+;
 ;
 ; Windows Virtual Desktop Improvements
 ; ------------------------------------
