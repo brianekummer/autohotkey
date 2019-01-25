@@ -387,7 +387,7 @@ XButton2::
 
 #t::
   ; Determine if Typora is running in this virtual desktop, while ignoring the instance of my to do list
-	typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc)
+	typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop()
 	If (typoraIdOnThisDesktop == 0)
 	{
     n := _GetCurrentDesktopNumber()
@@ -397,23 +397,23 @@ XButton2::
     	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes"
     Sleep, 1000
 		
-		typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc)
+		typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop()
 	}
 	
 	WinActivate, ahk_id %typoraIdOnThisDesktop%
   WinMaximize, A
   Return	
 
-GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
+GetTyporaOnThisVirtualDesktop()
 {
   n := _GetCurrentDesktopNumber()
   typoraIdOnThisDesktop = 0
 
-	WinGet, id, List, - Typora     ;, , My To Do List
+	WinGet, id, List, - Typora
   Loop, %id%
 	{
 		typoraId := id%A_Index%
-	  isOnDesktop := DllCall(hIsWindowOnCurrentVirtualDesktopProc, UInt, typoraId, UInt)
+	  isOnDesktop := IsWindowOnCurrentVirtualDesktop(typoraId)
 	  If (isOnDesktop == 1) 
 		{
 		  typoraIdOnThisDesktop := typoraId
@@ -531,7 +531,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 
 
 
-;---------------------------------------------------------------------------------------------------------------------
+;----------------------------------	-----------------------------------------------------------------------------------
 ; Win+Shift+y     centrifY
 ;---------------------------------------------------------------------------------------------------------------------
 +#y::
@@ -642,12 +642,15 @@ printscreen::
 ;---------------------------------------------------------------------------------------------------------------------
 ActivateOrStartMicrosoftOutlook()
 {
+  global UserEmailAddress
+	global WindowsProgramFilesX86Folder
+	
   outlookTitle = i)%UserEmailAddress%\s-\sOutlook
-  If Not WinExist(outlookTitle)
+  If Not WinExist(outlookTitle)	
   {
     outlookExe = %WindowsProgramFilesX86Folder%\Microsoft Office\root\Office16\OUTLOOK.EXE
-	ShellRun(outlookExe)
-	WinWaitActive, outlookTitle,,5
+	  ShellRun(outlookExe)
+	  WinWaitActive, outlookTitle,,5
   }
   WinActivate
 }	

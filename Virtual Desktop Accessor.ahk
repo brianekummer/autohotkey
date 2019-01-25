@@ -94,9 +94,11 @@ VirtualDesktopAccessor_Initialize()
 ;---------------------------------------------------------------------------------------------------------------------
 ; PUBLIC - Is a given window on the current virtual desktop
 ;---------------------------------------------------------------------------------------------------------------------
-IsWindowOnCurrentVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc, hWnd) 
+IsWindowOnCurrentVirtualDesktop(hWnd) 
 {
-  isOnCurrentVirtualDesktop := DllCall(hIsWindowOnCurrentVirtualDesktopProc, UInt, hWnd, UInt)
+  global IsWindowOnCurrentVirtualDesktopProc
+
+  isOnCurrentVirtualDesktop := DllCall(IsWindowOnCurrentVirtualDesktopProc, UInt, hWnd, UInt)
 	Return %isOnCurrentVirtualDesktop%
 }
 
