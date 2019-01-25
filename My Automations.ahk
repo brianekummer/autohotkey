@@ -45,7 +45,7 @@
 ;       Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
 ;     Win+Shift+p               Personal cloud - open in Edge
 ;     Win+t                     Activate Typora
-;     Win+Shift+t                 Activate my to-do list in Typora
+;     Win+Shift+t                 Activate my to-do list in gTasks
 ;     Win+z                     noiZe- Open SimplyNoise.com
 ;
 ;     Win+Ctrl+v:               Paste the clipboard as plain text
@@ -357,9 +357,9 @@ XButton2::
 ;   Win+Shift+P   Open my personal cloud website in Microsoft Edge, or activate it
 ;---------------------------------------------------------------------------------------------------------------------
 +#p::
-  If WinExist(".* - Kummer Cloud ahk_exe ApplicationFrameHost.exe")
+  If WinExist(".*Kummer Cloud ahk_exe ApplicationFrameHost.exe")
   {
-	  WinActivate, - Kummer Cloud
+	  WinActivate, Kummer Cloud
   }
 	Else
 	{
@@ -367,7 +367,7 @@ XButton2::
 		If (currentDesktopNumber != 2)
       _ChangeDesktop(2) 
 	  Run, "microsoft-edge:%PersonalCloudUrl%",, Max
-	  WinWaitActive, - Kummer Cloud,, 2
+	  WinWaitActive, Kummer Cloud,, 2
 		WinMaximize, A
 	}
   Return
@@ -378,7 +378,7 @@ XButton2::
 ; Typora
 ;   Ctrl+mousewheel   Zoom in and out
 ;   Win+T             Open Typora if not already open
-;   Win+Shift+T       Open my to-do list in a separate instance of Typora
+;;;;   Win+Shift+T       Open my to-do list in a separate instance of Typora
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive - Typora 
   ^WheelUp::   SendInput ^+{=}
@@ -404,30 +404,30 @@ XButton2::
   WinMaximize, A
   Return	
 
-+#t::
-	; Use a separate Typora instance for my to-do list
-	title = i)My\sTo\sDo\sList.*\-.\Typora
-  If Not WinExist(title)
-	{
-  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes\My To Do List.md"
-  	WinWaitActive, %title%,,5
-		; I may or may not have to press Ctrl+Shift+3 to hide the file tree
-	}
-	Else
-	{
-	  ; If the to-do list is open on a different virtual desktop, then move it to the current virtual desktop
-	  WinGet, toDoListId, ID, %title%
-		isOnCurrentVirtualDesktop := IsWindowOnCurrentVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc, toDoListId)
-		If (isOnCurrentVirtualDesktop == 0)
-		{
-      n := _GetCurrentDesktopNumber()
-			MoveWindowToDesktop(toDoListId, n)
-		}  
-	}
-	
-  WinActivate, %title%
- 	WinMaximize, A
-  Return
+;+#t::
+;	; Use a separate Typora instance for my to-do list
+;	title = i)My\sTo\sDo\sList.*\-.\Typora
+;  If Not WinExist(title)
+;	{
+;  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes\My To Do List.md"
+;  	WinWaitActive, %title%,,5
+;		; I may or may not have to press Ctrl+Shift+3 to hide the file tree
+;	}
+;	Else
+;	{
+;	  ; If the to-do list is open on a different virtual desktop, then move it to the current virtual desktop
+;	  WinGet, toDoListId, ID, %title%
+;		isOnCurrentVirtualDesktop := IsWindowOnCurrentVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc, toDoListId)
+;		If (isOnCurrentVirtualDesktop == 0)
+;		{
+;      n := _GetCurrentDesktopNumber()
+;			MoveWindowToDesktop(toDoListId, n)
+;		}  
+;	}
+;	
+;  WinActivate, %title%
+; 	WinMaximize, A
+;  Return
 
 
 GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
@@ -435,7 +435,7 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
   n := _GetCurrentDesktopNumber()
   typoraIdOnThisDesktop = 0
 
-	WinGet, id, List, - Typora, , My To Do List
+	WinGet, id, List, - Typora     ;, , My To Do List
   Loop, %id%
 	{
 		typoraId := id%A_Index%
@@ -450,6 +450,22 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 }
 
 
+
+;---------------------------------------------------------------------------------------------------------------------
+; Win+Shift+t     Activate/open gTasks to handle my tasks
+;---------------------------------------------------------------------------------------------------------------------
++#t::
+  ; Windows store apps are more complex than simple exe's
+  If Not WinActive("gTasks ahk_exe ApplicationFrameHost.exe") 
+	{
+	   Run, "C:\Users\Brian-Kummer\Personal\WindowsStoreAppLinks\gTasks.lnk"
+  	 WinWaitActive, gTasks,,2
+  }
+	WinActivate, gTasks
+	;WinMaximize, A
+  Return
+
+	
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Ctrl+v      Paste clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
