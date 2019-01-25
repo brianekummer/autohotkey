@@ -36,16 +36,16 @@
 ;                               or closes the application (Alt-F4)
 ;
 ;   Other hotkeys
-;     Win+c                     Calendar- Activate Outlook and goto Calendar
-;     Win+i                     Inbox- Activate Outlook and goto my Inbox
-;     Win+k                     slacK- Activate Slack
-;       Win+Shift+k               slacK- Activate Slack and opens "Jump to"
-;     Win+m                     windows Media player
-;     Win+n                     Notepad++- Opens Notepad++
-;       Win+Shift+n               Notepad++- Open Notepad++, and paste the selected text into the newly opened window
-;     Win+Shift+p               Personal cloud - open in Edge
-;     Win+t                     Activate Typora
-;     Win+Shift+t                 Activate my to-do list in gTasks
+;     Win+c                     Calendar- Activate/start Outlook and goto Calendar
+;     Win+g                     GTasks- Activate/start my to-do list in gTasks
+;     Win+i                     Inbox- Activate/start Outlook and goto my Inbox
+;     Win+k                     slacK- Activate/start Slack
+;       Win+Shift+k               Activate/start Slack and open "Jump to" dialog
+;     Win+m                     windows Media player- Activate/start Windows Media Player
+;     Win+n                     Notepad++- Activate/start Notepad++
+;       Win+Shift+n               Activate/start Notepad++, and paste the selected text into the newly opened window
+;     Win+Shift+p               Personal cloud - Activate/start in Microsoft Edge
+;     Win+t                     Activate/start Typora, each virtual desktop opens a different folder of files
 ;     Win+z                     noiZe- Open SimplyNoise.com
 ;
 ;     Win+Ctrl+v:               Paste the clipboard as plain text
@@ -57,11 +57,11 @@
 ;                               Typing "/mtg" gets changed to "/status :spiral_calendar_pad: In a meeting"
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
-;  For TeleTracking-specific stuff (Win-Shift and some key)
-;     Win+Shift+c               Command prompt as admin (because we're using RunAsAdmin() in this script)
+;   For TeleTracking-specific stuff (Win-Shift and some key)
+;     Win+Shift+c               Command prompt (as admin, because we're using RunAsAdmin() in this script)
 ;     Win+Shift+a               ADP
 ;     Win+Shift+b               BitBucket
-;     Win+Shift+g               Git Bash as admin
+;     Win+Shift+g               Git Bash (as admin)
 ;     Win+Shift+j               JIRA
 ;     Win+Shift+v               Visual Studio 2017
 ;     Win+Shift+w               Wiki
@@ -69,10 +69,10 @@
 ;     Win+Shift+y               centrifY
 ;
 ;
-; Windows Virtual Desktop Improvements
-; ------------------------------------
-; Enhancements around Windows virtual desktops, which includes assigning specific wallpapers to specific virtual 
-; desktops. Based on code: https://github.com/Ciantic/VirtualDesktopAccessor
+;   Windows Virtual Desktop Improvements
+;   ------------------------------------
+;   Enhancements around Windows virtual desktops, which includes assigning specific wallpapers to specific virtual 
+;   desktops. Based on code: https://github.com/Ciantic/VirtualDesktopAccessor
 ;
 ;---------------------------------------------------------------------------------------------------------------------
 #NoEnv
@@ -245,7 +245,7 @@ XButton2::
   WinGet, processName, ProcessName, A
   SplitPath, processName,,,, processNameNoExtension
 
-	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora")
+	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") or WinActive("gTasks ahk_exe ApplicationFrameHost.exe")
 		WinMinimize, A     ; Do not want to close these apps
   Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv") or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
@@ -352,6 +352,7 @@ XButton2::
   Return	
 
 	
+	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Personal cloud
 ;   Win+Shift+P   Open my personal cloud website in Microsoft Edge, or activate it
@@ -378,7 +379,6 @@ XButton2::
 ; Typora
 ;   Ctrl+mousewheel   Zoom in and out
 ;   Win+T             Open Typora if not already open
-;;;;   Win+Shift+T       Open my to-do list in a separate instance of Typora
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive - Typora 
   ^WheelUp::   SendInput ^+{=}
@@ -404,32 +404,6 @@ XButton2::
   WinMaximize, A
   Return	
 
-;+#t::
-;	; Use a separate Typora instance for my to-do list
-;	title = i)My\sTo\sDo\sList.*\-.\Typora
-;  If Not WinExist(title)
-;	{
-;  	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes\My To Do List.md"
-;  	WinWaitActive, %title%,,5
-;		; I may or may not have to press Ctrl+Shift+3 to hide the file tree
-;	}
-;	Else
-;	{
-;	  ; If the to-do list is open on a different virtual desktop, then move it to the current virtual desktop
-;	  WinGet, toDoListId, ID, %title%
-;		isOnCurrentVirtualDesktop := IsWindowOnCurrentVirtualDesktop(IsWindowOnCurrentVirtualDesktopProc, toDoListId)
-;		If (isOnCurrentVirtualDesktop == 0)
-;		{
-;      n := _GetCurrentDesktopNumber()
-;			MoveWindowToDesktop(toDoListId, n)
-;		}  
-;	}
-;	
-;  WinActivate, %title%
-; 	WinMaximize, A
-;  Return
-
-
 GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 {
   n := _GetCurrentDesktopNumber()
@@ -452,9 +426,9 @@ GetTyporaOnThisVirtualDesktop(hIsWindowOnCurrentVirtualDesktopProc)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+t     Activate/open gTasks to handle my tasks
+; Win+g           Activate/open gTasks to handle my tasks
 ;---------------------------------------------------------------------------------------------------------------------
-+#t::
+#g::
   ; Windows store apps are more complex than simple exe's
   If Not WinActive("gTasks ahk_exe ApplicationFrameHost.exe") 
 	{
