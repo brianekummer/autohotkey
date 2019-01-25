@@ -462,7 +462,7 @@ GetTyporaOnThisVirtualDesktop()
   If Not WinExist("ahk_class VirtualConsoleClass")
   {
     Run "%WindowsProgramFilesFolder%\ConEmu\ConEmu64.exe" -run {Shells::Git Bash}
-    WinWait ahk_class VirtualConsoleClass
+    WinWait ahk_class VirtualConsoleClass	
   }
   WinActivate
   Return
