@@ -27,11 +27,11 @@ SlackStatusUpdate_Initialize()
 	EnvGet, SlackStatusUpdate_MySlackToken, SLACK_TOKEN
 	EnvGet, SlackStatusUpdate_OfficeNetworks, SLACK_OFFICE_NETWORKS
 	
-	slackStatusMeeting := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_MEETING", "In a meeting|:spiral_calendar_pad:")
-	slackStatusWorkingInOffice := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_OFFICE", "|")
-	slackStatusWorkingRemotely := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_REMOTELY", "Working remotely|:house_with_garden:")
-	slackStatusVacation := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_VACATION", "Vacationing|:palm_tree:")
-	slackStatusLunch := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_LUNCH", "At lunch|:hamburger:")
+	slackStatusMeeting := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_MEETING", "In a meeting|:spiral_calendar_pad:", 0)
+	slackStatusWorkingInOffice := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_OFFICE", "|", 0)
+	slackStatusWorkingRemotely := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_REMOTELY", "Working remotely|:house_with_garden:", 0)
+	slackStatusVacation := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_VACATION", "Vacationing|:palm_tree:", 0)
+	slackStatusLunch := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_LUNCH", "At lunch|:hamburger:", 0)
 	global SlackStatusUpdate_SlackStatuses := {"meeting": slackStatusMeeting, "workingInOffice": slackStatusWorkingInOffice, "workingRemotely": slackStatusWorkingRemotely, "vacation": slackStatusVacation, "lunch": slackStatusLunch}
 	
 	; Create an AHK "window group" named "SlackUpdateStatus_WindowTitles" that contains the pattern
@@ -61,9 +61,11 @@ SlackStatusUpdate_Initialize()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; PUBLIC - Set Slack status, based on what wifi networks are available to the user. I can be connected to a network;
+; PUBLIC - Set Slack status, based on what wifi networks are available to the user. I can be connected to a network
 ;          by a wired ethernet cable in the office or at home, so looking at what wifi networks are nearby/available 
-;          seems like an accurate method of determining where I'm connected from. 
+;          seems like an accurate method of determining where I'm connected from.
+;
+;          If I am on PTO, then don't change the status before the PTO status expires.
 ;---------------------------------------------------------------------------------------------------------------------
 SlackStatusUpdate_SetSlackStatusBasedOnNetwork() 
 {
@@ -72,13 +74,19 @@ SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 	While (mySlackStatusEmoji = "???") 
 	{
 	  Sleep, 30000
-    mySlackStatusEmoji := SlackStatusUpdate_GetSlackStatusEmoji()
+    mySlackStatusEmoji := SlackStatusUpdate_GetSlackStatusEmoji() 
 	}
+	
   slackMeetingEmoji := SlackStatusUpdate_SlackStatuses["meeting"]["emoji"]
+  slackVacationEmoji := SlackStatusUpdate_SlackStatuses["vacation"]["emoji"]
 
 	If (mySlackStatusEmoji = slackMeetingEmoji) 
 	{
 	  ; I'm in a meeting, and I ASSUME that my Outlook addin will change my status back when the meeting ends
+	}
+  Else If (mySlackStatusEmoji = slackVacationEmoji) 
+	{
+	  ; I'm on PTO, and I ASSUME that my Outlook addin or JavaScript code set that status to have an expiration
 	}
 	Else 
 	{
@@ -113,7 +121,7 @@ SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 ;             - The text obtained from the environment variable and/or defaultValue should be a pipe-delimited string 
 ;               with the name and the emoji, such as "At lunch|:hamburger:". It does not matter the order of these.
 ;---------------------------------------------------------------------------------------------------------------------
-SlackStatusUpdate_BuildSlackStatus(envVarName, defaultValue)
+SlackStatusUpdate_BuildSlackStatus(envVarName, defaultValue, statusExpiration)
 {
   EnvGet, slackStatus, %envVarName%
 	
@@ -122,8 +130,8 @@ SlackStatusUpdate_BuildSlackStatus(envVarName, defaultValue)
 
 	parts := StrSplit(slackStatus, "|")
  	slackStatus := RegExMatch(parts[1], "^:.*:$")
-	  ? {"text": parts[2], "emoji": parts[1]}
-	  : {"text": parts[1], "emoji": parts[2]}
+	  ? {"text": parts[2], "emoji": parts[1], "expiration": statusExpiration}
+	  : {"text": parts[1], "emoji": parts[2], "expiration": statusExpiration}
 	
 	Return slackStatus
 }
@@ -180,6 +188,45 @@ AmNearOfficeWifiNetwork()
 
 
 
+
+;---------------------------------------------------------------------------------------------------------------------
+; Private - Get my Slack status using the Slack web API
+;
+;           I wrote this and then realized I didn't need it. It's good code, so I'm keeping it here in case I need
+;           it later.
+;---------------------------------------------------------------------------------------------------------------------
+SlackStatusUpdate_GetSlackStatus(ByRef statusText, ByRef statusEmoji, ByRef statusExpiration) 
+{
+	Try 
+	{
+	
+	  webRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	  webRequest.Open("GET", "https://slack.com/api/users.profile.get?token="SlackStatusUpdate_MySlackToken)
+    webRequest.Send()
+	  results := webRequest.ResponseText
+		
+	  ; The JSON returned by Slack will look something like this: 
+	  ;   ..."status_text":"Working remotely","status_emoji":":house_with_garden:","status_expiration":1535890000... 
+	  ;   or
+    ;   ..."status:text":"","status_emoji":"","status_expiration:":0...
+    RegExMatch(results, """status_text""\s*:\s*\""(.+?)\s*""", stText)
+    RegExMatch(results, """status_emoji""\s*:\s*\""(.+?)\s*""", stEmoji)
+    RegExMatch(results, """status_expiration""\s*:\s*(\d+)?", stExpiration)
+
+    statusText = %stText1%
+		statusEmoji = %stEmoji1%
+    statusExpiration = %stExpiration1%
+  }
+	Catch 
+	{
+    statusText = ???
+		statusEmoji = ???
+    statusExpiration = ???
+	}
+}
+
+
+
 ;---------------------------------------------------------------------------------------------------------------------
 ; Private - Get the name of the emoji for my current Slack status using the Slack web API
 ;---------------------------------------------------------------------------------------------------------------------
@@ -217,7 +264,7 @@ SlackStatusUpdate_GetSlackStatusEmoji()
 SlackStatusUpdate_SetSlackStatus(slackStatus) 
 {
   webRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-  data := "profile={'status_text': '"slackStatus["text"]"', 'status_emoji': '"slackStatus["emoji"]"'}"
+  data := "profile={'status_text': '"slackStatus["text"]"', 'status_emoji': '"slackStatus["emoji"]"', 'status_expiration': "slackStatus["expiration"]"}"
 	
 	webRequest.Open("POST", "https://slack.com/api/users.profile.set")
   webRequest.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded")

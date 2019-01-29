@@ -35,21 +35,6 @@
 ;     XButton2                  Depending on the active application, minimizes the window, closes the window/tab (Ctrl-F4),
 ;                               or closes the application (Alt-F4)
 ;
-;   Other hotkeys
-;     Win+c                     Calendar- Activate/start Outlook and goto Calendar
-;     Win+g                     GTasks- Activate/start my to-do list in gTasks
-;     Win+i                     Inbox- Activate/start Outlook and goto my Inbox
-;     Win+k                     slacK- Activate/start Slack
-;       Win+Shift+k               Activate/start Slack and open "Jump to" dialog
-;     Win+m                     windows Media player- Activate/start Windows Media Player
-;     Win+n                     Notepad++- Activate/start Notepad++
-;       Win+Shift+n               Activate/start Notepad++, and paste the selected text into the newly opened window
-;     Win+Shift+p               Personal cloud - Activate/start in Microsoft Edge
-;     Win+t                     Activate/start Typora, each virtual desktop opens a different folder of files
-;     Win+z                     noiZe- Open SimplyNoise.com
-;
-;     Win+Ctrl+v:               Paste the clipboard as plain text
-;
 ;   Modifying application behavior
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
@@ -57,12 +42,25 @@
 ;                               Typing "/mtg" gets changed to "/status :spiral_calendar_pad: In a meeting"
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
-;   For TeleTracking-specific stuff (Win-Shift and some key)
-;     Win+Shift+c               Command prompt (as admin, because we're using RunAsAdmin() in this script)
+;   Shortcuts
+;     Win+c                     outlook Calendar
+;     Win+g                     gTasks
+;     Win+i                     outlook Inbox
+;     Win+k                     slacK
+;       Win+Shift+k               slack "Jump to" dialog
+;     Win+m                     windows Media player
+;     Win+n                     Notepad++
+;       Win+Shift+n               open Notepad++, and paste the selected text into the newly opened window
+;     Win+t                     Typora, with each virtual desktop having a different folder of files
+;     Win+z                     noiZe- open SimplyNoise.com
+;
+;     Win+Ctrl+v:               Paste the clipboard as plain text
+;     Win+Shift+c               Command prompt (as admin)
 ;     Win+Shift+a               ADP
 ;     Win+Shift+b               BitBucket
 ;     Win+Shift+g               Git Bash (as admin)
 ;     Win+Shift+j               JIRA
+;     Win+Shift+p               Personal cloud
 ;     Win+Shift+v               Visual Studio 2017
 ;     Win+Shift+w               Wiki
 ;     Win+Shift+x               citriX
@@ -175,6 +173,8 @@ OnWindowsUnlock(wParam, lParam)
 ; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
 ;---------------------------------------------------------------------------------------------------------------------
 #NumpadSub::
+MSGBOX 1
+  SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 	Return
 
 	
@@ -218,10 +218,6 @@ OnWindowsUnlock(wParam, lParam)
 ;---------------------------------------------------------------------------------------------------------------------
 ; Shift+mousewheel   Change system volume
 ;   Other keystroke combinations (Win+mousewheel, or Ctrl+mousewheel) affect the current window
-;
-;   Because I also use Win-10-virtual-desktop-enhancer (https://github.com/sdias/win-10-virtual-desktop-enhancer),
-;   which has an option to change desktops when you mouse over the system tray and scroll the mouse wheel, I had
-;   to turn that setting off in its settings.ini (set TaskbarScrollSwitching=0)
 ;---------------------------------------------------------------------------------------------------------------------
 +WheelUp::   SendInput {Volume_Up 1}
 +WheelDown:: SendInput {Volume_Down 1}
@@ -355,7 +351,7 @@ XButton2::
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Personal cloud
-;   Win+Shift+P   Open my personal cloud website in Microsoft Edge, or activate it
+;   Win+Shift+P   Open or activate my personal cloud website in Microsoft Edge
 ;---------------------------------------------------------------------------------------------------------------------
 +#p::
   If WinExist(".*Kummer Cloud ahk_exe ApplicationFrameHost.exe")
@@ -378,7 +374,8 @@ XButton2::
 ;---------------------------------------------------------------------------------------------------------------------
 ; Typora
 ;   Ctrl+mousewheel   Zoom in and out
-;   Win+T             Open Typora if not already open
+;   Win+T             Open Typora if not already open. Virtual desktops "Main" and "Personal" open different folders 
+;                     of files.
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive - Typora 
   ^WheelUp::   SendInput ^+{=}
