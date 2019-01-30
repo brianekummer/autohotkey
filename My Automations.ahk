@@ -44,7 +44,7 @@
 ;
 ;   Shortcuts
 ;     Win+c                     outlook Calendar
-;     Win+g                     gTasks
+;     Win+g                     gTasks Pro
 ;     Win+i                     outlook Inbox
 ;     Win+k                     slacK
 ;       Win+Shift+k               slack "Jump to" dialog
@@ -241,7 +241,7 @@ XButton2::
   WinGet, processName, ProcessName, A
   SplitPath, processName,,,, processNameNoExtension
 
-	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") or WinActive("gTasks ahk_exe ApplicationFrameHost.exe")
+	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") or WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe")
 		WinMinimize, A     ; Do not want to close these apps
   Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv") or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
@@ -423,16 +423,16 @@ GetTyporaOnThisVirtualDesktop()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+g           Activate/open gTasks to handle my tasks
+; Win+g           Activate/open gTasks Pro to handle my tasks
 ;---------------------------------------------------------------------------------------------------------------------
 #g::
   ; Windows store apps are more complex than simple exe's
-  If Not WinActive("gTasks ahk_exe ApplicationFrameHost.exe") 
+  If Not WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
 	{
-	   Run, "C:\Users\Brian-Kummer\Personal\WindowsStoreAppLinks\gTasks.lnk"
-  	 WinWaitActive, gTasks,,2
+	   Run, "C:\Users\Brian-Kummer\Personal\WindowsStoreAppLinks\gTasks Pro.lnk"
+  	 WinWaitActive, gTasks Pro,,2
   }
-	WinActivate, gTasks
+	WinActivate, gTasks Pro
 	;WinMaximize, A
   Return
 
