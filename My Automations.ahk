@@ -191,12 +191,9 @@ MSGBOX 1
   If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
   {
     Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
-  	
-		WinActivate, ahk_group SlackStatusUpdate_WindowTitles
-	  Sleep, 1000
-  	WinMaximize, A
+	  WinWaitActive, Slack,, 2
   }
-  WinActivate
+ 	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
 	WinMaximize, A
   Return
 
@@ -204,11 +201,9 @@ MSGBOX 1
   If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
   {
     Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
-  	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
-	  Sleep, 1000
-  	WinMaximize, A
+	  WinWaitActive, Slack,, 2
   }
-	WinActivate
+  WinActivate, ahk_group SlackStatusUpdate_WindowTitles
 	WinMaximize, A
 	SendInput ^k
   Return
