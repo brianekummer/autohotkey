@@ -21,6 +21,11 @@
 ;   - None
 ;
 ;
+; Future Ideas
+; ------------
+;   - Text to speech: ComObjCreate("SAPI.SpVoice").Speak("Speak this phrase")
+;
+;
 ; Summary (1/23/2019)
 ; -------------------
 ;   Add auto-correct to EVERY application (http://www.biancolo.com/articles/autocorrect/)
@@ -173,8 +178,6 @@ OnWindowsUnlock(wParam, lParam)
 ; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
 ;---------------------------------------------------------------------------------------------------------------------
 #NumpadSub::
-MSGBOX 1
-  SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 	Return
 
 	
@@ -590,12 +593,12 @@ printscreen::
 	If StrLen(storyId) = 0
   {
 	  ; Could not find any JIRA story number
-		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=235&projectKey=IQTC
+		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=235&projectKey=IQTC&selectedIssue=IQTC-2631&sprint=1138
   }
   Else
   {
 	  ; Handle if there is an underscore or space instead of a hyphen, or no hyphen
-	  storyId := RegExReplace(storyId, "(\s-\s)[_ ]", "-")
+	  storyId := RegExReplace(storyId, "[\s_]", "")
 		If Not RegExMatch(storyId, "-")
 		{
 		  storyId := RegExReplace(storyId, "(\d+)", "-$1")
