@@ -178,6 +178,47 @@ OnWindowsUnlock(wParam, lParam)
 ; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
 ;---------------------------------------------------------------------------------------------------------------------
 #NumpadSub::
+  ; Chuck
+	Run, "https://www.amazon.com/Chuck-Complete-Various/dp/B009GYTP0W",, Max
+	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
+	Run, "https://www.walmart.com/ip/Chuck-The-Complete-Series-Collector-Set-DVD/21907403",, Max
+
+	; Dragons - Race to the Edge - Release dates: 1+2 2/12/2019, 3+4 3/5/2019, 5+6 3/26/2019
+	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-1-2-dvd/34451312.p?skuId=34451312",, Max
+	Run, "https://www.target.com/p/dragons-race-to-the-edge-season-1-2-dvd/-/A-54323862",, Max
+	Run, "https://www.amazon.com/Dragons-Race-Seasons-Jay-Baruchel/dp/6317635579/ref=sr_1_3?ie=UTF8&qid=1550496450&sr=8-3&keywords=dragons+race+to+edge+season",, Max
+	Run, "https://www.walmart.com/ip/Dragons-Race-to-the-Edge-Seasons-1-2-DVD/533584634",, Max
+
+	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-3-4-dvd/34475213.p?skuId=34475213",, Max
+	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-3-4-dvd/-/A-54396281",, Max
+	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MPK2XSV/ref=sr_1_1?ie=UTF8&qid=1550496450&sr=8-1&keywords=dragons+race+to+edge+season",, Max
+	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-3-And-4-DVD/822275189",, Max
+
+	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-5-6-dvd/34475204.p?skuId=34475204",, Max
+	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-5-dvd/-/A-54419845",, Max
+	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MS59ZGR/ref=sr_1_2?ie=UTF8&qid=1550496450&sr=8-2&keywords=dragons+race+to+edge+season",, Max
+	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-5-And-6-DVD/877831331",, Max
+	
+	; Private Eyes (Jason Priestley)
+	;Run, "",, Max
+	
+	; Dr Seuss's The Grinch (Illumination)
+	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
+	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
+	Run, "https://www.bestbuy.com/site/illumination-presents-dr-seuss-the-grinch-dvd-2018/6310541.p?skuId=6310541",, Max
+	
+	; Pirates of Caribbean
+	;   2003- Curse of the Black Pearl
+	;   2006- Dead Man's Chest
+	;   2007- At World's End
+	;   2011- On Stranger Tides
+	;   2017- Dead Men Tell No Tales
+	; ~$45 on amazon for each separately
+	Run, "https://www.ebay.com/itm/Pirates-of-the-Caribbean-5-Movie-Collection-DVD-9-Disc-Dead-Men-Tell-No-Tales/273704386159?hash=item3fba0d7e6f:g:b40AAOSwJ5dcZ4C6",, Max
+
+	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
+	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
+	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
 	Return
 
 	
@@ -191,6 +232,16 @@ OnWindowsUnlock(wParam, lParam)
 ;   /xxxxx        When in Slack, replace "/lunch", "/wfh", "/mtg" with the equivalent Slack command to change my status
 ;---------------------------------------------------------------------------------------------------------------------
 #k::
+  OpenSlack()
+  Return
+
++#k::
+  OpenSlack()
+	SendInput ^k
+  Return
+
+OpenSlack()
+{
   If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
   {
     Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
@@ -199,18 +250,8 @@ OnWindowsUnlock(wParam, lParam)
  	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
 	WinMaximize, A
   Return
+}
 
-+#k::
-  If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
-  {
-    Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
-	  WinWaitActive, Slack,, 2
-  }
-  WinActivate, ahk_group SlackStatusUpdate_WindowTitles
-	WinMaximize, A
-	SendInput ^k
-  Return
-	
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
