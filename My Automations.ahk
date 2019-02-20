@@ -80,7 +80,7 @@
 ;---------------------------------------------------------------------------------------------------------------------
 #NoEnv
 #Persistent
-
+#WinActivateForce
 
 
 ;---------------------------------------------------------------------------------------------------------------------
@@ -178,6 +178,12 @@ OnWindowsUnlock(wParam, lParam)
 ; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
 ;---------------------------------------------------------------------------------------------------------------------
 #NumpadSub::
+	Run, "https://www.amazon.com/Pirates-Caribbean-Stranger-Johnny-Depp/dp/B005COPWZW/ref=sr_1_1?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-1&keywords=pirates+caribbean+dvd",, Max
+	Run, "https://www.amazon.com/Pirates-Caribbean-At-Worlds-End/dp/B000U7WV1Y/ref=sr_1_2?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-2&keywords=pirates+caribbean+dvd",, Max
+	Run, "https://www.amazon.com/Pirates-Caribbean-Curse-Two-Disc-Collectors/dp/B00005JM5E/ref=sr_1_3?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-3&keywords=pirates+caribbean+dvd",, Max
+	Run, "https://www.amazon.com/Pirates-Caribbean-Dead-Mans-Chest/dp/B000I0RQVI/ref=sr_1_4?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-4&keywords=pirates+caribbean+dvd",, Max
+	Return
+
   ; Chuck
 	Run, "https://www.amazon.com/Chuck-Complete-Various/dp/B009GYTP0W",, Max
 	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
@@ -215,22 +221,33 @@ OnWindowsUnlock(wParam, lParam)
 	;   2017- Dead Men Tell No Tales
 	; ~$45 on amazon for each separately
 	Run, "https://www.ebay.com/itm/Pirates-of-the-Caribbean-5-Movie-Collection-DVD-9-Disc-Dead-Men-Tell-No-Tales/273704386159?hash=item3fba0d7e6f:g:b40AAOSwJ5dcZ4C6",, Max
-
 	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
 	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
 	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
+	
+	; First 4 Pirates movies as used DVDs from same store for < $7 + > $16 in shipping :-(
+	Run, "https://www.amazon.com/Pirates-Caribbean-Stranger-Johnny-Depp/dp/B005COPWZW/ref=sr_1_1?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-1&keywords=pirates+caribbean+dvd",, Max
+	Run, "https://www.amazon.com/Pirates-Caribbean-At-Worlds-End/dp/B000U7WV1Y/ref=sr_1_2?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-2&keywords=pirates+caribbean+dvd",, Max
+	Run, "https://www.amazon.com/Pirates-Caribbean-Curse-Two-Disc-Collectors/dp/B00005JM5E/ref=sr_1_3?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-3&keywords=pirates+caribbean+dvd",, Max
+	Run, "https://www.amazon.com/Pirates-Caribbean-Dead-Mans-Chest/dp/B000I0RQVI/ref=sr_1_4?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-4&keywords=pirates+caribbean+dvd",, Max
 	Return
 
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Slack
-;   Win+k         Open Slack
-;   Win+Shift+k   Open Slack and go to the "Jump to" window
+;   Ctrl+mousewheel   Zoom in and out
+;   Win+k             Open Slack
+;   Win+Shift+k       Open Slack and go to the "Jump to" window
 ;
 ; Functionality in Slack-Status-Update.ahk
-;   /xxxxx        When in Slack, replace "/lunch", "/wfh", "/mtg" with the equivalent Slack command to change my status
+;   /xxxxx            When in Slack, replace "/lunch", "/wfh", "/mtg" with the equivalent Slack command to change my status
 ;---------------------------------------------------------------------------------------------------------------------
+#IfWinActive ahk_group SlackStatusUpdate_WindowTitles
+  ^WheelUp::   SendInput ^{+}
+  ^WheelDown:: SendInput ^{-}
+#IfWinActive
+
 #k::
   OpenSlack()
   Return
@@ -265,8 +282,8 @@ OpenSlack()
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Extra mouse buttons
-;   - XButton1 minimizes the current window
-;   - XButton2, depending on the active window, closes a WINDOW, or minimizes or closes the active application.
+;   - XButton1 (front button) minimizes the current window
+;   - XButton2 (rear button) depending on the active window, closes a WINDOW, or minimizes or closes the active APPLICATION.
 ;
 ; It is based on the name of app/process, NOT the window title, or else it would minimize a browser with a tab 
 ; whose title is "How to Use Slack". Also, Microsoft Edge browser is more complex than a single process, so detecting
@@ -596,9 +613,18 @@ printscreen::
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+m           Windows Media Player
+; Win+m           Music - Google Play Music Player or Windows Media Player
 ;---------------------------------------------------------------------------------------------------------------------
 #m::
+  ; If Google Play Music Player is running, activate that
+  If WinExist("ahk_exe Google Play Music Desktop Player.exe")
+	{
+	  ; This process has multiple windows, we want the one with class Chrome_WidgetWin_1
+	  WinActivate ahk_class Chrome_WidgetWin_1 ahk_exe i)google play music desktop player.exe
+		Return
+	}
+	
+	; Else use Windows Media Player
 	If Not WinExist("Windows Media Player")
 	{
 	  Run "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe"
