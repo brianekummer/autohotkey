@@ -96,8 +96,12 @@ EnvGet, WindowsDnsDomain, USERDNSDOMAIN
 UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
 ; These come from my own Windows environment variables; see "My Automations Config.bat" for details
-EnvGet, BitBucketUrl, AHK_URL_BITBUCKET
 EnvGet, JiraUrl, AHK_URL_JIRA
+EnvGet, JiraMyProjectKeys, AHK_MY_PROJECT_KEYS_JIRA
+EnvGet, JiraDefaultProjectKey, AHK_DEFAULT_PROJECT_KEY_JIRA
+EnvGet, JiraDefaultRapidKey, AHK_DEFAULT_RAPID_KEY_JIRA
+EnvGet, JiraDefaultSprint, AHK_DEFAULT_SPRINT_JIRA
+EnvGet, BitBucketUrl, AHK_URL_BITBUCKET
 EnvGet, TimesheetUrl, AHK_URL_TIMESHEET
 EnvGet, WikiUrl, AHK_URL_WIKI
 EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
@@ -175,15 +179,22 @@ OnWindowsUnlock(wParam, lParam)
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Temporary stuff goes here. Uses Win+(dash on numeric keypad) as hotkey.
+; Temporary/experimental stuff goes here. 
 ;---------------------------------------------------------------------------------------------------------------------
-#NumpadSub::
-	Run, "https://www.amazon.com/Pirates-Caribbean-Stranger-Johnny-Depp/dp/B005COPWZW/ref=sr_1_1?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-1&keywords=pirates+caribbean+dvd",, Max
-	Run, "https://www.amazon.com/Pirates-Caribbean-At-Worlds-End/dp/B000U7WV1Y/ref=sr_1_2?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-2&keywords=pirates+caribbean+dvd",, Max
-	Run, "https://www.amazon.com/Pirates-Caribbean-Curse-Two-Disc-Collectors/dp/B00005JM5E/ref=sr_1_3?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-3&keywords=pirates+caribbean+dvd",, Max
-	Run, "https://www.amazon.com/Pirates-Caribbean-Dead-Mans-Chest/dp/B000I0RQVI/ref=sr_1_4?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-4&keywords=pirates+caribbean+dvd",, Max
-	Return
+; Ctrl+Shift+[WheelUp|WheelDown]  In Chrome, scroll through open tabs
+; Ctrl+[WheelLeft|WheelRight]
+#IfWinActive ahk_exe chrome.exe
+  ; This is faster
+  ^+WheelUp::   SendInput ^{PgUp}
+  ^+WheelDown:: SendInput ^{PgDn}
+	
+	; This is more deliberate
+  ^WheelLeft::   SendInput ^{PgUp}
+  ^WheelRight:: SendInput ^{PgDn}
+#IfWinActive
 
+; Win+(dash on numeric keypad)    Price check DVDs
+#NumpadSub::   
   ; Chuck
 	Run, "https://www.amazon.com/Chuck-Complete-Various/dp/B009GYTP0W",, Max
 	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
@@ -219,20 +230,18 @@ OnWindowsUnlock(wParam, lParam)
 	;   2007- At World's End
 	;   2011- On Stranger Tides
 	;   2017- Dead Men Tell No Tales
-	; ~$45 on amazon for each separately
+	; ~$38 on amazon for each separately
+	; If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
 	Run, "https://www.ebay.com/itm/Pirates-of-the-Caribbean-5-Movie-Collection-DVD-9-Disc-Dead-Men-Tell-No-Tales/273704386159?hash=item3fba0d7e6f:g:b40AAOSwJ5dcZ4C6",, Max
 	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
 	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
 	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
-	
-	; First 4 Pirates movies as used DVDs from same store for < $7 + > $16 in shipping :-(
-	Run, "https://www.amazon.com/Pirates-Caribbean-Stranger-Johnny-Depp/dp/B005COPWZW/ref=sr_1_1?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-1&keywords=pirates+caribbean+dvd",, Max
-	Run, "https://www.amazon.com/Pirates-Caribbean-At-Worlds-End/dp/B000U7WV1Y/ref=sr_1_2?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-2&keywords=pirates+caribbean+dvd",, Max
-	Run, "https://www.amazon.com/Pirates-Caribbean-Curse-Two-Disc-Collectors/dp/B00005JM5E/ref=sr_1_3?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-3&keywords=pirates+caribbean+dvd",, Max
-	Run, "https://www.amazon.com/Pirates-Caribbean-Dead-Mans-Chest/dp/B000I0RQVI/ref=sr_1_4?m=A3KHMEC8P675KP&s=merchant-items&ie=UTF8&qid=1550692697&sr=1-4&keywords=pirates+caribbean+dvd",, Max
 	Return
 
-	
+
+
+
+
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Slack
@@ -439,7 +448,7 @@ XButton2::
 #IfWinActive
 
 #t::
-  ; Determine if Typora is running in this virtual desktop, while ignoring the instance of my to do list
+  ; Determine if Typora is running in this virtual desktop
 	typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop()
 	If (typoraIdOnThisDesktop == 0)
 	{
@@ -500,7 +509,7 @@ GetTyporaOnThisVirtualDesktop()
 ^#v::                            ; Text–only paste from ClipBoard
   Clip0 = %ClipBoardAll%
   ClipBoard = %ClipBoard%       ; Convert to text
-  SendInput ^v                       ; For best compatibility: SendPlay
+  SendInput ^v                  ; For best compatibility: SendPlay
   Sleep 50                      ; Don't change clipboard while it is pasted! (Sleep > 0)
   ClipBoard = %Clip0%           ; Restore original ClipBoard
   VarSetCapacity(Clip0, 0)      ; Free memory
@@ -616,62 +625,78 @@ printscreen::
 ; Win+m           Music - Google Play Music Player or Windows Media Player
 ;---------------------------------------------------------------------------------------------------------------------
 #m::
-  ; If Google Play Music Player is running, activate that
+  ; If Google Play Music Player is running, switch to it
   If WinExist("ahk_exe Google Play Music Desktop Player.exe")
 	{
-	  ; This process has multiple windows, we want the one with class Chrome_WidgetWin_1
+	  ; This app has multiple windows, we want the one with class Chrome_WidgetWin_1
 	  WinActivate ahk_class Chrome_WidgetWin_1 ahk_exe i)google play music desktop player.exe
-		Return
 	}
-	
-	; Else use Windows Media Player
-	If Not WinExist("Windows Media Player")
+	Else 
 	{
-	  Run "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe"
+		; Otherwise use Windows Media Player
+		If Not WinExist("Windows Media Player")
+		{
+			Run "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe"
+		}
+		WinActivate, ahk_class WMPlayerApp
 	}
-  WinActivate, ahk_class WMPlayerApp
   Return  
 
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Shift+j     JIRA- Open JIRA
-;   - If the highlighted text looks like a JIRA story number (e.g. TRAN|IQTC|OCS|DA-x[xxx]), then open that story
+;   - If the highlighted text looks like a JIRA story number (e.g. PROJECT-1234), then open that story
 ;   - If the Git Bash window has text that looks like a JIRA story number, then open that story
 ;---------------------------------------------------------------------------------------------------------------------
 +#j::
-  regexString := "i)\b(tran|iqtc|ocs|da)([-_ ]|( - ))?\d{1,4}\b"
-  RegExMatch(GetSelectedTextUsingClipboard(), regexString, storyId)
+  regexStoryNumberWithoutProject = \b\d{1,5}\b
+  regexStoryNumberWithProject = i)\b(%JiraMyProjectKeys%)([-_ ]|( - ))?\d{1,5}\b
+	pathBrowse = /browse/
+	pathDefaultBoard = /secure/RapidBoard.jspa?rapidView=%JiraDefaultRapidKey%&projectKey=%JiraDefaultProjectKey%&sprint=%JiraDefaultSprint%
+	
+  selectedText := GetSelectedTextUsingClipboard()
 
-  If StrLen(storyId) = 0
+	; Search the selected text for something like PROJECT-1234
+  RegExMatch(selectedText, regexStoryNumberWithProject, storyNumber)
+
+  If StrLen(storyNumber) = 0
+  { 
+	  ; Search for just a number, and if found, add the default project name
+    RegExMatch(selectedText, regexStoryNumberWithoutProject, storyNumber)
+		If StrLen(storyNumber) > 0
+		  storyNumber = %JiraDefaultProjectKey%-%storyNumber%
+  }  
+
+  If StrLen(storyNumber) = 0
   { 
 	  ; Search for a ConEmu terminal with a JIRA story number
 		WinGetTitle, git_window_title, ahk_exe i)\\conemu64\.exe$ ahk_class VirtualConsoleClass
-		RegExMatch(git_window_title, regexString, storyId)
+		RegExMatch(git_window_title, regexStoryNumberWithProject, storyNumber)
 	}
 
-  If StrLen(storyId) = 0
+  If StrLen(storyNumber) = 0
   { 
 	  ; Search for a Mintty terminal (comes with Git) with a JIRA story number
 		WinGetTitle, git_window_title, ahk_exe i)\\mintty\.exe$ ahk_class mintty
-		RegExMatch(git_window_title, regexString, storyId)
+		RegExMatch(git_window_title, regexStoryNumberWithProject, storyNumber)
   }  
-		
-	If StrLen(storyId) = 0
+
+	If StrLen(storyNumber) = 0
   {
-	  ; Could not find any JIRA story number
-		Run, %JiraUrl%/secure/RapidBoard.jspa?rapidView=235&projectKey=IQTC&selectedIssue=IQTC-2631&sprint=1138
+	  ; Could not find any JIRA story number, go to a default JIRA board
+		Run, %JiraUrl%%pathDefaultBoard%
   }
   Else
   {
 	  ; Handle if there is an underscore or space instead of a hyphen, or no hyphen
-	  storyId := RegExReplace(storyId, "[\s_]", "")
-		If Not RegExMatch(storyId, "-")
+	  storyNumber := RegExReplace(storyNumber, "[\s_]", "")
+		If Not RegExMatch(storyNumber, "-")
 		{
-		  storyId := RegExReplace(storyId, "(\d+)", "-$1")
+		  storyNumber := RegExReplace(storyNumber, "(\d+)", "-$1")
 		}
 		
-    Run, %JiraUrl%/browse/%storyId%
+    Run, %JiraUrl%%pathBrowse%%storyNumber%
   }
   Return
 	
@@ -827,7 +852,7 @@ ActivateOrStartMicrosoftOutlook()
 ::iqtc::IQTC
 ::ocs::OCS
 ::wfh::WFH
-::pto::PTO
+;::pto::PTO
 ::optc::OPTC
 
 ::i'll::I'll
