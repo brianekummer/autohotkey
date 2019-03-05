@@ -93,6 +93,7 @@ EnvGet, WindowsProgramFilesX86Folder, PROGRAMFILES(X86)
 EnvGet, WindowsProgramFilesFolder, PROGRAMFILES
 EnvGet, WindowsUserName, USERNAME
 EnvGet, WindowsDnsDomain, USERDNSDOMAIN
+EnvGet, WindowsUserProfile, USERPROFILE
 UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
 ; These come from my own Windows environment variables; see "My Automations Config.bat" for details
@@ -107,8 +108,11 @@ EnvGet, WikiUrl, AHK_URL_WIKI
 EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
 EnvGet, CitrixUrl, AHK_URL_CITRIX
 EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
-	
-	
+
+; Commonly used folders	
+MyDocumentsFolder = %WindowsUserProfile%\Documents\
+MyPersonalFolder = %WindowsUserProfile%\Personal\
+
 
 
 ;---------------------------------------------------------------------------------------------------------------------
@@ -131,6 +135,9 @@ EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
   ; REQUIRES some Windows environment variables - see "Slack Status Update.ahk" for details
   SlackStatusUpdate_Initialize()
   SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
+
+  ; Pidgin keeps crashing on me. So every 10 minutes, check if it needs restarted.
+	SetTimer, CheckIfPidginIsRunning, 600000
 	
   Return
 
@@ -172,6 +179,18 @@ OnWindowsUnlock(wParam, lParam)
     SlackStatusUpdate_SetSlackStatusBasedOnNetwork()  ; If appropriate, update my Slack status
 	}
 }
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Ensure that Pidgin.exe is still running
+;---------------------------------------------------------------------------------------------------------------------
+CheckIfPidginIsRunning:
+  If Not WinExist("Buddy List")
+	{
+	  Run, "%MyPersonalFolder%\PortableApp-s\PidginPortable\PidginPortable.exe",, Min
+	}
+  Return	
 
 
 
@@ -232,12 +251,25 @@ OnWindowsUnlock(wParam, lParam)
 	;   2017- Dead Men Tell No Tales
 	; ~$38 on amazon for each separately
 	; If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
-	Run, "https://www.ebay.com/itm/Pirates-of-the-Caribbean-5-Movie-Collection-DVD-9-Disc-Dead-Men-Tell-No-Tales/273704386159?hash=item3fba0d7e6f:g:b40AAOSwJ5dcZ4C6",, Max
 	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
 	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
 	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
+	
+	; Sabrina the Teenage Witch - 1996 DVD - movie that started the series
+	Run, "https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias`%3Daps&field-keywords=sabrina+the+teenage+witch+dvd+1996+-season"
+	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=sabrina+the+teenage+witch+dvd+-season&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=sabrina+the+teenage+witch+dvd+1996+-season&LH_TitleDesc=0"
+	
+	; Sweet Home Alabama - Looks like is usually $4.99
+	Run, "https://www.amazon.com/s?k=sweet+home+alabama+dvd"
+	Run, "https://www.target.com/s?searchTerm=sweet+home+alabama+dvd"
+	Run, "https://www.walmart.com/search/?query=sweet+ome+labama+dvd"
+	Run, "https://www.bestbuy.com/site/searchpage.jsp?st=sweet+home+alabama+dvd&_dyncharset=UTF-8&id=pcat17071&type=page&sc=Global&cp=1&nrp=&sp=&qp=&list=n&af=true&iht=y&usc=All+Categories&ks=960&keys=keys"
+	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313.TR2.TRC1.A0.H0.Xsweet+home+alabama+dvd.TRS0&_nkw=sweet+home+alabama+dvd&_sacat=0"
 	Return
 
+	
+	
+	
 
 
 
@@ -454,9 +486,9 @@ XButton2::
 	{
     n := _GetCurrentDesktopNumber()
 	  If (n == 1)         ; Virtual desktop "Main"
-    	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Documents\Always Open"
+    	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "%WindowsUserProfile%\Documents\Always Open"
 		Else If (n == 2)    ; Virtual desktop "Personal"
-    	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "C:\Users\Brian-Kummer\Personal\Notes"
+    	Run "%WindowsProgramFilesFolder%\Typora\Typora.exe" "%MyPersonalFolder%\Notes"
     Sleep, 1000
 		
 		typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop()
@@ -494,7 +526,7 @@ GetTyporaOnThisVirtualDesktop()
   ; Windows store apps are more complex than simple exe's
   If Not WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
 	{
-	   Run, "C:\Users\Brian-Kummer\Personal\WindowsStoreAppLinks\gTasks Pro.lnk"
+	   Run, "%MyPersonalFolder%\WindowsStoreAppLinks\gTasks Pro.lnk"
   	 WinWaitActive, gTasks Pro,,2
   }
 	WinActivate, gTasks Pro
@@ -506,7 +538,7 @@ GetTyporaOnThisVirtualDesktop()
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Ctrl+v      Paste clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
 ;---------------------------------------------------------------------------------------------------------------------
-^#v::                            ; Text–only paste from ClipBoard
+^#v::
   Clip0 = %ClipBoardAll%
   ClipBoard = %ClipBoard%       ; Convert to text
   SendInput ^v                  ; For best compatibility: SendPlay
