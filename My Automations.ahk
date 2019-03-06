@@ -41,6 +41,7 @@
 ;                               or closes the application (Alt-F4)
 ;
 ;   Modifying application behavior
+;     Chrome                    Ctrl+Shift+mousewheel to scroll through all open tabs
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
 ;     Slack                     Typing "/lunch" gets changed to "/status :hamburger: At lunch"
@@ -89,10 +90,12 @@
 
 ; These come from Windows-defined environment variables
 EnvGet, WindowsLocalAppDataFolder, LOCALAPPDATA
+Global WindowsProgramFilesX86Folder
 EnvGet, WindowsProgramFilesX86Folder, PROGRAMFILES(X86)
 EnvGet, WindowsProgramFilesFolder, PROGRAMFILES
 EnvGet, WindowsUserName, USERNAME
 EnvGet, WindowsDnsDomain, USERDNSDOMAIN
+Global WindowsUserProfile
 EnvGet, WindowsUserProfile, USERPROFILE
 UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
@@ -110,6 +113,8 @@ EnvGet, CitrixUrl, AHK_URL_CITRIX
 EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
 
 ; Commonly used folders	
+Global MyDocumentsFolder
+Global MyPersonalFolder
 MyDocumentsFolder = %WindowsUserProfile%\Documents\
 MyPersonalFolder = %WindowsUserProfile%\Personal\
 
@@ -136,9 +141,12 @@ MyPersonalFolder = %WindowsUserProfile%\Personal\
   SlackStatusUpdate_Initialize()
   SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 
-  ; Pidgin keeps crashing on me. So every 10 minutes, check if it needs restarted.
+  ; Since Pidgin occasionally crashing on me, every 10 minutes, we'll check if it needs restarted
 	SetTimer, CheckIfPidginIsRunning, 600000
 	
+	; Build the popup menu for starting a music app
+  BuildMediaPlayerMenu()
+
   Return
 
 	
@@ -197,21 +205,10 @@ CheckIfPidginIsRunning:
 
 	
 
+
 ;---------------------------------------------------------------------------------------------------------------------
 ; Temporary/experimental stuff goes here. 
 ;---------------------------------------------------------------------------------------------------------------------
-; Ctrl+Shift+[WheelUp|WheelDown]  In Chrome, scroll through open tabs
-; Ctrl+[WheelLeft|WheelRight]
-#IfWinActive ahk_exe chrome.exe
-  ; This is faster
-  ^+WheelUp::   SendInput ^{PgUp}
-  ^+WheelDown:: SendInput ^{PgDn}
-	
-	; This is more deliberate
-  ^WheelLeft::   SendInput ^{PgUp}
-  ^WheelRight:: SendInput ^{PgDn}
-#IfWinActive
-
 ; Win+(dash on numeric keypad)    Price check DVDs
 #NumpadSub::   
   ; Chuck
@@ -271,10 +268,17 @@ CheckIfPidginIsRunning:
 	
 	
 
+;---------------------------------------------------------------------------------------------------------------------
+; Chrome
+; Ctrl+Shift+[WheelUp|WheelDown]     Scroll through all open tabs
+;---------------------------------------------------------------------------------------------------------------------
+#IfWinActive ahk_exe chrome.exe
+  ^+WheelUp::   SendInput ^{PgUp}
+  ^+WheelDown:: SendInput ^{PgDn}
+#IfWinActive
 
 
 
-	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Slack
 ;   Ctrl+mousewheel   Zoom in and out
@@ -338,9 +342,12 @@ XButton2::
   WinGet, processName, ProcessName, A
   SplitPath, processName,,,, processNameNoExtension
 
-	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") or WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe")
+	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") 
+	  or WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
+	  or WinActive("iHeartRadio ahk_exe ApplicationFrameHost.exe")
 		WinMinimize, A     ; Do not want to close these apps
-  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv") or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
+  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv") 
+	  or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
   Else
     SendInput !{f4}    ; Close the APP
@@ -577,28 +584,6 @@ GetTyporaOnThisVirtualDesktop()
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; K-Love radio:
-;   Win+k         Use Windows Media Player to open a playlist to play K-Love. If it's already open, open a browser
-;                 to K-Love's web site so I can see what song is playing. 
-;                   Unused right now: http://www.klove.com/listen/player.aspx
-;   Media Play Pause: When listening to K-LOVE, pause is disabled, so map the pause button to press media stop. This 
-;                     requires using the Windows Media Player plug-in Windows Media Player Plus!
-;---------------------------------------------------------------------------------------------------------------------
-;#k::
-;  If WinExist("Encouraging K-LOVE")
-;    Run http://www.klove.com
-;	Else
-;		Run "C:\Program Files (x86)\Windows Media Player\wmplayer.exe" /task MediaLibrary /prefetch:1 /play "%MyMemoryCardDrive%\Music\Playlists\K-Love Radio.wpl"
-;  Return
-;#IfWinExist Encouraging K-LOVE
-;Media_Play_Pause::
-;  Send {Media_Stop}
-;	Return
-;#IfWinExist
-
-
-
-;---------------------------------------------------------------------------------------------------------------------
 ; Win+Shift+a     ADP - Go to ADP website to enter my timesheet
 ;---------------------------------------------------------------------------------------------------------------------
 +#a::
@@ -654,26 +639,60 @@ printscreen::
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+m           Music - Google Play Music Player or Windows Media Player
+; Win+m           Music - Start or activate one of the music apps I use
+;                   - Google Play Music Player
+;                   - iHeartRadio
+;                   - Windows Media Player
 ;---------------------------------------------------------------------------------------------------------------------
 #m::
-  ; If Google Play Music Player is running, switch to it
   If WinExist("ahk_exe Google Play Music Desktop Player.exe")
 	{
-	  ; This app has multiple windows, we want the one with class Chrome_WidgetWin_1
 	  WinActivate ahk_class Chrome_WidgetWin_1 ahk_exe i)google play music desktop player.exe
+	}
+  Else If WinExist("iHeartRadio ahk_exe ApplicationFrameHost.exe")
+	{
+	  WinActivate iHeartRadio ahk_exe ApplicationFrameHost.exe
+	}
+  Else If WinExist("ahk_class WMPlayerApp")
+	{
+		WinActivate, ahk_class WMPlayerApp
 	}
 	Else 
 	{
-		; Otherwise use Windows Media Player
-		If Not WinExist("Windows Media Player")
-		{
-			Run "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe"
-		}
-		WinActivate, ahk_class WMPlayerApp
+		Menu, MediaPlayerMenu, Show
 	}
   Return  
 
+BuildMediaPlayerMenu()
+{
+	Menu, MediaPlayerMenu, Add, Windows Media Player, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Icon, Windows Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1
+	
+	Menu, MediaPlayerMenu, Add, Google Play Music Desktop Player, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Icon, Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1
+
+	; Cannot figure out how to extract icon from Windows Store app
+	Menu, MediaPlayerMenu, Add, iHeartRadio, MediaPlayerMenuHandler
+	;Menu, MediaPlayerMenu, Icon, iHeartRadio, @{ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png}, 1
+	Menu, MediaPlayerMenu, Icon, iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1
+}
+
+MediaPlayerMenuHandler:
+  chosenMenuItem=%A_ThisMenuItem%
+	If chosenMenuItem = Windows Media Player
+	{
+	  Run, "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe"
+	}
+	Else If chosenMenuItem = Google Play Music Desktop Player
+	{
+	  Run, "%WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe" --processStart "Google Play Music Desktop Player.exe"
+	}
+	Else If chosenMenuItem = iHeartRadio 
+	{
+	  Run, "%MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.lnk"
+	}
+	Return
+		
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
