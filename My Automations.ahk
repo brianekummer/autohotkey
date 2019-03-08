@@ -23,7 +23,15 @@
 ;
 ; Future Ideas
 ; ------------
-;   - Text to speech: ComObjCreate("SAPI.SpVoice").Speak("Speak this phrase")
+;   - Any use for text-to-speech? ComObjCreate("SAPI.SpVoice").Speak("Speak this phrase")
+;   - Win+Space useful for something?
+;   - Popup menus are useful- can I use them elsewhere?
+;       - ADP for entering timesheet?
+;   - Magnifier useful? http://www.computoredge.com/AutoHotkey/Downloads/Magnifier.ahk
+;   - How know to not restart Pidgin when I'm presenting?
+;      - In Windows, there is a "Presentation Settings" dialog-- look into that!!!!
+;          - it stops system notifications... does that include outlook, pidgin, slack, etc?
+;
 ;
 ;
 ; Summary (1/23/2019)
@@ -44,7 +52,8 @@
 ;     Chrome                    Ctrl+Shift+mousewheel to scroll through all open tabs
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
-;     Slack                     Typing "/lunch" gets changed to "/status :hamburger: At lunch"
+;     Slack                     Ctrl+mousewheel to zoom
+;                               Typing "/lunch" gets changed to "/status :hamburger: At lunch"
 ;                               Typing "/mtg" gets changed to "/status :spiral_calendar_pad: In a meeting"
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
@@ -54,13 +63,13 @@
 ;     Win+i                     outlook Inbox
 ;     Win+k                     slacK
 ;       Win+Shift+k               slack "Jump to" dialog
-;     Win+m                     windows Media player
+;     Win+m                     Music (Windows Media Player, Google Music Desktop Player, iHeartRadio)
 ;     Win+n                     Notepad++
 ;       Win+Shift+n               open Notepad++, and paste the selected text into the newly opened window
 ;     Win+t                     Typora, with each virtual desktop having a different folder of files
 ;     Win+z                     noiZe- open SimplyNoise.com
 ;
-;     Win+Ctrl+v:               Paste the clipboard as plain text
+;     Win+Ctrl+v                Paste the clipboard as plain text
 ;     Win+Shift+c               Command prompt (as admin)
 ;     Win+Shift+a               ADP
 ;     Win+Shift+b               BitBucket
@@ -87,15 +96,20 @@
 ;---------------------------------------------------------------------------------------------------------------------
 ; Global variables - configured from Windows environment variables
 ;---------------------------------------------------------------------------------------------------------------------
+Global WindowsLocalAppDataFolder
+Global WindowsProgramFilesX86Folder
+Global WindowsProgramFilesFolder
+Global WindowsUserName
+Global WindowsDnsDomain
+Global WindowsUserProfile
+Global UserEmailAddress
 
 ; These come from Windows-defined environment variables
 EnvGet, WindowsLocalAppDataFolder, LOCALAPPDATA
-Global WindowsProgramFilesX86Folder
 EnvGet, WindowsProgramFilesX86Folder, PROGRAMFILES(X86)
 EnvGet, WindowsProgramFilesFolder, PROGRAMFILES
 EnvGet, WindowsUserName, USERNAME
 EnvGet, WindowsDnsDomain, USERDNSDOMAIN
-Global WindowsUserProfile
 EnvGet, WindowsUserProfile, USERPROFILE
 UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
@@ -129,19 +143,19 @@ MyPersonalFolder = %WindowsUserProfile%\Personal\
   RunAsAdmin()
   StartInterceptingWindowsUnlock()
 
-  ; Configure wallpapers for Windows virtual desktops - 
-	; REQUIRES Windows environment variables AHK_VIRTUAL_DESKTOP_WALLPAPER_x such as:
+  ; Configure wallpapers for Windows virtual desktops 
+	; *REQUIRES* Windows environment variables AHK_VIRTUAL_DESKTOP_WALLPAPER_x such as:
 	;   AHK_VIRTUAL_DESKTOP_WALLPAPER_1 = Main    |C:\Pictures\wallpaper1.jpg
   ;   AHK_VIRTUAL_DESKTOP_WALLPAPER_2 = Personal|C:\Pictures\wallpaper2.jpg
 	; See "Virtual Desktop Accessor.ahk" for details
 	VirtualDesktopAccessor_Initialize()
 
 	; Configure Slack status updates based on the network
-  ; REQUIRES some Windows environment variables - see "Slack Status Update.ahk" for details
+  ; *REQUIRES* several Windows environment variables - see "Slack Status Update.ahk" for details
   SlackStatusUpdate_Initialize()
   SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 
-  ; Since Pidgin occasionally crashing on me, every 10 minutes, we'll check if it needs restarted
+  ; Since Pidgin occasionally crashing on me, every 10 minutes we'll check if it needs restarted
 	SetTimer, CheckIfPidginIsRunning, 600000
 	
 	; Build the popup menu for starting a music app
@@ -194,9 +208,13 @@ OnWindowsUnlock(wParam, lParam)
 ; Ensure that Pidgin.exe is still running
 ;---------------------------------------------------------------------------------------------------------------------
 CheckIfPidginIsRunning:
-  If Not WinExist("Buddy List")
+  If WindowsIsLocked()
 	{
-	  Run, "%MyPersonalFolder%\PortableApp-s\PidginPortable\PidginPortable.exe",, Min
+	  ; Windows is not locked
+		If Not WinExist("Buddy List")
+		{
+			Run, "%MyPersonalFolder%\PortableApp-s\PidginPortable\PidginPortable.exe",, Min
+		}
 	}
   Return	
 
@@ -212,11 +230,13 @@ CheckIfPidginIsRunning:
 ; Win+(dash on numeric keypad)    Price check DVDs
 #NumpadSub::   
   ; Chuck
+	;   - At The Exchange in Pgh, Seasons 1,2,3,5=$37, Adding S4 IS ~ same price as buying new for $50
 	Run, "https://www.amazon.com/Chuck-Complete-Various/dp/B009GYTP0W",, Max
 	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
 	Run, "https://www.walmart.com/ip/Chuck-The-Complete-Series-Collector-Set-DVD/21907403",, Max
 
-	; Dragons - Race to the Edge - Release dates: 1+2 2/12/2019, 3+4 3/5/2019, 5+6 3/26/2019
+	; Dragons - Race to the Edge - Release dates: S1+S2 2/12/2019, S3+S4 3/5/2019, S5+S6 3/26/2019
+	;   - Target seems cheapest for most of these
 	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-1-2-dvd/34451312.p?skuId=34451312",, Max
 	Run, "https://www.target.com/p/dragons-race-to-the-edge-season-1-2-dvd/-/A-54323862",, Max
 	Run, "https://www.amazon.com/Dragons-Race-Seasons-Jay-Baruchel/dp/6317635579/ref=sr_1_3?ie=UTF8&qid=1550496450&sr=8-3&keywords=dragons+race+to+edge+season",, Max
@@ -233,21 +253,21 @@ CheckIfPidginIsRunning:
 	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-5-And-6-DVD/877831331",, Max
 	
 	; Private Eyes (Jason Priestley)
-	;Run, "",, Max
 	
 	; Dr Seuss's The Grinch (Illumination)
 	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
 	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
 	Run, "https://www.bestbuy.com/site/illumination-presents-dr-seuss-the-grinch-dvd-2018/6310541.p?skuId=6310541",, Max
 	
-	; Pirates of Caribbean
-	;   2003- Curse of the Black Pearl
-	;   2006- Dead Man's Chest
-	;   2007- At World's End
-	;   2011- On Stranger Tides
-	;   2017- Dead Men Tell No Tales
-	; ~$38 on amazon for each separately
-	; If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
+	; Pirates of Caribbean movies
+	;   - Movies
+	;       2003- Curse of the Black Pearl
+	;       2006- Dead Man's Chest
+	;       2007- At World's End
+	;       2011- On Stranger Tides
+	;       2017- Dead Men Tell No Tales
+	;   - ~$38 on amazon or target for each separately
+	;   - If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
 	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
 	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
 	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
@@ -256,7 +276,8 @@ CheckIfPidginIsRunning:
 	Run, "https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias`%3Daps&field-keywords=sabrina+the+teenage+witch+dvd+1996+-season"
 	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=sabrina+the+teenage+witch+dvd+-season&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=sabrina+the+teenage+witch+dvd+1996+-season&LH_TitleDesc=0"
 	
-	; Sweet Home Alabama - Looks like is usually $4.99
+	; Sweet Home Alabama
+  ; 	- Usually $4.99 at amazon and target
 	Run, "https://www.amazon.com/s?k=sweet+home+alabama+dvd"
 	Run, "https://www.target.com/s?searchTerm=sweet+home+alabama+dvd"
 	Run, "https://www.walmart.com/search/?query=sweet+ome+labama+dvd"
@@ -345,12 +366,18 @@ XButton2::
 	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") 
 	  or WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
 	  or WinActive("iHeartRadio ahk_exe ApplicationFrameHost.exe")
+	{
 		WinMinimize, A     ; Do not want to close these apps
+	}
   Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv") 
 	  or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
+	{
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
+	}
   Else
+	{
     SendInput !{f4}    ; Close the APP
+	}
   Return
 
 	
@@ -530,14 +557,12 @@ GetTyporaOnThisVirtualDesktop()
 ; Win+g           Activate/open gTasks Pro to handle my tasks
 ;---------------------------------------------------------------------------------------------------------------------
 #g::
-  ; Windows store apps are more complex than simple exe's
   If Not WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
 	{
-	   Run, "%MyPersonalFolder%\WindowsStoreAppLinks\gTasks Pro.lnk"
-  	 WinWaitActive, gTasks Pro,,2
+    ; Note that Windows store apps are more complex than simple exe's
+	  Run, "%MyPersonalFolder%\WindowsStoreAppLinks\gTasks Pro.lnk"
   }
 	WinActivate, gTasks Pro
-	;WinMaximize, A
   Return
 
 	
@@ -665,16 +690,21 @@ printscreen::
 
 BuildMediaPlayerMenu()
 {
-	Menu, MediaPlayerMenu, Add, Windows Media Player, MediaPlayerMenuHandler
-	Menu, MediaPlayerMenu, Icon, Windows Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1
-	
-	Menu, MediaPlayerMenu, Add, Google Play Music Desktop Player, MediaPlayerMenuHandler
-	Menu, MediaPlayerMenu, Icon, Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1
+  Global WindowsUserProfile
+	Global MyPersonalFolder
+	Global WindowsProgramFilesX86Folder
 
-	; Cannot figure out how to extract icon from Windows Store app
+	Menu, MediaPlayerMenu, Add, Windows Media Player, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Add, Google Play Music Desktop Player, MediaPlayerMenuHandler
 	Menu, MediaPlayerMenu, Add, iHeartRadio, MediaPlayerMenuHandler
-	;Menu, MediaPlayerMenu, Icon, iHeartRadio, @{ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png}, 1
-	Menu, MediaPlayerMenu, Icon, iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1
+
+	; I could not figure out how to extract icon from a Windows Store app, AND 
+	; it looks like using PNG files for icons is unsupported, so I downloaded an
+	; icon from the internet and use it instead. The iHeartRadio shortcut 
+	; lists this as the icon: ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png
+	Menu, MediaPlayerMenu, Icon, Windows Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1, 32
+	Menu, MediaPlayerMenu, Icon, Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1, 32
+	Menu, MediaPlayerMenu, Icon, iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1, 32
 }
 
 MediaPlayerMenuHandler:
@@ -716,7 +746,9 @@ MediaPlayerMenuHandler:
 	  ; Search for just a number, and if found, add the default project name
     RegExMatch(selectedText, regexStoryNumberWithoutProject, storyNumber)
 		If StrLen(storyNumber) > 0
+		{
 		  storyNumber = %JiraDefaultProjectKey%-%storyNumber%
+		}
   }  
 
   If StrLen(storyNumber) = 0
