@@ -27,7 +27,6 @@
 ;   - Win+Space useful for something?
 ;   - Popup menus are useful- can I use them elsewhere?
 ;       - ADP for entering timesheet?
-;   - Magnifier useful? http://www.computoredge.com/AutoHotkey/Downloads/Magnifier.ahk
 ;   - How know to not restart Pidgin when I'm presenting?
 ;      - In Windows, there is a "Presentation Settings" dialog-- look into that!!!!
 ;          - it stops system notifications... does that include outlook, pidgin, slack, etc?
@@ -58,6 +57,7 @@
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
 ;   Shortcuts
+;     Win+b                     Bluetooth settings
 ;     Win+c                     outlook Calendar
 ;     Win+g                     gTasks Pro
 ;     Win+i                     outlook Inbox
@@ -113,7 +113,8 @@ EnvGet, WindowsDnsDomain, USERDNSDOMAIN
 EnvGet, WindowsUserProfile, USERPROFILE
 UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
-; These come from my own Windows environment variables; see "My Automations Config.bat" for details
+; These come from my own Windows environment variables
+; See "My Automations Config.bat" for details
 EnvGet, JiraUrl, AHK_URL_JIRA
 EnvGet, JiraMyProjectKeys, AHK_MY_PROJECT_KEYS_JIRA
 EnvGet, JiraDefaultProjectKey, AHK_DEFAULT_PROJECT_KEY_JIRA
@@ -125,6 +126,7 @@ EnvGet, WikiUrl, AHK_URL_WIKI
 EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
 EnvGet, CitrixUrl, AHK_URL_CITRIX
 EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
+EnvGet, NoiseMP3, AHK_MP3_NOISE
 
 ; Commonly used folders	
 Global MyDocumentsFolder
@@ -205,7 +207,8 @@ OnWindowsUnlock(wParam, lParam)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Ensure that Pidgin.exe is still running
+; Ensure that Pidgin.exe is still running. Note that this should NOT happen while WIndows is locked, since AHK
+; cannot run a program which the screen is locked.
 ;---------------------------------------------------------------------------------------------------------------------
 CheckIfPidginIsRunning:
   If WindowsIsLocked()
@@ -227,6 +230,16 @@ CheckIfPidginIsRunning:
 ;---------------------------------------------------------------------------------------------------------------------
 ; Temporary/experimental stuff goes here. 
 ;---------------------------------------------------------------------------------------------------------------------
+
+; Win+Ctrl+V      to open VPN app
+^#v::
+  Run, "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Palo Alto Networks\GlobalProtect\GlobalProtect.lnk"
+  WinWait, GlobalProtect,, 10
+	Sleep, 500
+	WinActivate, GlobalProtect
+	Return
+
+
 ; Win+(dash on numeric keypad)    Price check DVDs
 #NumpadSub::   
   ; Chuck
@@ -260,12 +273,13 @@ CheckIfPidginIsRunning:
 	Run, "https://www.bestbuy.com/site/illumination-presents-dr-seuss-the-grinch-dvd-2018/6310541.p?skuId=6310541",, Max
 	
 	; Pirates of Caribbean movies
-	;   - Movies
+	;   - Movies I Bought
+	;       2017- Dead Men Tell No Tales
+	;   - Movies Still to Buy
 	;       2003- Curse of the Black Pearl
 	;       2006- Dead Man's Chest
 	;       2007- At World's End
 	;       2011- On Stranger Tides
-	;       2017- Dead Men Tell No Tales
 	;   - ~$38 on amazon or target for each separately
 	;   - If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
 	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
@@ -276,13 +290,10 @@ CheckIfPidginIsRunning:
 	Run, "https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias`%3Daps&field-keywords=sabrina+the+teenage+witch+dvd+1996+-season"
 	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=sabrina+the+teenage+witch+dvd+-season&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=sabrina+the+teenage+witch+dvd+1996+-season&LH_TitleDesc=0"
 	
-	; Sweet Home Alabama
-  ; 	- Usually $4.99 at amazon and target
-	Run, "https://www.amazon.com/s?k=sweet+home+alabama+dvd"
-	Run, "https://www.target.com/s?searchTerm=sweet+home+alabama+dvd"
-	Run, "https://www.walmart.com/search/?query=sweet+ome+labama+dvd"
-	Run, "https://www.bestbuy.com/site/searchpage.jsp?st=sweet+home+alabama+dvd&_dyncharset=UTF-8&id=pcat17071&type=page&sc=Global&cp=1&nrp=&sp=&qp=&list=n&af=true&iht=y&usc=All+Categories&ks=960&keys=keys"
-	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313.TR2.TRC1.A0.H0.Xsweet+home+alabama+dvd.TRS0&_nkw=sweet+home+alabama+dvd&_sacat=0"
+	; Not sure- Pinky & the Brain, Animaniacs, Tiny Toons
+	Run, "https://www.amazon.com/s?k=dvd+pinky+and+brain&ref=nb_sb_noss_1"
+	Run, "https://www.bestbuy.com/site/searchpage.jsp?st=pinky+and+brain+dvd&_dyncharset=UTF-8&id=pcat17071&type=page&sc=Global&cp=1&nrp=&sp=&qp=&list=n&af=true&iht=y&usc=All+Categories&ks=960&keys=keys"
+	
 	Return
 
 	
@@ -347,6 +358,15 @@ OpenSlack()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
+; Win+B              Open Bluetooth settings dialog
+;---------------------------------------------------------------------------------------------------------------------
+#b::
+  Run, ms-settings:bluetooth	
+  Return
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
 ; Extra mouse buttons
 ;   - XButton1 (front button) minimizes the current window
 ;   - XButton2 (rear button) depending on the active window, closes a WINDOW, or minimizes or closes the active APPLICATION.
@@ -366,6 +386,7 @@ XButton2::
 	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") 
 	  or WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
 	  or WinActive("iHeartRadio ahk_exe ApplicationFrameHost.exe")
+    or WinActive("ahk_exe Google Play Music Desktop Player.exe")
 	{
 		WinMinimize, A     ; Do not want to close these apps
 	}
@@ -409,7 +430,7 @@ XButton2::
 #IfWinActive
 
 #n::
-	Run "%WindowsProgramFilesX86Folder%\Notepad++\notepad++.exe"
+	Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
   Return
 
 +#n::
@@ -436,7 +457,7 @@ XButton2::
 	  If Not WinExist("- Notepad++") 
 		{
 		  ; Notepad++ isn't open, so start it, and wait up to 2 seconds for it to open
-		  Run "%WindowsProgramFilesX86Folder%\Notepad++\notepad++.exe"
+		  Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
 		  WinWaitActive, Notepad++,,2
     
 		  WinGetTitle, notpadTitle, A
@@ -570,14 +591,14 @@ GetTyporaOnThisVirtualDesktop()
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Ctrl+v      Paste clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
 ;---------------------------------------------------------------------------------------------------------------------
-^#v::
-  Clip0 = %ClipBoardAll%
-  ClipBoard = %ClipBoard%       ; Convert to text
-  SendInput ^v                  ; For best compatibility: SendPlay
-  Sleep 50                      ; Don't change clipboard while it is pasted! (Sleep > 0)
-  ClipBoard = %Clip0%           ; Restore original ClipBoard
-  VarSetCapacity(Clip0, 0)      ; Free memory
-  Return
+;^#v::
+;  Clip0 = %ClipBoardAll%
+;  ClipBoard = %ClipBoard%       ; Convert to text
+;  SendInput ^v                  ; For best compatibility: SendPlay
+;  Sleep 50                      ; Don't change clipboard while it is pasted! (Sleep > 0)
+;  ClipBoard = %Clip0%           ; Restore original ClipBoard
+;  VarSetCapacity(Clip0, 0)      ; Free memory
+;  Return
 
 	
 
@@ -664,10 +685,12 @@ printscreen::
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+m           Music - Start or activate one of the music apps I use
-;                   - Google Play Music Player
+; Win+m           Music - Start or activate one of the music/media apps I use
 ;                   - iHeartRadio
+;                   - Google Play Music Player
 ;                   - Windows Media Player
+;                   - Brown Noise
+;                   - White Noise App
 ;---------------------------------------------------------------------------------------------------------------------
 #m::
   If WinExist("ahk_exe Google Play Music Desktop Player.exe")
@@ -677,6 +700,10 @@ printscreen::
   Else If WinExist("iHeartRadio ahk_exe ApplicationFrameHost.exe")
 	{
 	  WinActivate iHeartRadio ahk_exe ApplicationFrameHost.exe
+	}
+  Else If WinExist("White Noise ahk_exe ApplicationFrameHost.exe")
+	{
+	  WinActivate White Noise ahk_exe ApplicationFrameHost.exe
 	}
   Else If WinExist("ahk_class WMPlayerApp")
 	{
@@ -688,39 +715,73 @@ printscreen::
 	}
   Return  
 
+PlayNoiseFile()
+{
+	Global WindowsProgramFilesX86Folder
+	Global NoiseMP3
+
+  If Not WinExist("Noise.*Windows Media Player")
+	{
+	  ; I had a difficult time getting Windows Media Player to cooperate here, thus
+		;   - /Task Library     I would have preferred to open NowPlaying
+		;   - Sleep             Shouldn't need all of these, but I couldn't get it to 
+		;                       work without the sleeps and WinActivate
+		Run, "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe" "%NoiseMP3%" /Task Library
+		WinWaitActive, Windows Media Player,, 2
+		Sleep, 1000
+	  WinActivate, Noise.*Windows Media Player
+		Sleep, 2000
+		WinMinimize 
+	}
+}
+
 BuildMediaPlayerMenu()
 {
   Global WindowsUserProfile
 	Global MyPersonalFolder
 	Global WindowsProgramFilesX86Folder
 
-	Menu, MediaPlayerMenu, Add, Windows Media Player, MediaPlayerMenuHandler
-	Menu, MediaPlayerMenu, Add, Google Play Music Desktop Player, MediaPlayerMenuHandler
-	Menu, MediaPlayerMenu, Add, iHeartRadio, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Add, &Google Play Music Desktop Player, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Add, &iHeartRadio, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Add, Windows &Media Player, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Add
+	Menu, MediaPlayerMenu, Add, &Brown Noise, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Add, &White Noise App, MediaPlayerMenuHandler
 
 	; I could not figure out how to extract icon from a Windows Store app, AND 
 	; it looks like using PNG files for icons is unsupported, so I downloaded an
 	; icon from the internet and use it instead. The iHeartRadio shortcut 
 	; lists this as the icon: ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png
-	Menu, MediaPlayerMenu, Icon, Windows Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1, 32
-	Menu, MediaPlayerMenu, Icon, Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1, 32
-	Menu, MediaPlayerMenu, Icon, iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1, 32
+	Menu, MediaPlayerMenu, Icon, &iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1, 32
+	Menu, MediaPlayerMenu, Icon, &Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1, 32
+	Menu, MediaPlayerMenu, Icon, Windows &Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1, 32
+	Menu, MediaPlayerMenu, Icon, &Brown Noise, %MyPersonalFolder%\WindowsStoreAppLinks\Brown Noise.jpg, 1, 32
+	Menu, MediaPlayerMenu, Icon, &White Noise App, %MyPersonalFolder%\WindowsStoreAppLinks\White Noise.jpg, 1, 32
 }
 
 MediaPlayerMenuHandler:
   chosenMenuItem=%A_ThisMenuItem%
-	If chosenMenuItem = Windows Media Player
+	If Instr(chosenMenuItem, "Windows")
 	{
 	  Run, "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe"
 	}
-	Else If chosenMenuItem = Google Play Music Desktop Player
+	Else If Instr(chosenMenuItem, "Google")
 	{
 	  Run, "%WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe" --processStart "Google Play Music Desktop Player.exe"
 	}
-	Else If chosenMenuItem = iHeartRadio 
+	Else If Instr(chosenMenuItem, "iHeartRadio")
 	{
 	  Run, "%MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.lnk"
 	}
+	Else If Instr(chosenMenuItem, "White")
+	{
+	  Run, "%MyPersonalFolder%\WindowsStoreAppLinks\White Noise.lnk"
+	}
+	Else If Instr(chosenMenuItem, "Brown")
+	{
+	  PlayNoiseFile()
+	}
+	
 	Return
 		
 	
@@ -866,13 +927,15 @@ ActivateOrStartMicrosoftOutlook()
 ; separately controllable window.
 ;---------------------------------------------------------------------------------------------------------------------
 #z::
-  If Not WinExist("SimplyNoise")
-    Run, iexplore.exe http://www.simplynoise.com,, Min
-  Else 
-	{
-	  WinActivate, SimplyNoise
-    WinClose, SimplyNoise
-	}
+  ;If Not WinExist("SimplyNoise")
+  ;  Run, iexplore.exe http://www.simplynoise.com,, Min
+  ;Else 
+	;{
+	;  WinActivate, SimplyNoise
+  ;  WinClose, SimplyNoise
+	;}
+	
+	PlayNoiseFile()
 	Return
 
 
@@ -894,9 +957,14 @@ ActivateOrStartMicrosoftOutlook()
 ;---------------------------------------------------------------------------------------------------------------------
 #Include %A_ScriptDir%\Lib\AutoCorrect.ahk
 
-;::brian::Brian      -- doing this always capitalizes Brian-kummer@company.com
-;::kummer::Kummer    -- Otherwise, it changes brian-kummer to brian-Kummer, and Jenkins can't handle that as a login
-;::i::I              -- Don't want to always capitalize i (e.g. "-i")
+;::brian::Brian      ; Doing this always capitalizes Brian-kummer@company.com
+;::kummer::Kummer    ; Otherwise, it changes brian-kummer to brian-Kummer, and some apps REQUIRE a username to be all lowercase
+;::i::I              ; Don't want to always capitalize i (e.g. "-i")
+
+::1/4::¼             ; One-quarter
+::1/2::½             ; One-half
+::3/4::¾             ; Three-quarters
+::~~::≈              ; Approximation
 
 ::nancy::Nancy
 ::manoj::Manoj

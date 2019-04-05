@@ -26,6 +26,8 @@ SETX AHK_URL_CENTRIFY "https://centrify.com/xxxxxx"
 SETX AHK_URL_CITRIX "https://xxxxxxxxx"
 SETX AHK_URL_PERSONAL_CLOUD "https://xxxxxxxxx"
 
+SETX AHK_MP3_NOISE "x:\xxxxx\xxxxxxx.mp3"
+
 SETX AHK_VIRTUAL_DESKTOP_WALLPAPER_1 "Main    |C:\Users\xxxxxxxxxx\Pictures\wallpaper_main.jpg"
 SETX AHK_VIRTUAL_DESKTOP_WALLPAPER_2 "Personal|C:\Users\xxxxxxxxxx\Pictures\wallpaper_personal.jpg"
 SETX AHK_VIRTUAL_DESKTOP_WALLPAPER_3 "Temp-1  |C:\Users\xxxxxxxxxx\Pictures\wallpaper_temp_1.jpg"

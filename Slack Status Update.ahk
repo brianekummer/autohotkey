@@ -32,7 +32,8 @@ SlackStatusUpdate_Initialize()
 	slackStatusWorkingRemotely := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_WORKING_REMOTELY", "Working remotely|:house_with_garden:", 0)
 	slackStatusVacation := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_VACATION", "Vacationing|:palm_tree:", 0)
 	slackStatusLunch := SlackStatusUpdate_BuildSlackStatus("SLACK_STATUS_LUNCH", "At lunch|:hamburger:", 0)
-	global SlackStatusUpdate_SlackStatuses := {"meeting": slackStatusMeeting, "workingInOffice": slackStatusWorkingInOffice, "workingRemotely": slackStatusWorkingRemotely, "vacation": slackStatusVacation, "lunch": slackStatusLunch}
+	slackStatusNone := {"text": "", "emoji": "", "expiration": 0}
+	global SlackStatusUpdate_SlackStatuses := {"meeting": slackStatusMeeting, "workingInOffice": slackStatusWorkingInOffice, "workingRemotely": slackStatusWorkingRemotely, "vacation": slackStatusVacation, "lunch": slackStatusLunch, "none": slackStatusNone}
 	
 	; Create an AHK "window group" named "SlackUpdateStatus_WindowTitles" that contains the pattern
 	; to find the Slack window
@@ -48,13 +49,16 @@ SlackStatusUpdate_Initialize()
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive ahk_group SlackStatusUpdate_WindowTitles
 ::/lunch::
-  SlackStatusUpdate_SetSlackStatusViaKeyboard(SlackStatusUpdate_SlackStatuses["lunch"])
+	SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["lunch"])
 	Return
 ::/wfh::
-  SlackStatusUpdate_SetSlackStatusViaKeyboard(SlackStatusUpdate_SlackStatuses["workingRemotely"])
+	SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["workingRemotely"])
 	Return
 ::/mtg::
-  SlackStatusUpdate_SetSlackStatusViaKeyboard(SlackStatusUpdate_SlackStatuses["meeting"])
+	SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["meeting"])
+	Return
+::/status::
+	SlackStatusUpdate_SetSlackStatus(SlackStatusUpdate_SlackStatuses["none"])
 	Return
 #IfWinActive
 
@@ -199,7 +203,6 @@ SlackStatusUpdate_GetSlackStatus(ByRef statusText, ByRef statusEmoji, ByRef stat
 {
 	Try 
 	{
-	
 	  webRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
 	  webRequest.Open("GET", "https://slack.com/api/users.profile.get?token="SlackStatusUpdate_MySlackToken)
     webRequest.Send()
@@ -229,13 +232,18 @@ SlackStatusUpdate_GetSlackStatus(ByRef statusText, ByRef statusEmoji, ByRef stat
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Private - Get the name of the emoji for my current Slack status using the Slack web API
+;
+;           Now that I have both a work and a personal Slack account, we're just getting the status of the first 
+;           (work) account.
 ;---------------------------------------------------------------------------------------------------------------------
 SlackStatusUpdate_GetSlackStatusEmoji() 
 {
 	Try 
 	{
+	  SlackTokens := StrSplit(SlackStatusUpdate_MySlackToken , "|")
+
 	  webRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-	  webRequest.Open("GET", "https://slack.com/api/users.profile.get?token="SlackStatusUpdate_MySlackToken)
+	  webRequest.Open("GET", "https://slack.com/api/users.profile.get?token="SlackTokens[1])
     webRequest.Send()
 	  results := webRequest.ResponseText
 
@@ -260,17 +268,25 @@ SlackStatusUpdate_GetSlackStatusEmoji()
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Private - Set my Slack status via the Slack web API
+;
+;           Now I have a work and a personal Slack account, so I have two Slack tokens. So we'll loop through them
+;           and send the status update to both.
 ;---------------------------------------------------------------------------------------------------------------------
 SlackStatusUpdate_SetSlackStatus(slackStatus) 
 {
   webRequest := ComObjCreate("WinHttp.WinHttpRequest.5.1")
   data := "profile={'status_text': '"slackStatus["text"]"', 'status_emoji': '"slackStatus["emoji"]"', 'status_expiration': "slackStatus["expiration"]"}"
 	
-	webRequest.Open("POST", "https://slack.com/api/users.profile.set")
-  webRequest.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-  webRequest.SetRequestHeader("Authorization", "Bearer "SlackStatusUpdate_MySlackToken)
-
-  webRequest.Send(data)
+	SlackTokens := StrSplit(SlackStatusUpdate_MySlackToken , "|")
+  Loop % SlackTokens.MaxIndex()
+  {
+    thisToken := SlackTokens[A_Index]
+	
+	  webRequest.Open("POST", "https://slack.com/api/users.profile.set")
+    webRequest.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+    webRequest.SetRequestHeader("Authorization", "Bearer "thisToken)
+    webRequest.Send(data)
+  }
 }
 
 
