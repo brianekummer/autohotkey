@@ -36,9 +36,15 @@ SlackStatusUpdate_Initialize()
 	global SlackStatusUpdate_SlackStatuses := {"meeting": slackStatusMeeting, "workingInOffice": slackStatusWorkingInOffice, "workingRemotely": slackStatusWorkingRemotely, "vacation": slackStatusVacation, "lunch": slackStatusLunch, "none": slackStatusNone}
 	
 	; Create an AHK "window group" named "SlackUpdateStatus_WindowTitles" that contains the pattern
-	; to find the Slack window
-	EnvGet, slackWindowTitle, SLACK_WINDOW_TITLE
-	GroupAdd, SlackStatusUpdate_WindowTitles, %slackWindowTitle%
+	; to find the Slack windows, which are delimited by pipes
+	EnvGet, slackWindowTitles, SLACK_WINDOW_TITLE
+	slackWindowTitlesArray := StrSplit(slackWindowTitles , "|")
+  Loop % slackWindowTitlesArray.MaxIndex()
+  {
+    thisWindowTitle := slackWindowTitlesArray[A_Index]
+	  GroupAdd, SlackStatusUpdate_WindowTitles, %thisWindowTitle%
+  }
+
 }
 
 
