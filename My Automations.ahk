@@ -18,7 +18,8 @@
 ;
 ; To Do
 ; -----
-;   - None
+;   - Assuming Jodi and I replace Google Hangouts/Pidgin with Slack, remove the
+;     code to keep restarting Pidgin
 ;
 ;
 ; Future Ideas
@@ -27,10 +28,6 @@
 ;   - Win+Space useful for something?
 ;   - Popup menus are useful- can I use them elsewhere?
 ;       - ADP for entering timesheet?
-;   - How know to not restart Pidgin when I'm presenting?
-;      - In Windows, there is a "Presentation Settings" dialog-- look into that!!!!
-;          - it stops system notifications... does that include outlook, pidgin, slack, etc?
-;
 ;
 ;
 ; Summary (1/23/2019)
@@ -63,16 +60,18 @@
 ;     Win+i                     outlook Inbox
 ;     Win+k                     slacK
 ;       Win+Shift+k               slack "Jump to" dialog
-;     Win+m                     Music (Windows Media Player, Google Music Desktop Player, iHeartRadio)
+;     Win+m                     Music (Windows Media Player, Google Music Desktop Player, iHeartRadio, etc.)
 ;     Win+n                     Notepad++
 ;       Win+Shift+n               open Notepad++, and paste the selected text into the newly opened window
 ;     Win+t                     Typora, with each virtual desktop having a different folder of files
-;     Win+z                     noiZe- open SimplyNoise.com
+;     Win+z                     background noiZe
 ;
 ;     Win+Ctrl+v                Paste the clipboard as plain text
+;
 ;     Win+Shift+c               Command prompt (as admin)
 ;     Win+Shift+a               ADP
 ;     Win+Shift+b               BitBucket
+;     Win+Shift+e               Eclipse IDE
 ;     Win+Shift+g               Git Bash (as admin)
 ;     Win+Shift+j               JIRA
 ;     Win+Shift+p               Personal cloud
@@ -157,9 +156,6 @@ MyPersonalFolder = %WindowsUserProfile%\Personal\
   SlackStatusUpdate_Initialize()
   SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 
-  ; Since Pidgin occasionally crashing on me, every 10 minutes we'll check if it needs restarted
-	SetTimer, CheckIfPidginIsRunning, 600000
-	
 	; Build the popup menu for starting a music app
   BuildMediaPlayerMenu()
 
@@ -199,32 +195,13 @@ OnWindowsUnlock(wParam, lParam)
   WTS_SESSION_UNLOCK := 0x8
   If (wParam = WTS_SESSION_UNLOCK)
 	{
-		SendInput #a                                      ; Open Windows Action Center to show any new notifications from my phone
-    SlackStatusUpdate_SetSlackStatusBasedOnNetwork()  ; If appropriate, update my Slack status
+		SendInput #a                                      		; Open Windows Action Center to show any new notifications from my phone
+    SlackStatusUpdate_SetSlackStatusBasedOnNetwork()		; If appropriate, update my Slack status
 	}
 }
 
 
 
-;---------------------------------------------------------------------------------------------------------------------
-; Ensure that Pidgin.exe is still running. Note that this should NOT happen while WIndows is locked, since AHK
-; cannot run a program which the screen is locked.
-;---------------------------------------------------------------------------------------------------------------------
-CheckIfPidginIsRunning:
-  If WindowsIsLocked()
-	{
-	  ; Windows is not locked
-		If Not WinExist("Buddy List")
-		{
-			Run, "%MyPersonalFolder%\PortableApp-s\PidginPortable\PidginPortable.exe",, Min
-		}
-	}
-  Return	
-
-
-
-
-	
 
 
 ;---------------------------------------------------------------------------------------------------------------------
@@ -232,13 +209,12 @@ CheckIfPidginIsRunning:
 ;---------------------------------------------------------------------------------------------------------------------
 
 ; Win+Ctrl+V      to open VPN app
-^#v::
-  Run, "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Palo Alto Networks\GlobalProtect\GlobalProtect.lnk"
-  WinWait, GlobalProtect,, 10
-	Sleep, 500
-	WinActivate, GlobalProtect
-	Return
-
+;^#v::
+;  Run, "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Palo Alto Networks\GlobalProtect\GlobalProtect.lnk"
+;  WinWait, GlobalProtect,, 10
+;	Sleep, 500
+;	WinActivate, GlobalProtect
+;	Return
 
 ; Win+(dash on numeric keypad)    Price check DVDs
 #NumpadSub::   
@@ -265,35 +241,38 @@ CheckIfPidginIsRunning:
 	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MS59ZGR/ref=sr_1_2?ie=UTF8&qid=1550496450&sr=8-2&keywords=dragons+race+to+edge+season",, Max
 	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-5-And-6-DVD/877831331",, Max
 	
-	; Private Eyes (Jason Priestley)
-	
 	; Dr Seuss's The Grinch (Illumination)
 	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
 	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
 	Run, "https://www.bestbuy.com/site/illumination-presents-dr-seuss-the-grinch-dvd-2018/6310541.p?skuId=6310541",, Max
-	
-	; Pirates of Caribbean movies
-	;   - Movies I Bought
-	;       2017- Dead Men Tell No Tales
-	;   - Movies Still to Buy
-	;       2003- Curse of the Black Pearl
-	;       2006- Dead Man's Chest
-	;       2007- At World's End
-	;       2011- On Stranger Tides
-	;   - ~$38 on amazon or target for each separately
-	;   - If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
-	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
-	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
-	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
-	
+
 	; Sabrina the Teenage Witch - 1996 DVD - movie that started the series
 	Run, "https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias`%3Daps&field-keywords=sabrina+the+teenage+witch+dvd+1996+-season"
 	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=sabrina+the+teenage+witch+dvd+-season&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=sabrina+the+teenage+witch+dvd+1996+-season&LH_TitleDesc=0"
 	
-	; Not sure- Pinky & the Brain, Animaniacs, Tiny Toons
-	Run, "https://www.amazon.com/s?k=dvd+pinky+and+brain&ref=nb_sb_noss_1"
-	Run, "https://www.bestbuy.com/site/searchpage.jsp?st=pinky+and+brain+dvd&_dyncharset=UTF-8&id=pcat17071&type=page&sc=Global&cp=1&nrp=&sp=&qp=&list=n&af=true&iht=y&usc=All+Categories&ks=960&keys=keys"
+	; Pirates of Caribbean movies - low priority, have these on DVR
+	;   - Already Own
+	;       2017- Dead Men Tell No Tales
+	;   - Need to Buy
+	;       - ~$38 on amazon or target for each separately
+	;       - If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
+	;       2003- Curse of the Black Pearl
+	;       2006- Dead Man's Chest
+	;       2007- At World's End
+	;       2011- On Stranger Tides
+	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
+	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
+	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
 	
+  ; Definitely
+  ;   - Private Eyes (Jason Priestley)
+	; Probably
+	;   - Toy Story, 2, 3
+	; Not sure 
+	;   - Pinky & the Brain, Pinky, Elmyra & the Brain
+  ;   - Animaniacs
+	;   - Tiny Toons
+
 	Return
 
 	
@@ -390,7 +369,7 @@ XButton2::
 	{
 		WinMinimize, A     ; Do not want to close these apps
 	}
-  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv") 
+  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv|eclipse") 
 	  or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
 	{
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
@@ -591,14 +570,14 @@ GetTyporaOnThisVirtualDesktop()
 ;---------------------------------------------------------------------------------------------------------------------
 ; Win+Ctrl+v      Paste clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
 ;---------------------------------------------------------------------------------------------------------------------
-;^#v::
-;  Clip0 = %ClipBoardAll%
-;  ClipBoard = %ClipBoard%       ; Convert to text
-;  SendInput ^v                  ; For best compatibility: SendPlay
-;  Sleep 50                      ; Don't change clipboard while it is pasted! (Sleep > 0)
-;  ClipBoard = %Clip0%           ; Restore original ClipBoard
-;  VarSetCapacity(Clip0, 0)      ; Free memory
-;  Return
+^#v::
+  Clip0 = %ClipBoardAll%
+  ClipBoard = %ClipBoard%      	; Convert to text
+  SendInput ^v                  	; For best compatibility: SendPlay
+  Sleep 50                      	; Don't change clipboard while it is pasted! (Sleep > 0)
+  ClipBoard = %Clip0%           	; Restore original ClipBoard
+  VarSetCapacity(Clip0, 0)     	; Free memory
+  Return
 
 	
 
@@ -626,6 +605,26 @@ GetTyporaOnThisVirtualDesktop()
 	}
   WinActivate, Microsoft Visual Studio
   Return  
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Win+Shift+e     Run ECLIPSE IDE
+;---------------------------------------------------------------------------------------------------------------------
+#IfWinActive - Eclipse IDE
+  ^WheelUp::   SendInput ^{+}
+  ^WheelDown:: SendInput ^{-}
+#IfWinActive
+
++#e::
+	If Not WinExist("- Eclipse IDE")
+	{
+	  Run *RunAs "%WindowsProgramFilesFolder%\Eclipse 4.10\eclipse\eclipse.exe"
+	}
+  WinActivate, Eclipse IDE
+  Return  
+
+
 
 	
 	
@@ -656,7 +655,7 @@ GetTyporaOnThisVirtualDesktop()
 
 
 
-;----------------------------------	-----------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------------------------------------------
 ; Win+Shift+y     centrifY
 ;---------------------------------------------------------------------------------------------------------------------
 +#y::
@@ -748,10 +747,10 @@ BuildMediaPlayerMenu()
 	Menu, MediaPlayerMenu, Add, &Brown Noise, MediaPlayerMenuHandler
 	Menu, MediaPlayerMenu, Add, &White Noise App, MediaPlayerMenuHandler
 
-	; I could not figure out how to extract icon from a Windows Store app, AND 
+	; I could not figure out how to extract an icon from a Windows Store app, AND 
 	; it looks like using PNG files for icons is unsupported, so I downloaded an
-	; icon from the internet and use it instead. The iHeartRadio shortcut 
-	; lists this as the icon: ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png
+	; icon from the internet and use it instead. The iHeartRadio shortcut lists 
+	; this as the icon: ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png
 	Menu, MediaPlayerMenu, Icon, &iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1, 32
 	Menu, MediaPlayerMenu, Icon, &Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1, 32
 	Menu, MediaPlayerMenu, Icon, Windows &Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1, 32
