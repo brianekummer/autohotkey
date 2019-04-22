@@ -18,8 +18,9 @@
 ;
 ; To Do
 ; -----
-;   - Assuming Jodi and I replace Google Hangouts/Pidgin with Slack, remove the
-;     code to keep restarting Pidgin
+;   - When on TeleBYOD network, display a pop-up somewhere telling me of that. Use timer to run 
+;     "netsh wlan show interfaces | findstr TeleBYOD", which only returns text when I'm connected
+;     to that network
 ;
 ;
 ; Future Ideas
@@ -39,12 +40,12 @@
 ;     Win+down                  Minimize the active window instead of making it unmaximized, then minimize
 ;     Shift+mousewheel          Adjusts system volume 
 ;
-;   Mouse Behavior
+;   Modifying Mouse Behavior
 ;     XButton1                  Minimizes the current application
 ;     XButton2                  Depending on the active application, minimizes the window, closes the window/tab (Ctrl-F4),
 ;                               or closes the application (Alt-F4)
 ;
-;   Modifying application behavior
+;   Modifying Application Behavior
 ;     Chrome                    Ctrl+Shift+mousewheel to scroll through all open tabs
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
@@ -54,6 +55,7 @@
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
 ;   Shortcuts
+;     Win+space                 Toggle dark mode for the ACTIVE APPLICATION
 ;     Win+b                     Bluetooth settings
 ;     Win+c                     outlook Calendar
 ;     Win+g                     gTasks Pro
@@ -125,7 +127,8 @@ EnvGet, WikiUrl, AHK_URL_WIKI
 EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
 EnvGet, CitrixUrl, AHK_URL_CITRIX
 EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
-EnvGet, NoiseMP3, AHK_MP3_NOISE
+EnvGet, NoiseBrownMP3, AHK_MP3_NOISE_BROWN
+EnvGet, NoiseRailroadMP3, AHK_MP3_NOISE_RAILROAD
 
 ; Commonly used folders	
 Global MyDocumentsFolder
@@ -215,6 +218,122 @@ OnWindowsUnlock(wParam, lParam)
 ;	Sleep, 500
 ;	WinActivate, GlobalProtect
 ;	Return
+
+
+
+
+; Use #Space to toggle commonly-used apps between dark and light mode
+#Space::
+	If WinActive("ahk_exe chrome.exe")
+	{
+		; In the Dark Reader extension for Chrome, existing shortcut Alt+Shift+D toggles between dark and light
+	  SendInput !+D   
+	}
+	Else If WinActive("- KeePass")
+	{
+	  ; With KeeTheme plugin installed, existing shortcut Ctrl+T toggles Dark Theme on and off
+	  SendInput ^t   
+	}
+	Else If WinActive("ahk_class Notepad++")
+  {
+	  ; Notepad++ Settings => Style Configurator
+		SendInput {ALT}ts{ENTER}
+		WinWaitActive, Style Configurator,, 2
+		ControlGet, currentTheme, Choice,, ComboBox1, Style Configurator
+		ControlFocus, ComboBox1, Style Configurator
+		If InStr(currentTheme, "Dark")
+			 SendInput d    ; Select "Default"
+		Else
+			 SendInput vvv  ; Select "VS2015-Dark"
+		SendInput {TAB}{TAB}{TAB}{TAB}{TAB}{TAB}{TAB}{ENTER}
+  }	
+	Else If WinActive("- Eclipse IDE")
+	{
+	  ; In Eclipse settings, I added a shortcut to open Preferences => General => Appearance
+		SendInput ^+{8}     
+		WinWaitActive, Preferences,, 2
+		ControlGet, currentTheme, Choice,, ComboBox1, Preferences
+		ControlFocus, ComboBox1, Preferences
+		If InStr(currentTheme, "Dark")
+			 SendInput c      ; Select "Classic"
+		Else
+			 SendInput d      ; Select "Dark"
+    SendInput !a         ; Apply changes
+    SendInput {Escape}   ; Close dialog saying restart necessary for full effect
+    SendInput {Escape}   ; Close Preferences dialog
+	}
+	Else If WinActive("Microsoft Visual Studio")
+	{
+	  ; Tools => Options
+    SendInput !to    
+		WinWaitActive, Options,, 2
+		SendInput ^eVisual experience{TAB}
+		Sleep, 500
+		ControlGet, currentTheme, Choice,, ComboBox1, Options
+		ControlFocus, ComboBox1, Options
+		If InStr(currentTheme, "Dark")
+			 SendInput b    ; Select "Blue"
+		Else
+		  SendInput d     ; Select "Dark"
+		SendInput, {ENTER}
+	}
+	Else If WinActive("- Typora")
+	{
+		; There is no easy way to see which theme is active:
+		;   - Typora has a custom UI that is not accessible by AHK ControlGet/etc commands
+		;   - I could not find where the name of the current theme is persisted, either in a
+		;     in a file in C:\Program Files\Typora, or in the registry)
+		;   - While Typora uses Chrome to render, and the developer tools (Shift+F12) shows
+		;     me see this in the header: 
+		;       <link rel="stylesheet" href="C:\Users\Brian-Kummer\AppData\Roaming\Typora\themes\night.css" id="theme_css">
+		;     I can't figure out how to access that from AHK
+		; So I look at the color of a specific pixel (20,70) in the window, and if it's dim 
+		; (blue < 55) then I ASSUME we're displaying a dark theme, else I assume we're using a 
+		; light theme.
+		PixelGetColor, color, 20, 70
+		blue:="0x" SubStr(color,3,2) ;substr is to get the piece
+		blue:=blue+0 ;add 0 to convert it to decimal
+		SendInput !t
+		Sleep, 100
+		If blue < 55
+			SendInput p           ; Switch to light theme Pixyll
+		Else
+			SendInput nn{ENTER}   ; Switch to dark theme Night
+	}
+	Else If WinActive("ahk_exe explorer.exe")
+	{
+	  ; Windows Explorer
+		; Registry key: 0 = dark mode, 1 = light mode
+		RegRead, appsUseLightTheme, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize, AppsUseLightTheme
+		appsUseLightTheme:=!appsUseLightTheme
+		RegWrite, REG_DWORD, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize, AppsUseLightTheme, %appsUseLightTheme%
+	}
+	Else If WinActive("ahk_class VirtualConsoleClass")
+	{
+	  ; ConEmu
+		SendInput #!p
+		WinWaitActive, Settings.*,, 2
+		SendInput ^fSchemes{ENTER}
+		Sleep, 500
+		ControlGetText, currentTheme, Edit20, Settings.*
+		ControlFocus, Edit20, Settings.*
+		If InStr(currentTheme, "Cobalt2")
+		{
+			SendInput <Tomorrow Night Blue>{DOWN}
+		}
+		Else
+		{
+		  SendInput <Cobalt2>{DOWN}
+		}
+		Sleep, 500
+		ControlFocus, Save settings, Settings.*
+		SendInput, {ENTER}
+	}
+  Return
+
+
+
+
 
 ; Win+(dash on numeric keypad)    Price check DVDs
 #NumpadSub::   
@@ -714,10 +833,9 @@ printscreen::
 	}
   Return  
 
-PlayNoiseFile()
+PlayNoiseFile(whichNoiseMp3)
 {
 	Global WindowsProgramFilesX86Folder
-	Global NoiseMP3
 
   If Not WinExist("Noise.*Windows Media Player")
 	{
@@ -725,7 +843,7 @@ PlayNoiseFile()
 		;   - /Task Library     I would have preferred to open NowPlaying
 		;   - Sleep             Shouldn't need all of these, but I couldn't get it to 
 		;                       work without the sleeps and WinActivate
-		Run, "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe" "%NoiseMP3%" /Task Library
+		Run, "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe" "%whichNoiseMp3%" /Task Library
 		WinWaitActive, Windows Media Player,, 2
 		Sleep, 1000
 	  WinActivate, Noise.*Windows Media Player
@@ -746,6 +864,7 @@ BuildMediaPlayerMenu()
 	Menu, MediaPlayerMenu, Add
 	Menu, MediaPlayerMenu, Add, &Brown Noise, MediaPlayerMenuHandler
 	Menu, MediaPlayerMenu, Add, &White Noise App, MediaPlayerMenuHandler
+	Menu, MediaPlayerMenu, Add, &Railroad Noise, MediaPlayerMenuHandler
 
 	; I could not figure out how to extract an icon from a Windows Store app, AND 
 	; it looks like using PNG files for icons is unsupported, so I downloaded an
@@ -754,8 +873,9 @@ BuildMediaPlayerMenu()
 	Menu, MediaPlayerMenu, Icon, &iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1, 32
 	Menu, MediaPlayerMenu, Icon, &Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1, 32
 	Menu, MediaPlayerMenu, Icon, Windows &Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1, 32
-	Menu, MediaPlayerMenu, Icon, &Brown Noise, %MyPersonalFolder%\WindowsStoreAppLinks\Brown Noise.jpg, 1, 32
-	Menu, MediaPlayerMenu, Icon, &White Noise App, %MyPersonalFolder%\WindowsStoreAppLinks\White Noise.jpg, 1, 32
+	Menu, MediaPlayerMenu, Icon, &Brown Noise, %MyPersonalFolder%\WindowsStoreAppLinks\Noise- Brown.jpg, 1, 32
+	Menu, MediaPlayerMenu, Icon, &White Noise App, %MyPersonalFolder%\WindowsStoreAppLinks\Noise- White.jpg, 1, 32
+	Menu, MediaPlayerMenu, Icon, &Railroad Noise, %MyPersonalFolder%\WindowsStoreAppLinks\Noise- Railroad.jpg, 1, 32
 }
 
 MediaPlayerMenuHandler:
@@ -778,7 +898,11 @@ MediaPlayerMenuHandler:
 	}
 	Else If Instr(chosenMenuItem, "Brown")
 	{
-	  PlayNoiseFile()
+	  PlayNoiseFile(NoiseBrownMP3)
+	}
+	Else If Instr(chosenMenuItem, "Railroad")
+	{
+	  PlayNoiseFile(NoiseRailroadMP3)
 	}
 	
 	Return
@@ -934,7 +1058,7 @@ ActivateOrStartMicrosoftOutlook()
   ;  WinClose, SimplyNoise
 	;}
 	
-	PlayNoiseFile()
+	PlayNoiseFile(NoiseBrownMP3)
 	Return
 
 
