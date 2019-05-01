@@ -226,17 +226,21 @@ OnWindowsUnlock(wParam, lParam)
 #Space::
 	If WinActive("ahk_exe chrome.exe")
 	{
-		; In the Dark Reader extension for Chrome, existing shortcut Alt+Shift+D toggles between dark and light
+		; In Chrome, need Dark Reader extension, which has an existing shortcut 
+		; Alt+Shift+D that toggles between dark and light.
 	  SendInput !+D   
 	}
 	Else If WinActive("- KeePass")
 	{
-	  ; With KeeTheme plugin installed, existing shortcut Ctrl+T toggles Dark Theme on and off
+	  ; In KeePass, need KeeTheme plugin (https://github.com/xatupal/KeeTheme),
+		; which has an existing shortcut Ctrl+T toggles Dark Theme on and off.
 	  SendInput ^t   
 	}
 	Else If WinActive("ahk_class Notepad++")
   {
-	  ; Notepad++ Settings => Style Configurator
+	  ; In Notepad++, need VS2015-Dark theme (https://github.com/Ethan-Genser/NotepadPP_AHK_VS-theme)
+		; and can then go to Settings => Style Configurator to toggle between 
+		; themes "Default" and "VS2015-Dark"
 		SendInput {ALT}ts{ENTER}
 		WinWaitActive, Style Configurator,, 2
 		ControlGet, currentTheme, Choice,, ComboBox1, Style Configurator
@@ -249,7 +253,10 @@ OnWindowsUnlock(wParam, lParam)
   }	
 	Else If WinActive("- Eclipse IDE")
 	{
-	  ; In Eclipse settings, I added a shortcut to open Preferences => General => Appearance
+	  ; In Eclipse settings Preferences => Editor => Keys, I MANUALLY added a shortcut
+    ; for Ctrl+Shift+8 to open Preferences => General => Appearance. So here I can 
+		; use that shortcut to programmatically open Preferences => Appearance and then 
+		; toggle the Theme between "Classic" and "Dark".
 		SendInput ^+{8}     
 		WinWaitActive, Preferences,, 2
 		ControlGet, currentTheme, Choice,, ComboBox1, Preferences
@@ -264,7 +271,7 @@ OnWindowsUnlock(wParam, lParam)
 	}
 	Else If WinActive("Microsoft Visual Studio")
 	{
-	  ; Tools => Options
+	  ; In Visual Studio, Tools => Options, toggle between "Blue" and "Dark"
     SendInput !to    
 		WinWaitActive, Options,, 2
 		SendInput ^eVisual experience{TAB}
@@ -275,42 +282,43 @@ OnWindowsUnlock(wParam, lParam)
 			 SendInput b    ; Select "Blue"
 		Else
 		  SendInput d     ; Select "Dark"
-		SendInput, {ENTER}
+		SendInput {ENTER}
 	}
 	Else If WinActive("- Typora")
 	{
-		; There is no easy way to see which theme is active:
+		; In Typora, there is no easy way to see which theme is active:
 		;   - Typora has a custom UI that is not accessible by AHK ControlGet/etc commands
-		;   - I could not find where the name of the current theme is persisted, either in a
-		;     in a file in C:\Program Files\Typora, or in the registry)
+		;   - I could not find where the name of the current theme is persisted, either in
+		;     a file in C:\Program Files\Typora, or in the registry
 		;   - While Typora uses Chrome to render, and the developer tools (Shift+F12) shows
 		;     me see this in the header: 
 		;       <link rel="stylesheet" href="C:\Users\Brian-Kummer\AppData\Roaming\Typora\themes\night.css" id="theme_css">
 		;     I can't figure out how to access that from AHK
 		; So I look at the color of a specific pixel (20,70) in the window, and if it's dim 
-		; (blue < 55) then I ASSUME we're displaying a dark theme, else I assume we're using a 
-		; light theme.
+		; (blue < 55) then I ASSUME we're displaying a dark theme, else I assume we're using 
+		; a light theme.
 		PixelGetColor, color, 20, 70
-		blue:="0x" SubStr(color,3,2) ;substr is to get the piece
-		blue:=blue+0 ;add 0 to convert it to decimal
+		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
+		blue:=blue+0                   ; add 0 to convert it to decimal
 		SendInput !t
 		Sleep, 100
 		If blue < 55
-			SendInput p           ; Switch to light theme Pixyll
+			SendInput p                  ; Switch to light theme Pixyll
 		Else
-			SendInput nn{ENTER}   ; Switch to dark theme Night
+			SendInput nn{ENTER}          ; Switch to dark theme Night
 	}
 	Else If WinActive("ahk_exe explorer.exe")
 	{
-	  ; Windows Explorer
-		; Registry key: 0 = dark mode, 1 = light mode
+	  ; In Windows Explorer, light and dark mode is controlled by a registry key, and
+		;   0 = dark mode
+		;   1 = light mode
 		RegRead, appsUseLightTheme, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize, AppsUseLightTheme
 		appsUseLightTheme:=!appsUseLightTheme
 		RegWrite, REG_DWORD, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize, AppsUseLightTheme, %appsUseLightTheme%
 	}
 	Else If WinActive("ahk_class VirtualConsoleClass")
 	{
-	  ; ConEmu
+	  ; ConEmu Settings => Features => Colors, toggle between "Tomorrow Night Blue" (light) and "Cobalt2" (dark)
 		SendInput #!p
 		WinWaitActive, Settings.*,, 2
 		SendInput ^fSchemes{ENTER}
@@ -343,7 +351,7 @@ OnWindowsUnlock(wParam, lParam)
 	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
 	Run, "https://www.walmart.com/ip/Chuck-The-Complete-Series-Collector-Set-DVD/21907403",, Max
 
-	; Dragons - Race to the Edge - Release dates: S1+S2 2/12/2019, S3+S4 3/5/2019, S5+S6 3/26/2019
+	; Dragons - Race to the Edge
 	;   - Target seems cheapest for most of these
 	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-1-2-dvd/34451312.p?skuId=34451312",, Max
 	Run, "https://www.target.com/p/dragons-race-to-the-edge-season-1-2-dvd/-/A-54323862",, Max
@@ -382,6 +390,10 @@ OnWindowsUnlock(wParam, lParam)
 	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
 	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
 	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
+	
+	; How to Train Your Dragon 3, will be released on 5/21/2019
+	Run, "https://www.amazon.com/How-Train-Your-Dragon-Hidden/dp/B07NN3R1BS/ref=sr_1_1?keywords=How+train+dragon+3+dvd&qid=1556206031&s=gateway&sr=8-1"
+	Run, "https://www.walmart.com/ip/How-to-Train-Your-Dragon-The-Hidden-World-DVD-Digital-Copy/331975663"
 	
   ; Definitely
   ;   - Private Eyes (Jason Priestley)
@@ -488,7 +500,7 @@ XButton2::
 	{
 		WinMinimize, A     ; Do not want to close these apps
 	}
-  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv|eclipse") 
+  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv|eclipse|winmergeu|robo3t") 
 	  or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
 	{
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
