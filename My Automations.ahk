@@ -26,7 +26,6 @@
 ; Future Ideas
 ; ------------
 ;   - Any use for text-to-speech? ComObjCreate("SAPI.SpVoice").Speak("Speak this phrase")
-;   - Win+Space useful for something?
 ;   - Popup menus are useful- can I use them elsewhere?
 ;       - ADP for entering timesheet?
 ;
@@ -55,7 +54,7 @@
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
 ;
 ;   Shortcuts
-;     Win+space                 Toggle dark mode for the ACTIVE APPLICATION
+;     Win+space                 Toggle dark mode for the active application (only some applications supported)
 ;     Win+b                     Bluetooth settings
 ;     Win+c                     outlook Calendar
 ;     Win+g                     gTasks Pro
@@ -116,6 +115,9 @@ UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
 ; These come from my own Windows environment variables
 ; See "My Automations Config.bat" for details
+Global BackupDriveSerialNumber
+Global KeePassDBFilename
+Global KeePassDBBackupFilename
 EnvGet, JiraUrl, AHK_URL_JIRA
 EnvGet, JiraMyProjectKeys, AHK_MY_PROJECT_KEYS_JIRA
 EnvGet, JiraDefaultProjectKey, AHK_DEFAULT_PROJECT_KEY_JIRA
@@ -129,6 +131,9 @@ EnvGet, CitrixUrl, AHK_URL_CITRIX
 EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
 EnvGet, NoiseBrownMP3, AHK_MP3_NOISE_BROWN
 EnvGet, NoiseRailroadMP3, AHK_MP3_NOISE_RAILROAD
+EnvGet, BackupDriveSerialNumber, AHK_BACKUP_DRIVE_SERIAL_NUMBER
+EnvGet, KeePassDBFilename, AHK_KEEPASS_DB_FILENAME
+EnvGet, KeePassDBBackupFilename, AHK_KEEPASS_DB_BACKUP_FILENAME
 
 ; Commonly used folders	
 Global MyDocumentsFolder
@@ -198,8 +203,9 @@ OnWindowsUnlock(wParam, lParam)
   WTS_SESSION_UNLOCK := 0x8
   If (wParam = WTS_SESSION_UNLOCK)
 	{
-		SendInput #a                                      		; Open Windows Action Center to show any new notifications from my phone
-    SlackStatusUpdate_SetSlackStatusBasedOnNetwork()		; If appropriate, update my Slack status
+		SendInput #a                                      		  ; Open Windows Action Center to show any new notifications from my phone
+    SlackStatusUpdate_SetSlackStatusBasedOnNetwork()		; If appropriate, then update my Slack status
+	  BackupKeePass()                                       	; If backup drive is inserted, then backup my KeePass database
 	}
 }
 
@@ -219,10 +225,89 @@ OnWindowsUnlock(wParam, lParam)
 ;	WinActivate, GlobalProtect
 ;	Return
 
+; Win+(dash on numeric keypad)    Price check DVDs
+#NumpadSub::   
+	; Chuck
+	;   - At The Exchange in Pgh, Seasons 1,2,3,5=$37, Adding S4 IS ~ same price as buying new for $50
+	Run, "https://www.amazon.com/Chuck-Complete-Various/dp/B009GYTP0W",, Max
+	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
+	Run, "https://www.walmart.com/ip/Chuck-The-Complete-Series-Collector-Set-DVD/21907403",, Max
+
+	; Dragons - Race to the Edge
+	;   - Target seems cheapest for most of these
+	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-1-2-dvd/34451312.p?skuId=34451312",, Max
+	Run, "https://www.target.com/p/dragons-race-to-the-edge-season-1-2-dvd/-/A-54323862",, Max
+	Run, "https://www.amazon.com/Dragons-Race-Seasons-Jay-Baruchel/dp/6317635579/ref=sr_1_3?ie=UTF8&qid=1550496450&sr=8-3&keywords=dragons+race+to+edge+season",, Max
+	Run, "https://www.walmart.com/ip/Dragons-Race-to-the-Edge-Seasons-1-2-DVD/533584634",, Max
+
+	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-3-4-dvd/34475213.p?skuId=34475213",, Max
+	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-3-4-dvd/-/A-54396281",, Max
+	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MPK2XSV/ref=sr_1_1?ie=UTF8&qid=1550496450&sr=8-1&keywords=dragons+race+to+edge+season",, Max
+	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-3-And-4-DVD/822275189",, Max
+
+	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-5-6-dvd/34475204.p?skuId=34475204",, Max
+	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-5-dvd/-/A-54419845",, Max
+	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MS59ZGR/ref=sr_1_2?ie=UTF8&qid=1550496450&sr=8-2&keywords=dragons+race+to+edge+season",, Max
+	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-5-And-6-DVD/877831331",, Max
+	
+	; Dr Seuss's The Grinch (Illumination)
+	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
+	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
+	Run, "https://www.bestbuy.com/site/illumination-presents-dr-seuss-the-grinch-dvd-2018/6310541.p?skuId=6310541",, Max
+
+	; Sabrina the Teenage Witch - 1996 DVD - movie that started the series
+	Run, "https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias`%3Daps&field-keywords=sabrina+the+teenage+witch+dvd+1996+-season"
+	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=sabrina+the+teenage+witch+dvd+-season&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=sabrina+the+teenage+witch+dvd+1996+-season&LH_TitleDesc=0"
+	
+	; Pirates of Caribbean movies - low priority, have these on DVR
+	;   - Already Own
+	;       2017- Dead Men Tell No Tales
+	;   - Need to Buy
+	;       - ~$38 on amazon or target for each separately
+	;       - If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
+	;       2003- Curse of the Black Pearl
+	;       2006- Dead Man's Chest
+	;       2007- At World's End
+	;       2011- On Stranger Tides
+	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
+	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
+	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
+	
+  ; Definitely
+  ;   - Private Eyes (Jason Priestley)
+	; Probably
+	;   - Toy Story, 2, 3
+	; Not sure 
+	;   - Pinky & the Brain, Pinky, Elmyra & the Brain
+  ;   - Animaniacs
+	;   - Tiny Toons
+
+	Return
 
 
 
-; Use #Space to toggle commonly-used apps between dark and light mode
+;---------------------------------------------------------------------------------------------------------------------
+; Backup KeePass database
+; If the flash drive I use to backup my KeePass database is inserted, then back it up to that drive.
+;---------------------------------------------------------------------------------------------------------------------
+BackupKeePass()
+{
+	keePassBackupDriveLetter := GetDriveLetter(BackupDriveSerialNumber, "REMOVABLE")
+	If (keePassBackupDriveLetter)
+	{
+	  ; FileCopy - last parameter determines if overwrite
+	  ; MsgBox options: 64 (Info icon) + 4096 (System Modal- always on top)
+		FileCopy, %KeePassDBFilename%, %keePassBackupDriveLetter%:\%KeePassDBBackupFilename%, 1
+		MsgBox, 4160, KeePass Database Backup, %KeePassDBFilename%`nhas been backed up to %keePassBackupDriveLetter%:\%KeePassDBBackupFilename%.
+	}
+}
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Dark mode
+;   Win+Space         Toggle commonly-used apps between dark and light mode
+;---------------------------------------------------------------------------------------------------------------------
 #Space::
 	If WinActive("ahk_exe chrome.exe")
 	{
@@ -246,9 +331,9 @@ OnWindowsUnlock(wParam, lParam)
 		ControlGet, currentTheme, Choice,, ComboBox1, Style Configurator
 		ControlFocus, ComboBox1, Style Configurator
 		If InStr(currentTheme, "Dark")
-			 SendInput d    ; Select "Default"
+		  SendInput d    ; Select "Default"
 		Else
-			 SendInput vvv  ; Select "VS2015-Dark"
+		  SendInput vvv  ; Select "VS2015-Dark"
 		SendInput {TAB}{TAB}{TAB}{TAB}{TAB}{TAB}{TAB}{ENTER}
   }	
 	Else If WinActive("- Eclipse IDE")
@@ -262,9 +347,9 @@ OnWindowsUnlock(wParam, lParam)
 		ControlGet, currentTheme, Choice,, ComboBox1, Preferences
 		ControlFocus, ComboBox1, Preferences
 		If InStr(currentTheme, "Dark")
-			 SendInput c      ; Select "Classic"
+			SendInput c        ; Select "Classic"
 		Else
-			 SendInput d      ; Select "Dark"
+			SendInput d        ; Select "Dark"
     SendInput !a         ; Apply changes
     SendInput {Escape}   ; Close dialog saying restart necessary for full effect
     SendInput {Escape}   ; Close Preferences dialog
@@ -279,7 +364,7 @@ OnWindowsUnlock(wParam, lParam)
 		ControlGet, currentTheme, Choice,, ComboBox1, Options
 		ControlFocus, ComboBox1, Options
 		If InStr(currentTheme, "Dark")
-			 SendInput b    ; Select "Blue"
+			SendInput b     ; Select "Blue"
 		Else
 		  SendInput d     ; Select "Dark"
 		SendInput {ENTER}
@@ -326,90 +411,17 @@ OnWindowsUnlock(wParam, lParam)
 		ControlGetText, currentTheme, Edit20, Settings.*
 		ControlFocus, Edit20, Settings.*
 		If InStr(currentTheme, "Cobalt2")
-		{
 			SendInput <Tomorrow Night Blue>{DOWN}
-		}
 		Else
-		{
 		  SendInput <Cobalt2>{DOWN}
-		}
 		Sleep, 500
 		ControlFocus, Save settings, Settings.*
 		SendInput, {ENTER}
 	}
   Return
-
-
-
-
-
-; Win+(dash on numeric keypad)    Price check DVDs
-#NumpadSub::   
-  ; Chuck
-	;   - At The Exchange in Pgh, Seasons 1,2,3,5=$37, Adding S4 IS ~ same price as buying new for $50
-	Run, "https://www.amazon.com/Chuck-Complete-Various/dp/B009GYTP0W",, Max
-	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
-	Run, "https://www.walmart.com/ip/Chuck-The-Complete-Series-Collector-Set-DVD/21907403",, Max
-
-	; Dragons - Race to the Edge
-	;   - Target seems cheapest for most of these
-	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-1-2-dvd/34451312.p?skuId=34451312",, Max
-	Run, "https://www.target.com/p/dragons-race-to-the-edge-season-1-2-dvd/-/A-54323862",, Max
-	Run, "https://www.amazon.com/Dragons-Race-Seasons-Jay-Baruchel/dp/6317635579/ref=sr_1_3?ie=UTF8&qid=1550496450&sr=8-3&keywords=dragons+race+to+edge+season",, Max
-	Run, "https://www.walmart.com/ip/Dragons-Race-to-the-Edge-Seasons-1-2-DVD/533584634",, Max
-
-	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-3-4-dvd/34475213.p?skuId=34475213",, Max
-	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-3-4-dvd/-/A-54396281",, Max
-	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MPK2XSV/ref=sr_1_1?ie=UTF8&qid=1550496450&sr=8-1&keywords=dragons+race+to+edge+season",, Max
-	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-3-And-4-DVD/822275189",, Max
-
-	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-5-6-dvd/34475204.p?skuId=34475204",, Max
-	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-5-dvd/-/A-54419845",, Max
-	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MS59ZGR/ref=sr_1_2?ie=UTF8&qid=1550496450&sr=8-2&keywords=dragons+race+to+edge+season",, Max
-	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-5-And-6-DVD/877831331",, Max
-	
-	; Dr Seuss's The Grinch (Illumination)
-	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
-	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
-	Run, "https://www.bestbuy.com/site/illumination-presents-dr-seuss-the-grinch-dvd-2018/6310541.p?skuId=6310541",, Max
-
-	; Sabrina the Teenage Witch - 1996 DVD - movie that started the series
-	Run, "https://www.amazon.com/s/ref=nb_sb_noss?url=search-alias`%3Daps&field-keywords=sabrina+the+teenage+witch+dvd+1996+-season"
-	Run, "https://www.ebay.com/sch/i.html?_from=R40&_trksid=m570.l1313&_nkw=sabrina+the+teenage+witch+dvd+-season&_sacat=0&LH_TitleDesc=0&_osacat=0&_odkw=sabrina+the+teenage+witch+dvd+1996+-season&LH_TitleDesc=0"
-	
-	; Pirates of Caribbean movies - low priority, have these on DVR
-	;   - Already Own
-	;       2017- Dead Men Tell No Tales
-	;   - Need to Buy
-	;       - ~$38 on amazon or target for each separately
-	;       - If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
-	;       2003- Curse of the Black Pearl
-	;       2006- Dead Man's Chest
-	;       2007- At World's End
-	;       2011- On Stranger Tides
-	Run, "https://www.amazon.com/s/ref=nb_sb_ss_i_1_12?url=search-alias`%3Dmovies-tv&field-keywords=dvd+pirates+of+the+caribbean&sprefix=dvd+pirates+`%2Cmovies-tv`%2C131&crid=2CVU55IXFKKPA",, Max
-	Run, "https://www.target.com/s?searchTerm=dvd+pirates+of+caribbean",, Max
-	Run, "https://www.bestbuy.com/site/searchpage.jsp?id=pcat17071&st=pirates+of+the+caribbean+dvd",, Max
-	
-	; How to Train Your Dragon 3, will be released on 5/21/2019
-	Run, "https://www.amazon.com/How-Train-Your-Dragon-Hidden/dp/B07NN3R1BS/ref=sr_1_1?keywords=How+train+dragon+3+dvd&qid=1556206031&s=gateway&sr=8-1"
-	Run, "https://www.walmart.com/ip/How-to-Train-Your-Dragon-The-Hidden-World-DVD-Digital-Copy/331975663"
-	
-  ; Definitely
-  ;   - Private Eyes (Jason Priestley)
-	; Probably
-	;   - Toy Story, 2, 3
-	; Not sure 
-	;   - Pinky & the Brain, Pinky, Elmyra & the Brain
-  ;   - Animaniacs
-	;   - Tiny Toons
-
-	Return
-
 	
 	
 	
-
 ;---------------------------------------------------------------------------------------------------------------------
 ; Chrome
 ; Ctrl+Shift+[WheelUp|WheelDown]     Scroll through all open tabs
@@ -605,8 +617,8 @@ XButton2::
       SendInput !+{f}     ; Plugins => SQLinForm => Format Selected SQL 
     }
   }
-  Clipboard := ClipSaved	; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll)
-  ClipSaved =			        ; Free the memory in case the clipboard was very large
+  Clipboard := ClipSaved	 ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll)
+  ClipSaved =			       ; Free the memory in case the clipboard was very large
   Return	
 
 	
@@ -754,8 +766,6 @@ GetTyporaOnThisVirtualDesktop()
 	}
   WinActivate, Eclipse IDE
   Return  
-
-
 
 	
 	
@@ -916,7 +926,6 @@ MediaPlayerMenuHandler:
 	{
 	  PlayNoiseFile(NoiseRailroadMP3)
 	}
-	
 	Return
 		
 	

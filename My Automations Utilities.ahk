@@ -12,6 +12,22 @@ FindWindowEx(p_hw_parent, p_hw_child, p_class, p_title)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
+; Returns the drive letter associated with the specified serial number and type.
+;   - Valid types are "FIXED" or "REMOVABLE"
+; https://autohotkey.com/board/topic/78552-usb-is-sometimes-f-drive-or-e-drive/
+;---------------------------------------------------------------------------------------------------------------------
+GetDriveLetter(serialNumber, driveType){
+	DriveGet, drives, List, %driveType%
+	Loop, Parse, drives
+	{
+		DriveGet, _serial, Serial, %A_LoopField%:
+		If (_serial=serialNumber)
+			Return A_LoopField
+	}
+}
+
+
+;---------------------------------------------------------------------------------------------------------------------
 ; Run a DOS command. This code taken from AutoHotKey website: https://autohotkey.com/docs/commands/Run.htm
 ;---------------------------------------------------------------------------------------------------------------------
 RunWaitOne(command)
