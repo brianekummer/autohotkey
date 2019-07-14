@@ -48,7 +48,7 @@
 ;     Chrome                    Ctrl+Shift+mousewheel to scroll through all open tabs
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
-;     Slack                     Ctrl+mousewheel to zoom
+;     sk                     Ctrl+mousewheel to zoom
 ;                               Typing "/lunch" gets changed to "/status :hamburger: At lunch"
 ;                               Typing "/mtg" gets changed to "/status :spiral_calendar_pad: In a meeting"
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
@@ -59,6 +59,7 @@
 ;     Win+c                     outlook Calendar
 ;     Win+g                     gTasks Pro
 ;     Win+i                     outlook Inbox
+;     Win+j                     JIRA, current board
 ;     Win+k                     slacK
 ;       Win+Shift+k               slack "Jump to" dialog
 ;     Win+m                     Music (Windows Media Player, Google Music Desktop Player, iHeartRadio, etc.)
@@ -74,7 +75,7 @@
 ;     Win+Shift+b               BitBucket
 ;     Win+Shift+e               Eclipse IDE
 ;     Win+Shift+g               Git Bash (as admin)
-;     Win+Shift+j               JIRA
+;     Win+Shift+j               JIRA, smart
 ;     Win+Shift+p               Personal cloud
 ;     Win+Shift+v               Visual Studio 2017
 ;     Win+Shift+w               Wiki
@@ -227,29 +228,6 @@ OnWindowsUnlock(wParam, lParam)
 
 ; Win+(dash on numeric keypad)    Price check DVDs
 #NumpadSub::   
-	; Chuck
-	;   - At The Exchange in Pgh, Seasons 1,2,3,5=$37, Adding S4 IS ~ same price as buying new for $50
-	Run, "https://www.amazon.com/Chuck-Complete-Various/dp/B009GYTP0W",, Max
-	Run, "https://www.ebay.com/itm/Chuck-Chuck-Seasons-1-5-The-Complete-Series-New-DVD-Boxed-Set-Collectors/302168821419?epid=129869237&hash=item465aaa4eab%3Ag%3Ar1MAAOSwBY1bVoS8&_sacat=0&_nkw=chuck+tv+levi+dvd+complete&_from=R40&rt=nc&_trksid=m570.l1313",, Max
-	Run, "https://www.walmart.com/ip/Chuck-The-Complete-Series-Collector-Set-DVD/21907403",, Max
-
-	; Dragons - Race to the Edge
-	;   - Target seems cheapest for most of these
-	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-1-2-dvd/34451312.p?skuId=34451312",, Max
-	Run, "https://www.target.com/p/dragons-race-to-the-edge-season-1-2-dvd/-/A-54323862",, Max
-	Run, "https://www.amazon.com/Dragons-Race-Seasons-Jay-Baruchel/dp/6317635579/ref=sr_1_3?ie=UTF8&qid=1550496450&sr=8-3&keywords=dragons+race+to+edge+season",, Max
-	Run, "https://www.walmart.com/ip/Dragons-Race-to-the-Edge-Seasons-1-2-DVD/533584634",, Max
-
-	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-3-4-dvd/34475213.p?skuId=34475213",, Max
-	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-3-4-dvd/-/A-54396281",, Max
-	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MPK2XSV/ref=sr_1_1?ie=UTF8&qid=1550496450&sr=8-1&keywords=dragons+race+to+edge+season",, Max
-	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-3-And-4-DVD/822275189",, Max
-
-	Run, "https://www.bestbuy.com/site/dragons-race-to-the-edge-seasons-5-6-dvd/34475204.p?skuId=34475204",, Max
-	Run, "https://www.target.com/p/dragons-race-to-the-edge-seasons-5-dvd/-/A-54419845",, Max
-	Run, "https://www.amazon.com/Dragons-Race-Edge-Seasons/dp/B07MS59ZGR/ref=sr_1_2?ie=UTF8&qid=1550496450&sr=8-2&keywords=dragons+race+to+edge+season",, Max
-	Run, "https://www.walmart.com/ip/Dragons-Race-To-The-Edge-Seasons-5-And-6-DVD/877831331",, Max
-	
 	; Dr Seuss's The Grinch (Illumination)
 	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
 	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
@@ -275,8 +253,6 @@ OnWindowsUnlock(wParam, lParam)
 	
   ; Definitely
   ;   - Private Eyes (Jason Priestley)
-	; Probably
-	;   - Toy Story, 2, 3
 	; Not sure 
 	;   - Pinky & the Brain, Pinky, Elmyra & the Brain
   ;   - Animaniacs
@@ -321,9 +297,60 @@ BackupKeePass()
 		; which has an existing shortcut Ctrl+T toggles Dark Theme on and off.
 	  SendInput ^t   
 	}
+	Else If WinActive("- Visual Studio Code")
+	{
+		; In Visual Studio Code, there is no easy way to see which color theme is
+		; active, so I look at the color of a specific pixel (20,70) in the window, 
+		; and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, 
+		; else I assume we're using a light theme.
+		PixelGetColor, color, 20, 70
+		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
+		blue:=blue+0                  ; add 0 to convert it to decimal
+		If blue < 55
+		{
+	    SendInput ^k
+			Sleep, 100
+			SendInput ^t
+			Sleep, 100
+			SendInput Light+{ENTER}
+		}
+		Else
+		{
+	    SendInput ^k
+			Sleep, 100
+			SendInput ^t
+			Sleep, 100
+			SendInput Dark+{ENTER}
+		}
+	}
+	Else If WinActive("- IntelliJ IDEA")
+	{
+		; In IntelliJ IDEA, there is no easy way to see which color theme is
+		; active, so I look at the color of a specific pixel (3,60) in the window, 
+		; and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, 
+		; else I assume we're using a light theme.
+		PixelGetColor, color, 17, 80
+		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
+		blue:=blue+0                  ; add 0 to convert it to decimal
+		SendInput ^!s
+		Sleep, 500
+		SendInput theme
+		Sleep, 250
+		SendInput {ENTER}
+		Sleep, 250
+		SendInput {DOWN}
+		Sleep, 250
+		If blue < 75
+			SendInput {DOWN}{DOWN}      ; Switching to IntelliJ/Default/Light
+		Else
+			SendInput {UP}{UP}          ; Switching to Darcula
+		SendInput {ENTER}
+		Sleep, 250
+		SendInput {ENTER}
+	}
 	Else If WinActive("ahk_class Notepad++")
   {
-	  ; In Notepad++, need VS2015-Dark theme (https://github.com/Ethan-Genser/NotepadPP_AHK_VS-theme)
+	  ; In Notepad++, need VS2015-Dark theme (https://github.com/Dark-Genser/NotepadPP_AHK_VS-theme)
 		; and can then go to Settings => Style Configurator to toggle between 
 		; themes "Default" and "VS2015-Dark"
 		SendInput {ALT}ts{ENTER}
@@ -512,7 +539,7 @@ XButton2::
 	{
 		WinMinimize, A     ; Do not want to close these apps
 	}
-  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv|eclipse|winmergeu|robo3t") 
+  Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv|eclipse|winmergeu|robo3t|code|idea64") 
 	  or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
 	{
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
@@ -552,7 +579,8 @@ XButton2::
 #IfWinActive
 
 #n::
-	Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
+	;Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
+	Run "C:\Users\Brian-Kummer\AppData\Local\Programs\Microsoft VS Code\Code.exe"
   Return
 
 +#n::
@@ -579,7 +607,8 @@ XButton2::
 	  If Not WinExist("- Notepad++") 
 		{
 		  ; Notepad++ isn't open, so start it, and wait up to 2 seconds for it to open
-		  Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
+		  ;Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
+			Run "C:\Users\Brian-Kummer\AppData\Local\Programs\Microsoft VS Code\Code.exe"
 		  WinWaitActive, Notepad++,,2
     
 		  WinGetTitle, notpadTitle, A
@@ -931,16 +960,22 @@ MediaPlayerMenuHandler:
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+j     JIRA- Open JIRA
-;   - If the highlighted text looks like a JIRA story number (e.g. PROJECT-1234), then open that story
-;   - If the Git Bash window has text that looks like a JIRA story number, then open that story
+; Win+j           JIRA- Open JIRA to current board
+; Win+Shift+j     JIRA- Open JIRA - smart
+;                   - If the highlighted text looks like a JIRA story number (e.g. PROJECT-1234), then open that story
+;                   - If the Git Bash window has text that looks like a JIRA story number, then open that story
 ;---------------------------------------------------------------------------------------------------------------------
+#j::
+	pathDefaultBoard = /secure/RapidBoard.jspa?rapidView=%JiraDefaultRapidKey%&projectKey=%JiraDefaultProjectKey%&sprint=%JiraDefaultSprint%
+	Run, %JiraUrl%%pathDefaultBoard%
+	Return
+
 +#j::
   regexStoryNumberWithoutProject = \b\d{1,5}\b
   regexStoryNumberWithProject = i)\b(%JiraMyProjectKeys%)([-_ ]|( - ))?\d{1,5}\b
 	pathBrowse = /browse/
 	pathDefaultBoard = /secure/RapidBoard.jspa?rapidView=%JiraDefaultRapidKey%&projectKey=%JiraDefaultProjectKey%&sprint=%JiraDefaultSprint%
-	
+
   selectedText := GetSelectedTextUsingClipboard()
 
 	; Search the selected text for something like PROJECT-1234
