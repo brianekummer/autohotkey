@@ -48,7 +48,7 @@
 ;     Chrome                    Ctrl+Shift+mousewheel to scroll through all open tabs
 ;     Typora                    Ctrl+mousewheel to zoom
 ;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
-;     sk                     Ctrl+mousewheel to zoom
+;     Slack                     Ctrl+mousewheel to zoom
 ;                               Typing "/lunch" gets changed to "/status :hamburger: At lunch"
 ;                               Typing "/mtg" gets changed to "/status :spiral_calendar_pad: In a meeting"
 ;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
@@ -445,6 +445,23 @@ BackupKeePass()
 		ControlFocus, Save settings, Settings.*
 		SendInput, {ENTER}
 	}
+	Else If WinActive("ahk_exe OUTLOOK.EXE")
+	{
+	  ; Microsoft Outlook
+		SendInput !f
+		Sleep, 100
+		SendInput d
+		Sleep, 500
+		PixelGetColor, color, 200, 200
+		blue:="0x" SubStr(color,3,2)   ; substr is to get the piece
+		blue:=blue+0                   ; add 0 to convert it to decimal
+		SendInput y1
+		If blue < 55
+			SendInput c                  ; Switch to light theme Colorful
+		Else
+			SendInput b                  ; Switch to dark theme Black
+		SendInput {ENTER}{ESCAPE}
+	}
   Return
 	
 	
@@ -573,6 +590,12 @@ XButton2::
 ;                       SQL        SQLinForm     Alt+Shift+f
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive .ahk - Notepad++ 
+~$^s:: 
+  Reload
+  Return
+#IfWinActive
+
+#IfWinActive .ahk - Visual Studio Code 
 ~$^s:: 
   Reload
   Return
