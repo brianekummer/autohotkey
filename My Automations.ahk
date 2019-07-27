@@ -1,4 +1,4 @@
-﻿;---------------------------------------------------------------------------------------------------------------------
+;========================================================================================================================
 ; Brian Kummer's AutoHotKey script
 ;
 ;
@@ -8,7 +8,7 @@
 ; Miscellaneous
 ; -------------
 ;   - Definition of AutoHotKey keys: http://www.autohotkey.com/docs/KeyList.htm
-;   - Send, SendInput modifiers: ^ = Ctrl, ! = Alt, + = Shift, # = Windows
+;   - Send/SendInput modifiers: ^ = Ctrl, ! = Alt, + = Shift, # = Windows
 ;
 ;
 ; Known Issues
@@ -16,79 +16,116 @@
 ;   - None
 ;
 ;
-; To Do
-; -----
-;   - When on TeleBYOD network, display a pop-up somewhere telling me of that. Use timer to run 
-;     "netsh wlan show interfaces | findstr TeleBYOD", which only returns text when I'm connected
-;     to that network
+; To Do List
+; ----------
+; 1. Auto-generate shortcuts in header
+;    NEED TO FIX PROBLEMS WHEN CAN'T OVERWRITE FILE
+;    ***** THIS CODE IS NOT TRUSTWORTHY YET *****
+;    BEWARE OF IT REPLACING TOO MUCH TEXT!!!!, going down to "Upon startup of this script, perform these actions"
 ;
 ;
 ; Future Ideas
 ; ------------
+;   - When on TeleBYOD network, display a pop-up somewhere telling me of that. Use a timer to run 
+;     "netsh wlan show interfaces | findstr TeleBYOD", which only returns text when I'm connected to that network
 ;   - Any use for text-to-speech? ComObjCreate("SAPI.SpVoice").Speak("Speak this phrase")
 ;   - Popup menus are useful- can I use them elsewhere?
 ;       - ADP for entering timesheet?
 ;
 ;
-; Summary (1/23/2019)
+; Summary (7/22/2019)
 ; -------------------
-;   Add auto-correct to EVERY application (http://www.biancolo.com/articles/autocorrect/)
-;
-;   Modifying System Behavior:
-;     printscreen               Starts Windows snipping tool in rectangle mode. Shift+Prt Scr still takes a screenshot of the whole screen.
-;     Win+down                  Minimize the active window instead of making it unmaximized, then minimize
-;     Shift+mousewheel          Adjusts system volume 
-;
-;   Modifying Mouse Behavior
-;     XButton1                  Minimizes the current application
-;     XButton2                  Depending on the active application, minimizes the window, closes the window/tab (Ctrl-F4),
-;                               or closes the application (Alt-F4)
-;
-;   Modifying Application Behavior
-;     Chrome                    Ctrl+Shift+mousewheel to scroll through all open tabs
-;     Typora                    Ctrl+mousewheel to zoom
-;     Notepad++                 After save ahk file in Notepad++, reload the current script in AutoHotKey
-;     Slack                     Ctrl+mousewheel to zoom
-;                               Typing "/lunch" gets changed to "/status :hamburger: At lunch"
-;                               Typing "/mtg" gets changed to "/status :spiral_calendar_pad: In a meeting"
-;                               Typing "/wfh" gets changed to "/status :house: Working remotely"
-;
-;   Shortcuts
-;     Win+space                 Toggle dark mode for the active application (only some applications supported)
-;     Win+b                     Bluetooth settings
-;     Win+c                     outlook Calendar
-;     Win+g                     gTasks Pro
-;     Win+i                     outlook Inbox
-;     Win+j                     JIRA, current board
-;     Win+k                     slacK
-;       Win+Shift+k               slack "Jump to" dialog
-;     Win+m                     Music (Windows Media Player, Google Music Desktop Player, iHeartRadio, etc.)
-;     Win+n                     Notepad++
-;       Win+Shift+n               open Notepad++, and paste the selected text into the newly opened window
-;     Win+t                     Typora, with each virtual desktop having a different folder of files
-;     Win+z                     background noiZe
-;
-;     Win+Ctrl+v                Paste the clipboard as plain text
-;
-;     Win+Shift+c               Command prompt (as admin)
-;     Win+Shift+a               ADP
-;     Win+Shift+b               BitBucket
-;     Win+Shift+e               Eclipse IDE
-;     Win+Shift+g               Git Bash (as admin)
-;     Win+Shift+j               JIRA, smart
-;     Win+Shift+p               Personal cloud
-;     Win+Shift+v               Visual Studio 2017
-;     Win+Shift+w               Wiki
-;     Win+Shift+x               citriX
-;     Win+Shift+y               centrifY
+; * Implements zooming of font size in multiple applications
+; * Add Auto-Correct to EVERY Application (http://www.biancolo.com/articles/autocorrect)
+; * Windows Virtual Desktop Improvements - Enhancements around Windows virtual desktops, such as assigning specific 
+;   wallpapers to specific virtual desktops.  Based on code: https://github.com/Ciantic/VirtualDesktopAccessor
+; * Slack Improvements
+;     - Changing "/lunch" "/status :hamburger: At lunch", etc.
+;     - Upon Windows login/unlock, set Slack status based on nearby wifi networks
+; * Backup KeePass Database - Upon Windows login/unlock, if a specific USB drive is plugged in, backup KeePass 
+;   database to it
 ;
 ;
-;   Windows Virtual Desktop Improvements
-;   ------------------------------------
-;   Enhancements around Windows virtual desktops, which includes assigning specific wallpapers to specific virtual 
-;   desktops. Based on code: https://github.com/Ciantic/VirtualDesktopAccessor
+; Shortcuts (Auto-Genereated)
+; -------------------------------
+; ^+WheelDown     Chrome (AHK)        Scroll through open tabs
+; ^+WheelUp       Chrome (AHK)        Scroll through open tabs
 ;
-;---------------------------------------------------------------------------------------------------------------------
+; /lunch          Slack (AHK)         Set status to "/status :hamburger: At lunch"
+; /mtg            Slack (AHK)         Set status to "/status :spiral_calendar_pad: In a meeting"
+; /status         Slack (AHK)         Clear status
+; /wfh            Slack (AHK)         Set status to "/status :house: Working remotely"
+; ^WheelDown      Slack (AHK)         Decrease font size
+; ^WheelUp        Slack (AHK)         Increase font size
+;
+; ^WheelDown      Typora (AHK)        Decrease font size
+; ^WheelUp        Typora (AHK)        Increase font size
+;
+; #^1             V. Desktops (AHK)   Switch to virtual desktop #1
+; #^2             V. Desktops (AHK)   Switch to virtual desktop #2
+; #^3             V. Desktops (AHK)   Switch to virtual desktop #3
+; #^4             V. Desktops (AHK)   Switch to virtual desktop #4
+; #^5             V. Desktops (AHK)   Switch to virtual desktop #5
+; #^6             V. Desktops (AHK)   Switch to virtual desktop #6
+; #^7             V. Desktops (AHK)   Switch to virtual desktop #7
+; #^8             V. Desktops (AHK)   Switch to virtual desktop #8
+; #^9             V. Desktops (AHK)   Switch to virtual desktop #9
+; #^+Left         V. Desktops (AHK)   Move active window to previous virtual desktop
+; #^left          V. Desktops         Switch to previous virtual desktop
+; #^+Right        V. Desktops (AHK)   Move active window to next virtual desktop
+; #^right         V. Desktops         Switch to next virtual desktop
+;
+; ~$^s            VS Code (AHK)       After save AHK file in VS Code, reload the current script
+;
+; (login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks; KeePass backup - I like IT!!!
+; #1              Windows             1st app in the task bar
+; #2              Windows             2nd app in the task bar
+; #3              Windows             3rd app in the task bar
+; #+4             Windows (AHK)       Timesheet (Shift-4 is $)
+; #4              Windows             4th app in the task bar
+; #5              Windows             5th app in the task bar
+; #6              Windows             6th app in the task bar
+; #7              Windows             7th app in the task bar
+; #8              Windows             8th app in the task bar
+; #9              Windows             9th app in the task bar
+; #a              Windows             Windows Action Center
+; #b              Windows (AHK)       git Bash (as admin)
+; #c              Windows (AHK)       Outlook Calendar
+; #down           Windows (AHK)       Minimize active window instead of making it unmaximized, then minimize
+; #d              Windows             Windows desktop
+; #e              Windows             Windows Explorer
+; #g              Windows (AHK)       gTasks Pro
+; #i              Windows (AHK)       Outlook Inbox
+; #^j             Windows (AHK)       JIRA, smart (open a specific story)
+; #j              Windows (AHK)       JIRA, current board
+; #^k             Windows (AHK)       Slack, "jump to" dialog
+; #k              Windows (AHK)       Slack
+; #l              Windows             Lock workstation
+; #m              Windows (AHK)       Music/media app
+; #NumpadSub      Windows (AHK)       TEMP - price checks
+; +printscreen    Windows             Take screenshot of the whole screen
+; printscreen     Windows (AHK)       Start Windows snipping tool in rectangle mode
+; #^p             Windows (AHK)       Personal cloud, smart (on 2nd virtual desktop in Edge)
+; #p              Windows             Project (duplicate, extend, etc)
+; #Space          Windows (AHK)       Toggle dark mode for active application
+; #s              Windows (AHK)       Source code (BitBucket)
+; #t              Windows (AHK)       Typora, with each virtual desktop having a different folder of files
+; #up             Windows             Maximize active window
+; #^v             Windows (AHK)       Visual Studio Code, smart (paste the selected text into the newly opened window)
+; #v              Windows (AHK)       Visual Studio Code
+; #v              Windows             Clipboard
+; +WheelDown      Windows (AHK)       Turn system volume down
+; +WheelUp        Windows (AHK)       Turn system volume up
+; #w              Windows (AHK)       Wiki- Confluence
+; XButton1        Windows (AHK)       Minimize current application
+; XButton2        Windows (AHK)       Minimize app or close window/tab or close app
+; #z              Windows (AHK)       noiZe
+;========================================================================================================================
+
+
+
+
+
 #NoEnv
 #Persistent
 #WinActivateForce
@@ -114,8 +151,7 @@ EnvGet, WindowsDnsDomain, USERDNSDOMAIN
 EnvGet, WindowsUserProfile, USERPROFILE
 UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
-; These come from my own Windows environment variables
-; See "My Automations Config.bat" for details
+; These come from my own Windows environment variables. See "My Automations Config.bat" for details
 Global BackupDriveSerialNumber
 Global KeePassDBFilename
 Global KeePassDBBackupFilename
@@ -124,11 +160,9 @@ EnvGet, JiraMyProjectKeys, AHK_MY_PROJECT_KEYS_JIRA
 EnvGet, JiraDefaultProjectKey, AHK_DEFAULT_PROJECT_KEY_JIRA
 EnvGet, JiraDefaultRapidKey, AHK_DEFAULT_RAPID_KEY_JIRA
 EnvGet, JiraDefaultSprint, AHK_DEFAULT_SPRINT_JIRA
-EnvGet, BitBucketUrl, AHK_URL_BITBUCKET
+EnvGet, SourceCodeUrl, AHK_URL_SOURCE_CODE
 EnvGet, TimesheetUrl, AHK_URL_TIMESHEET
 EnvGet, WikiUrl, AHK_URL_WIKI
-EnvGet, CentrifyUrl, AHK_URL_CENTRIFY
-EnvGet, CitrixUrl, AHK_URL_CITRIX
 EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
 EnvGet, NoiseBrownMP3, AHK_MP3_NOISE_BROWN
 EnvGet, NoiseRailroadMP3, AHK_MP3_NOISE_RAILROAD
@@ -153,19 +187,19 @@ MyPersonalFolder = %WindowsUserProfile%\Personal\
   RunAsAdmin()
   StartInterceptingWindowsUnlock()
 
-  ; Configure wallpapers for Windows virtual desktops 
-	; *REQUIRES* Windows environment variables AHK_VIRTUAL_DESKTOP_WALLPAPER_x such as:
+  ; Configure wallpapers for Windows virtual desktops. *REQUIRES* Windows environment variables 
+	; AHK_VIRTUAL_DESKTOP_WALLPAPER_x such as:
 	;   AHK_VIRTUAL_DESKTOP_WALLPAPER_1 = Main    |C:\Pictures\wallpaper1.jpg
   ;   AHK_VIRTUAL_DESKTOP_WALLPAPER_2 = Personal|C:\Pictures\wallpaper2.jpg
 	; See "Virtual Desktop Accessor.ahk" for details
 	VirtualDesktopAccessor_Initialize()
 
-	; Configure Slack status updates based on the network
-  ; *REQUIRES* several Windows environment variables - see "Slack Status Update.ahk" for details
+	; Configure Slack status updates based on the network. *REQUIRES* several Windows environment variables - see 
+	; "Slack Status Update.ahk" for details
   SlackStatusUpdate_Initialize()
   SlackStatusUpdate_SetSlackStatusBasedOnNetwork()
 
-	; Build the popup menu for starting a music app
+	; Build the popup menu for starting a music/media app
   BuildMediaPlayerMenu()
 
   Return
@@ -183,8 +217,8 @@ ExitFunc(ExitReason, ExitCode)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Hook into Windows system message WM_WTSSESSION_CHANGE so that when I log into the computer, I can do stuff. Code 
-; taken from http://autohotkey.com/board/topic/23095-trouble-detecting-windows-unlock-only-when-compiled
+; Hook into Windows system message WM_WTSSESSION_CHANGE so that when I log into the computer, I can do stuff
+;   - Code taken from http://autohotkey.com/board/topic/23095-trouble-detecting-windows-unlock-only-when-compiled
 ;---------------------------------------------------------------------------------------------------------------------
 StartInterceptingWindowsUnlock() 
 {
@@ -199,14 +233,15 @@ StopInterceptingWindowsUnlock()
 {
   DllCall("Wtsapi32.dll\WTSUnRegisterSessionNotification", "uint", hwnd)
 }
+; (login/unlock)::     ; Windows|AHK|Set Slack status based on nearby wifi networks; KeePass backup - I like IT!!!
 OnWindowsUnlock(wParam, lParam)
 {
   WTS_SESSION_UNLOCK := 0x8
   If (wParam = WTS_SESSION_UNLOCK)
 	{
-		SendInput #a                                      		  ; Open Windows Action Center to show any new notifications from my phone
+		SendInput #a                                  		  ; Open Windows Action Center to show new notifications from my phone
     SlackStatusUpdate_SetSlackStatusBasedOnNetwork()		; If appropriate, then update my Slack status
-	  BackupKeePass()                                       	; If backup drive is inserted, then backup my KeePass database
+	  BackupKeePass()                                    	; If backup drive is inserted, then backup my KeePass database
 	}
 }
 
@@ -215,7 +250,7 @@ OnWindowsUnlock(wParam, lParam)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Temporary/experimental stuff goes here. 
+; Temporary/experimental stuff goes here
 ;---------------------------------------------------------------------------------------------------------------------
 
 ; Win+Ctrl+V      to open VPN app
@@ -226,8 +261,7 @@ OnWindowsUnlock(wParam, lParam)
 ;	WinActivate, GlobalProtect
 ;	Return
 
-; Win+(dash on numeric keypad)    Price check DVDs
-#NumpadSub::   
+#NumpadSub::     ; Windows|AHK|TEMP - price checks
 	; Dr Seuss's The Grinch (Illumination)
 	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
 	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
@@ -241,7 +275,7 @@ OnWindowsUnlock(wParam, lParam)
 	;   - Already Own
 	;       2017- Dead Men Tell No Tales
 	;   - Need to Buy
-	;       - ~$38 on amazon or target for each separately
+	;       - ~$38 on Amazon or Target for each separately
 	;       - If buy used through Amazon, looks like everyone charges shipping on each DVD, so can buy DVD for $1 + $4 in shipping :-(
 	;       2003- Curse of the Black Pearl
 	;       2006- Dead Man's Chest
@@ -264,7 +298,7 @@ OnWindowsUnlock(wParam, lParam)
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Backup KeePass database
-; If the flash drive I use to backup my KeePass database is inserted, then back it up to that drive.
+;   - If the flash drive I use to backup my KeePass database is inserted, then back it up to that drive
 ;---------------------------------------------------------------------------------------------------------------------
 BackupKeePass()
 {
@@ -282,27 +316,24 @@ BackupKeePass()
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Dark mode
-;   Win+Space         Toggle commonly-used apps between dark and light mode
 ;---------------------------------------------------------------------------------------------------------------------
-#Space::
+#Space::     ; Windows|AHK|Toggle dark mode for active application
 	If WinActive("ahk_exe chrome.exe")
 	{
-		; In Chrome, need Dark Reader extension, which has an existing shortcut 
-		; Alt+Shift+D that toggles between dark and light.
+		; In Chrome, need Dark Reader extension, which has an existing shortcut Alt+Shift+D that toggles between dark/light
 	  SendInput !+D   
 	}
 	Else If WinActive("- KeePass")
 	{
-	  ; In KeePass, need KeeTheme plugin (https://github.com/xatupal/KeeTheme),
-		; which has an existing shortcut Ctrl+T toggles Dark Theme on and off.
+	  ; In KeePass, need KeeTheme plugin (https://github.com/xatupal/KeeTheme), which has an existing shortcut Ctrl+T 
+		; that toggles Dark Theme on and off.
 	  SendInput ^t   
 	}
 	Else If WinActive("- Visual Studio Code")
 	{
-		; In Visual Studio Code, there is no easy way to see which color theme is
-		; active, so I look at the color of a specific pixel (20,70) in the window, 
-		; and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, 
-		; else I assume we're using a light theme.
+		; In Visual Studio Code, there is no easy way to see which color theme is active, so I look at the color of a
+		; specific pixel in the window, and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, else I
+		; assume we're using a light theme.
 		PixelGetColor, color, 20, 70
 		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
 		blue:=blue+0                  ; add 0 to convert it to decimal
@@ -325,10 +356,9 @@ BackupKeePass()
 	}
 	Else If WinActive("- IntelliJ IDEA")
 	{
-		; In IntelliJ IDEA, there is no easy way to see which color theme is
-		; active, so I look at the color of a specific pixel (3,60) in the window, 
-		; and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, 
-		; else I assume we're using a light theme.
+		; In IntelliJ IDEA, there is no easy way to see which color theme is active, so I look at the color of a specific 
+		; pixel in the window, and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, else I assume 
+		; we're using a light theme.
 		PixelGetColor, color, 17, 80
 		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
 		blue:=blue+0                  ; add 0 to convert it to decimal
@@ -350,9 +380,8 @@ BackupKeePass()
 	}
 	Else If WinActive("ahk_class Notepad++")
   {
-	  ; In Notepad++, need VS2015-Dark theme (https://github.com/Dark-Genser/NotepadPP_AHK_VS-theme)
-		; and can then go to Settings => Style Configurator to toggle between 
-		; themes "Default" and "VS2015-Dark"
+	  ; In Notepad++, need VS2015-Dark theme (https://github.com/Dark-Genser/NotepadPP_AHK_VS-theme) and can then go to
+		; Settings => Style Configurator to toggle between themes "Default" and "VS2015-Dark"
 		SendInput {ALT}ts{ENTER}
 		WinWaitActive, Style Configurator,, 2
 		ControlGet, currentTheme, Choice,, ComboBox1, Style Configurator
@@ -365,10 +394,9 @@ BackupKeePass()
   }	
 	Else If WinActive("- Eclipse IDE")
 	{
-	  ; In Eclipse settings Preferences => Editor => Keys, I MANUALLY added a shortcut
-    ; for Ctrl+Shift+8 to open Preferences => General => Appearance. So here I can 
-		; use that shortcut to programmatically open Preferences => Appearance and then 
-		; toggle the Theme between "Classic" and "Dark".
+	  ; In Eclipse settings Preferences => Editor => Keys, I MANUALLY added a shortcut for Ctrl+Shift+8 to open 
+		; Preferences => General => Appearance. So this code can use that shortcut to programmatically open
+		; Preferences => Appearance and then toggle the Theme between "Classic" and "Dark".
 		SendInput ^+{8}     
 		WinWaitActive, Preferences,, 2
 		ControlGet, currentTheme, Choice,, ComboBox1, Preferences
@@ -400,24 +428,23 @@ BackupKeePass()
 	{
 		; In Typora, there is no easy way to see which theme is active:
 		;   - Typora has a custom UI that is not accessible by AHK ControlGet/etc commands
-		;   - I could not find where the name of the current theme is persisted, either in
-		;     a file in C:\Program Files\Typora, or in the registry
-		;   - While Typora uses Chrome to render, and the developer tools (Shift+F12) shows
-		;     me see this in the header: 
+		;   - I could not find where the name of the current theme is persisted, either in a file in
+		;     C:\Program Files\Typora, or in the registry
+		;   - While Typora uses Chrome to render, and the developer tools (Shift+F12) shows me see
+		;     this in the header: 
 		;       <link rel="stylesheet" href="C:\Users\Brian-Kummer\AppData\Roaming\Typora\themes\night.css" id="theme_css">
 		;     I can't figure out how to access that from AHK
-		; So I look at the color of a specific pixel (20,70) in the window, and if it's dim 
-		; (blue < 55) then I ASSUME we're displaying a dark theme, else I assume we're using 
-		; a light theme.
+		; So I look at the color of a specific pixel in the window, and if it's dim (blue < 55) then
+		; I ASSUME we're displaying a dark theme, else I assume we're using a light theme.
 		PixelGetColor, color, 20, 70
 		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
-		blue:=blue+0                   ; add 0 to convert it to decimal
+		blue:=blue+0                  ; add 0 to convert it to decimal
 		SendInput !t
 		Sleep, 100
 		If blue < 55
-			SendInput p                  ; Switch to light theme Pixyll
+			SendInput p                 ; Switch to light theme Pixyll
 		Else
-			SendInput nn{ENTER}          ; Switch to dark theme Night
+			SendInput nn{ENTER}         ; Switch to dark theme Night
 	}
 	Else If WinActive("ahk_exe explorer.exe")
 	{
@@ -447,7 +474,9 @@ BackupKeePass()
 	}
 	Else If WinActive("ahk_exe OUTLOOK.EXE")
 	{
-	  ; Microsoft Outlook
+		; In Microsoft Outlook, there is no easy way to see which color theme is active, so I look at the color of a
+		; specific pixel in the window, and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, else
+		; I assume we're using a light theme.
 		SendInput !f
 		Sleep, 100
 		SendInput d
@@ -468,34 +497,43 @@ BackupKeePass()
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Chrome
-; Ctrl+Shift+[WheelUp|WheelDown]     Scroll through all open tabs
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive ahk_exe chrome.exe
-  ^+WheelUp::   SendInput ^{PgUp}
-  ^+WheelDown:: SendInput ^{PgDn}
+  ^+WheelUp::     ; Chrome|AHK|Scroll through open tabs
+	  SendInput ^{PgUp}
+		Return
+  ^+WheelDown::   ; Chrome|AHK|Scroll through open tabs
+	  SendInput ^{PgDn}
+		Return
 #IfWinActive
 
 
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Slack
-;   Ctrl+mousewheel   Zoom in and out
-;   Win+k             Open Slack
-;   Win+Shift+k       Open Slack and go to the "Jump to" window
+;   - Ctrl+MouseWheel     Zoom in and out
+;   - #k                  Open Slack
+;   - #^k                 Open Slack and go to the "Jump to" window
 ;
-; Functionality in Slack-Status-Update.ahk
-;   /xxxxx            When in Slack, replace "/lunch", "/wfh", "/mtg" with the equivalent Slack command to change my status
+; Functionality implemented in Slack-Status-Update.ahk
+;   - /xxxxx              When in Slack, replace "/lunch", "/wfh", "/mtg" with the equivalent Slack command to change
+;                         my status
+;   - upon login/unlock   Upon Windows login/unlock, set Slack status based on nearby wifi networks
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive ahk_group SlackStatusUpdate_WindowTitles
-  ^WheelUp::   SendInput ^{+}
-  ^WheelDown:: SendInput ^{-}
+  ^WheelUp::     ; Slack|AHK|Increase font size
+    SendInput ^{+}
+		Return
+  ^WheelDown::   ; Slack|AHK|Decrease font size
+	  SendInput ^{-}
+		Return
 #IfWinActive
 
-#k::
+#k::             ; Windows|AHK|Slack
   OpenSlack()
   Return
 
-+#k::
+#^k::            ; Windows|AHK|Slack, "jump to" dialog
   OpenSlack()
 	SendInput ^k
   Return
@@ -515,37 +553,33 @@ OpenSlack()
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Shift+mousewheel   Change system volume
-;   Other keystroke combinations (Win+mousewheel, or Ctrl+mousewheel) affect the current window
+; Adjust system volume
+;   - Other keystroke combinations (Win+mousewheel, or Ctrl+mousewheel) affected the current window
 ;---------------------------------------------------------------------------------------------------------------------
-+WheelUp::   SendInput {Volume_Up 1}
-+WheelDown:: SendInput {Volume_Down 1}
-
-
-
-;---------------------------------------------------------------------------------------------------------------------
-; Win+B              Open Bluetooth settings dialog
-;---------------------------------------------------------------------------------------------------------------------
-#b::
-  Run, ms-settings:bluetooth	
-  Return
++WheelUp::     ; Windows|AHK|Turn system volume up
+	SendInput {Volume_Up 1}
+	Return
++WheelDown::   ; Windows|AHK|Turn system volume down
+  SendInput {Volume_Down 1}
+	Return
 
 
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Extra mouse buttons
 ;   - XButton1 (front button) minimizes the current window
-;   - XButton2 (rear button) depending on the active window, closes a WINDOW, or minimizes or closes the active APPLICATION.
+;   - XButton2 (rear button) depending on the active window, closes the active TAB/WINDOW, or minimizes or closes the 
+;     active APPLICATION.
 ;
-; It is based on the name of app/process, NOT the window title, or else it would minimize a browser with a tab 
-; whose title is "How to Use Slack". Also, Microsoft Edge browser is more complex than a single process, so detecting
-; it is more complex.
+; This is based on the name of app/process, NOT the window title, or else it would minimize a browser with a tab whose
+; title is "How to Use Slack".  Also, Microsoft Edge browser is more complex than a single process, so detecting it is
+; more complex.
 ;---------------------------------------------------------------------------------------------------------------------
-XButton1::
+XButton1::     ; Windows|AHK|Minimize current application
   WinMinimize, A
 	Return
 
-XButton2::
+XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
   WinGet, processName, ProcessName, A
   SplitPath, processName,,,, processNameNoExtension
 
@@ -570,14 +604,17 @@ XButton2::
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Notepad++
+; Visual Studio Code
 ;
-; When editing any AutoHotKey script in Notepad++, clicking Ctrl-S to save the script automatically forces AutoHotKey
-; to reload the current script. This eliminates the need to right-click the AutoHotKey system tray icon and select
-; "Reload This Script".
+; TODO: Transition away from Notepad++ to VS Code
+; 
+;   - When editing any AutoHotKey script in Visual Studio Code, clicking Ctrl-S to save the script also causes 
+;     AutoHotKey to reload the current script. This eliminates the need to right-click the AutoHotKey system tray icon
+;     and select "Reload This Script".
+;   - #v       Open Visual Studio Code
+;   - #^v      Open Visual Studio Code and paste the selected text into the new Visual Studio Code window
 ;
-; Win+n           Open Notepad++
-; Win+Shift+n     Open Notepad++ and paste the selected text into the new Notepad++ window
+; TODO:
 ;                   - I could have copied the selected text into a variable and done a "Send %variableName%", which 
 ;                     would send each character as if it was typed, which would be very SLOW. Instead, I paste the 
 ;                     selected text into the Notepad++ window.
@@ -589,24 +626,20 @@ XButton2::
 ;                       JSON       JSTool        Ctrl+Alt+m
 ;                       SQL        SQLinForm     Alt+Shift+f
 ;---------------------------------------------------------------------------------------------------------------------
-#IfWinActive .ahk - Notepad++ 
-~$^s:: 
-  Reload
-  Return
-#IfWinActive
-
 #IfWinActive .ahk - Visual Studio Code 
-~$^s:: 
+~$^s::      ; VS Code|AHK|After save AHK file in VS Code, reload the current script
+  ;Reload
+	AutoGenerateDocumentation()
   Reload
   Return
 #IfWinActive
 
-#n::
+#v::        ; Windows|AHK|Visual Studio Code
 	;Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
 	Run "C:\Users\Brian-Kummer\AppData\Local\Programs\Microsoft VS Code\Code.exe"
   Return
 
-+#n::
+#^v::       ; Windows|AHK|Visual Studio Code, smart (paste the selected text into the newly opened window)
   ; Define the regular expression patterns to recognize different types of text
   ;   - Identifying SQL is complex. As a rough guess, look for any one of the following:
   ;       CREATE|ALTER...FUNCTION|PROCEDURE|VIEW|INDEX...AS BEGIN
@@ -627,24 +660,23 @@ XButton2::
 	
   If (!ErrorLevel)
   {
-	  If Not WinExist("- Notepad++") 
+	  If Not WinExist("- Visual Studio Code") 
 		{
-		  ; Notepad++ isn't open, so start it, and wait up to 2 seconds for it to open
+		  ; Visual Studio Code isn't open, so start it, and wait up to 2 seconds for it to open
 		  ;Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
 			Run "C:\Users\Brian-Kummer\AppData\Local\Programs\Microsoft VS Code\Code.exe"
-		  WinWaitActive, Notepad++,,2
+		  WinWaitActive, Visual Studio Code,,2
     
 		  WinGetTitle, notpadTitle, A
-			foundPos := RegExMatch(notpadTitle, "i)new \d+ - Notepad++")
+			foundPos := RegExMatch(notpadTitle, "i)Untitled-\d+ - Visual Studio Code")
 		  If (foundPos == 0)
-			  ; The active Notepad++ document is not new, so we need to create a new document
-				; to paste our text into
+			  ; The active Visual Studio Code document is not new, so we need to create a new document to paste our text into
 		    SendInput ^n
 		}
 		Else
 		{
-		  ; Notepad++ is already open, so activate it and create a new document
-		  WinActivate, Notepad++
+		  ; Visual Studio Code is already open, so activate it and create a new document
+		  WinActivate, Visual Studio Code
 		  SendInput ^n
 		}
 		
@@ -652,22 +684,23 @@ XButton2::
     SendInput ^v
     Sleep, 750
 		
+		; TODO: Fix this with VS Code
     ; We can do some extra formatting of some types of data using Notepad++ plugins, 
     ; based on the type of the data we're viewing
-    newText := Clipboard
-    If RegExMatch(newText, regExHtmlOrXml)
-    {
-      SendInput ^+!{b}    ; Plugins => XML Tools => Pretty print...
-      SendInput !{l}x     ; Language => XML
-    }
-    Else If RegExMatch(newText, regExJson)
-    {
-      SendInput ^!{m}     ; Pluginx => JSTool =>    JSFormat
-    }
-    Else If RegExMatch(newText, regExSql)
-    {
-      SendInput !+{f}     ; Plugins => SQLinForm => Format Selected SQL 
-    }
+    ;newText := Clipboard
+    ;If RegExMatch(newText, regExHtmlOrXml)
+    ;{
+    ;  SendInput ^+!{b}    ; Plugins => XML Tools => Pretty print...
+    ;  SendInput !{l}x     ; Language => XML
+    ;}
+    ;Else If RegExMatch(newText, regExJson)
+    ;{
+    ;  SendInput ^!{m}     ; Pluginx => JSTool =>    JSFormat
+    ;}
+    ;Else If RegExMatch(newText, regExSql)
+    ;{
+    ;  SendInput !+{f}     ; Plugins => SQLinForm => Format Selected SQL 
+    ;}
   }
   Clipboard := ClipSaved	 ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll)
   ClipSaved =			       ; Free the memory in case the clipboard was very large
@@ -677,9 +710,9 @@ XButton2::
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Personal cloud
-;   Win+Shift+P   Open or activate my personal cloud website in Microsoft Edge
+;   - Open or activate my personal cloud website on the 2nd virtual desktop in Microsoft Edge
 ;---------------------------------------------------------------------------------------------------------------------
-+#p::
+#^p::     ; Windows|AHK|Personal cloud, smart (on 2nd virtual desktop in Edge)
   If WinExist(".*Kummer Cloud ahk_exe ApplicationFrameHost.exe")
   {
 	  WinActivate, Kummer Cloud
@@ -699,16 +732,20 @@ XButton2::
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Typora
-;   Ctrl+mousewheel   Zoom in and out
-;   Win+T             Open Typora if not already open. Virtual desktops "Main" and "Personal" open different folders 
-;                     of files.
+;   - Ctrl+MouseWheel   Zoom in and out
+;   - #t                Open Typora if not already open. Virtual desktops "Main" and "Personal" open different folders 
+;                       of files.
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive - Typora 
-  ^WheelUp::   SendInput ^+{=}
-  ^WheelDown:: SendInput ^+{-}
+  ^WheelUp::        ; Typora|AHK|Increase font size
+	  SendInput ^+{=}
+		Return
+  ^WheelDown::      ; Typora|AHK|Decrease font size
+	  SendInput ^+{-}
+		Return
 #IfWinActive
 
-#t::
+#t::                ; Windows|AHK|Typora, with each virtual desktop having a different folder of files
   ; Determine if Typora is running in this virtual desktop
 	typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop()
 	If (typoraIdOnThisDesktop == 0)
@@ -749,9 +786,9 @@ GetTyporaOnThisVirtualDesktop()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+g           Activate/open gTasks Pro to handle my tasks
+; gTasks Pro
 ;---------------------------------------------------------------------------------------------------------------------
-#g::
+#g::              ; Windows|AHK|gTasks Pro
   If Not WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
 	{
     ; Note that Windows store apps are more complex than simple exe's
@@ -763,23 +800,25 @@ GetTyporaOnThisVirtualDesktop()
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Ctrl+v      Paste clipboard as plain text. https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
+; Paste clipboard as plain text
+;   - Code taken from https://autohotkey.com/board/topic/10412-paste-plain-text-and-copycut
 ;---------------------------------------------------------------------------------------------------------------------
-^#v::
-  Clip0 = %ClipBoardAll%
-  ClipBoard = %ClipBoard%      	; Convert to text
-  SendInput ^v                  	; For best compatibility: SendPlay
-  Sleep 50                      	; Don't change clipboard while it is pasted! (Sleep > 0)
-  ClipBoard = %Clip0%           	; Restore original ClipBoard
-  VarSetCapacity(Clip0, 0)     	; Free memory
-  Return
+;#^v::
+;  Clip0 = %ClipBoardAll%
+;  ClipBoard = %ClipBoard%      	; Convert to text
+;  SendInput ^v                  ; For best compatibility: SendPlay
+;  Sleep 50                      ; Don't change clipboard while it is pasted! (Sleep > 0)
+;  ClipBoard = %Clip0%           ; Restore original ClipBoard
+;  VarSetCapacity(Clip0, 0)     	; Free memory
+;  Return
 
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+g     Open Git. ConEmu has multiple windows, so cannot just use "WinActivate, Git Bash"
+; git Bash
+;   - Since ConEmu has multiple windows, cannot just use "WinActivate, Git Bash"
 ;---------------------------------------------------------------------------------------------------------------------
-+#g::
+#b::              ; Windows|AHK|git Bash (as admin)
   If Not WinExist("ahk_class VirtualConsoleClass")
   {
     Run "%WindowsProgramFilesFolder%\ConEmu\ConEmu64.exe" -run {Shells::Git Bash}
@@ -791,100 +830,48 @@ GetTyporaOnThisVirtualDesktop()
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+v     Run VISUAL STUDIO
+; Timesheets website
 ;---------------------------------------------------------------------------------------------------------------------
-+#v::
-	If Not WinExist("Microsoft Visual Studio")
-	{
-	  Run *RunAs "%WindowsProgramFilesX86Folder%\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe"
-	}
-  WinActivate, Microsoft Visual Studio
-  Return  
-
-
-
-;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+e     Run ECLIPSE IDE
-;---------------------------------------------------------------------------------------------------------------------
-#IfWinActive - Eclipse IDE
-  ^WheelUp::   SendInput ^{+}
-  ^WheelDown:: SendInput ^{-}
-#IfWinActive
-
-+#e::
-	If Not WinExist("- Eclipse IDE")
-	{
-	  Run *RunAs "%WindowsProgramFilesFolder%\Eclipse 4.10\eclipse\eclipse.exe"
-	}
-  WinActivate, Eclipse IDE
-  Return  
-
-	
-	
-;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+a     ADP - Go to ADP website to enter my timesheet
-;---------------------------------------------------------------------------------------------------------------------
-+#a::
+#+4::             ; Windows|AHK|Timesheet (Shift-4 is $)
 	Run, "%TimesheetUrl%",, Max
   Return
 
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+b     BitBucket
+; Source code
 ;---------------------------------------------------------------------------------------------------------------------
-+#b::
-	Run, "%BitBucketUrl%",, Max
+#s::              ; Windows|AHK|Source code (BitBucket)
+	Run, "%SourceCodeUrl%",, Max
   Return
 
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+w     Wiki
+; Wiki (Confluence)
 ;---------------------------------------------------------------------------------------------------------------------
-+#w::
+#w::              ; Windows|AHK|Wiki- Confluence
 	Run, "%WikiUrl%",, Max
   Return
 
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+y     centrifY
+; PrintScreen
+;   - Open the Windows snipping tool in rectangular mode
+;   - Image is stored in the clipboard
+;   - Shift+PrintScreen still takes a screenshot of the whole screen
 ;---------------------------------------------------------------------------------------------------------------------
-+#y::
-	Run, "%CentrifyUrl%",, Max
-  Return
-
-
-	
-;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+x     citriX
-;---------------------------------------------------------------------------------------------------------------------
-+#x::
-	Run, "%CitrixUrl%",, Max
-  Return
-
-	
-  
-;---------------------------------------------------------------------------------------------------------------------
-; Prt Scr         Open the Windows snipping tool in rectangular mode. Image is stored in the clipboard.
-;                 Shift+Prt Scr still takes a screenshot of the whole screen.
-;---------------------------------------------------------------------------------------------------------------------
-printscreen::
+printscreen::     ; Windows|AHK|Start Windows snipping tool in rectangle mode
   Run snippingtool /clip
   Return
 
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+m           Music - Start or activate one of the music/media apps I use
-;                   - iHeartRadio
-;                   - Google Play Music Player
-;                   - Windows Media Player
-;                   - Brown Noise
-;                   - White Noise App
+; Music/media
 ;---------------------------------------------------------------------------------------------------------------------
-#m::
+#m::              ; Windows|AHK|Music/media app
   If WinExist("ahk_exe Google Play Music Desktop Player.exe")
 	{
 	  WinActivate ahk_class Chrome_WidgetWin_1 ahk_exe i)google play music desktop player.exe
@@ -915,8 +902,7 @@ PlayNoiseFile(whichNoiseMp3)
 	{
 	  ; I had a difficult time getting Windows Media Player to cooperate here, thus
 		;   - /Task Library     I would have preferred to open NowPlaying
-		;   - Sleep             Shouldn't need all of these, but I couldn't get it to 
-		;                       work without the sleeps and WinActivate
+		;   - Sleep             Shouldn't need all of these, but couldn't get it to work without sleeps and WinActivate
 		Run, "%WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe" "%whichNoiseMp3%" /Task Library
 		WinWaitActive, Windows Media Player,, 2
 		Sleep, 1000
@@ -940,10 +926,9 @@ BuildMediaPlayerMenu()
 	Menu, MediaPlayerMenu, Add, &White Noise App, MediaPlayerMenuHandler
 	Menu, MediaPlayerMenu, Add, &Railroad Noise, MediaPlayerMenuHandler
 
-	; I could not figure out how to extract an icon from a Windows Store app, AND 
-	; it looks like using PNG files for icons is unsupported, so I downloaded an
-	; icon from the internet and use it instead. The iHeartRadio shortcut lists 
-	; this as the icon: ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png
+	; I could not figure out how to extract an icon from a Windows Store app, AND it looks like using PNG files for icons
+	; is unsupported, so I downloaded an icon from the internet and use it instead. The iHeartRadio shortcut lists this
+	; as the icon: ClearChannelRadioDigital.iHeartRadio_6.0.34.0_x64__a76a11dkgb644?ms-resource://ClearChannelRadioDigital.iHeartRadio/Files/Assets/Square44x44Logo.png
 	Menu, MediaPlayerMenu, Icon, &iHeartRadio, %MyPersonalFolder%\WindowsStoreAppLinks\iHeartRadio.jpg, 1, 32
 	Menu, MediaPlayerMenu, Icon, &Google Play Music Desktop Player, %WindowsUserProfile%\AppData\Local\GPMDP_3\Update.exe, 1, 32
 	Menu, MediaPlayerMenu, Icon, Windows &Media Player, %WindowsProgramFilesX86Folder%\Windows Media Player\wmplayer.exe, 1, 32
@@ -983,17 +968,19 @@ MediaPlayerMenuHandler:
 	
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+j           JIRA- Open JIRA to current board
-; Win+Shift+j     JIRA- Open JIRA - smart
-;                   - If the highlighted text looks like a JIRA story number (e.g. PROJECT-1234), then open that story
-;                   - If the Git Bash window has text that looks like a JIRA story number, then open that story
+; JIRA
+;   - #j opens the current board
+;   - #^j tries to determine which story to open
+;       * If the highlighted text looks like a JIRA story number (e.g. PROJECT-1234), then open that story
+;       * If the Git Bash window has text that looks like a JIRA story number, then open that story
+;       * Last resort is to open the current board
 ;---------------------------------------------------------------------------------------------------------------------
-#j::
+#j::              ; Windows|AHK|JIRA, current board
 	pathDefaultBoard = /secure/RapidBoard.jspa?rapidView=%JiraDefaultRapidKey%&projectKey=%JiraDefaultProjectKey%&sprint=%JiraDefaultSprint%
 	Run, %JiraUrl%%pathDefaultBoard%
 	Return
 
-+#j::
+#^j::             ; Windows|AHK|JIRA, smart (open a specific story)
   regexStoryNumberWithoutProject = \b\d{1,5}\b
   regexStoryNumberWithProject = i)\b(%JiraMyProjectKeys%)([-_ ]|( - ))?\d{1,5}\b
 	pathBrowse = /browse/
@@ -1049,20 +1036,20 @@ MediaPlayerMenuHandler:
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+i           INBOX - Activate Outlook and goto my Inbox
+; Inbox
 ;---------------------------------------------------------------------------------------------------------------------
-#i::	
+#i::              ; Windows|AHK|Outlook Inbox
   ActivateOrStartMicrosoftOutlook()
   WinActivate
-	SendInput ^+I    ;Ctrl-Shift-I is "Switch to Inbox" shortcut key
+	SendInput ^+I   ; Ctrl-Shift-I is "Switch to Inbox" shortcut key
 	Return
 
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+C           CALENDAR - Activate Outlook and goto my Calendar
+; Calendar
 ;---------------------------------------------------------------------------------------------------------------------
-#c::
+#c::              ; Windows|AHK|Outlook Calendar
   ActivateOrStartMicrosoftOutlook()
   SendInput ^2	
   Return
@@ -1070,9 +1057,9 @@ MediaPlayerMenuHandler:
 
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; NOTE that Outlook is whiny, and the "instant search" feature (press Ctrl+E to search your mail items) 
-; refuses to run when Outlook is run as an administrator. Because we are running this AHK script as an
-; administrator, we cannot simply run Outlook. Instead, we must run it as a standard user.
+; NOTE that Outlook is whiny, and the "instant search" feature (press Ctrl+E to search your mail items) refuses to run
+; when Outlook is run as an administrator. Because we are running this AHK script as an administrator, we cannot
+; simply run Outlook. Instead, we must run it as a standard user.
 ;---------------------------------------------------------------------------------------------------------------------
 ActivateOrStartMicrosoftOutlook()
 {
@@ -1092,64 +1079,188 @@ ActivateOrStartMicrosoftOutlook()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+down        MINIMIZE - Minimize the active window. This overrides the existing Windows hotkey that:
-;                   - First time you use it, un-maximizes (restores) the window
-;                   - Second second time you use it, it minimizes the window
+; Minimize the active window. This overrides the existing Windows hotkey that:
+;   - First time you use it, un-maximizes (restores) the window
+;   - Second second time you use it, it minimizes the window
 ;---------------------------------------------------------------------------------------------------------------------
-#down::
+#down::           ; Windows|AHK|Minimize active window instead of making it unmaximized, then minimize
   WinMinimize, A
   Return
 
 
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+c     COMMAND prompt - Open a command prompt. Because we're using RunAsAdmin() in this script to run as 
-;                                  administrator, the command prompt has administrator privileges. I am using ConEmu
-;                                  as a replacement console (https://code.google.com/p/conemu-maximus5)
+; Noise
 ;---------------------------------------------------------------------------------------------------------------------
-#+c::
-	Run %WindowsProgramFilesFolder%\ConEmu\ConEmu64.exe -run {Shells::cmd (Admin)}
-  Return
-
-  
-
-;---------------------------------------------------------------------------------------------------------------------
-; Win+Shift+s     SURROUND - Open Surround
-;---------------------------------------------------------------------------------------------------------------------
-+#s::
-  Run %WindowsProgramFilesFolder%\Seapine\Surround SCM\Surround SCM Client.exe
-  Return
-	
-
-	
-;---------------------------------------------------------------------------------------------------------------------
-; Win+z           noiZe - Toggle SimplyNoise.com
-;
-; I'm having problems w/this site crashing Chrome, so I'll use IE for this instead. Plus, it segregates it out into a 
-; separately controllable window.
-;---------------------------------------------------------------------------------------------------------------------
-#z::
-  ;If Not WinExist("SimplyNoise")
-  ;  Run, iexplore.exe http://www.simplynoise.com,, Min
-  ;Else 
-	;{
-	;  WinActivate, SimplyNoise
-  ;  WinClose, SimplyNoise
-	;}
-	
+#z::              ; Windows|AHK|noiZe
 	PlayNoiseFile(NoiseBrownMP3)
 	Return
 
 
+
 	
+AutoGenerateDocumentation() 
+{
+  ; Read this script and build a list of shortcut keys
+	Sleep, 1000     ; Give VS Code time to save the file before we start
+	shortcut_details := []
+	shortcut_array_keys := []
 	
-	
-	
-	
+	line_num = 1
+	Loop
+	{
+    FileReadLine, line, %A_ScriptName%, %A_Index%
+    if ErrorLevel
+      break
+		; When search for lines in this file, have to explicitly exclude the next line
+		If (RegExMatch(line, ".*;?.*::.*;.*[\|].*[\|]") And InStr(line, "RegExMatch") == 0)
+		{
+			;MsgBox, 4, , Line #%A_Index% MATCHES: %line%. Continue?
+    	;IfMsgBox, No
+      ;  break
+			current_shortcut_details := {array_key: "", raw_text: "", shortcut_keys: "", group_name: "", is_ahk: "", comments: ""}
+
+			; Parse out shortcut keys, the group name, and the comments
+			; TODO: somehow exclude commented code
+			RegExMatch(line, "[;]?(.*)`:`:.*\;(.*?)\|(.*)\|(.*)", info)
+			shortcut_keys_all = %info1%
+			group_name = %info2%
+			is_ahk = %info3%
+			comments = %info4%
+
+			; For sorting, want keys to look like this for nice sorting purposes, keeping all varieties of
+			; shortcut keys for a single letter together
+			;   Windows|j|#^j|JIRA
+			;   Windows|j|#j|JIRA
+			shortcut_keys_stripped := RegExReplace(shortcut_keys_all, "[#^+!]")
+			array_key = %group_name%|%shortcut_keys_stripped%|%shortcut_keys_all%|%line_num%
+			current_shortcut_details.array_key := array_key
+			shortcut_array_keys.Push(array_key)
+
+      ; Save the details of this shortcut key
+			current_shortcut_details.raw_text := line
+			current_shortcut_details.shortcut_keys := shortcut_keys_all
+			current_shortcut_details.group_name := group_name
+			current_shortcut_details.is_ahk := is_ahk
+			current_shortcut_details.comments := comments
+			shortcut_details.Push(current_shortcut_details)
+
+			current_shortcut_details := ""  ; Release the object
+			line_num++
+		}
+	}
+
+  shortcut_array_keys := sortArray(shortcut_array_keys)
+
+	; Build the output. Use shortcut_array_keys to get shortcut keys in the desired order.
+	output := ""
+	last_group := ""
+	for index, element in shortcut_array_keys
+	{
+		details_index := StrSplit(element, "|")[4]
+    details_object := shortcut_details[details_index]
+
+		shortcut_keys := details_object.shortcut_keys
+		group_name := details_object.group_name
+		comments := details_object.comments
+
+		padded_shortcut_keys := SubStr(shortcut_keys . "               ", 1, 15)
+		padded_group_name := group_name
+		If (details_object.is_ahk)
+		  padded_group_name = %padded_group_name% (AHK)
+	  padded_group_name := SubStr(padded_group_name . "                   ", 1, 19)
+		
+		If (last_group != "" And last_group != group_name)
+		  output = %output%;`n
+ 		output = %output%; %padded_shortcut_keys% %padded_group_name% %comments%`n
+
+		last_group := group_name
+	}
+	FileDelete, C:\Temp\Out.txt
+	FileAppend, %output%, C:\Temp\Out.txt
+
+  ; Backup our script
+	source_filename = %A_ScriptName%
+	FormatTime, CurrentDateTime,, yyyy-MM-ddThh-mm-ss
+	target_filename = %A_ScriptName%.%CurrentDateTime%.ahk
+  FileCopy, %source_filename%, %target_filename%
+
+  ; Replace the "Shortcuts" documentation with our newly generated documentation
+	FileRead, my_script, %A_ScriptName%
+	title_dashes := Replicate("-", 10)
+	end_of_comments_dashes := Replicate("=", 120)
+	new_output := "; Shortcuts (Auto-Generated)`r`n; " . title_dashes . "`r`n" . output . ";" . end_of_comments_dashes . "`r`n"
+  ;test := RegExMatch(my_script, "s); Shortcuts`r`n; -----+`r`n;..*;")
+  ;msgbox test is %test%
+	my_script := RegExReplace(my_script, "s); Shortcuts (Auto-Generated)`r`n; -----+`r`n;..*?;=====+", new_output)
+	FileDelete, %source_filename%
+	FileAppend, %my_script%, %source_filename%
+	;Sleep, 1000
+
+	MsgBox, Done regenerating shortcut documentation.
+	Return
+}
+
+Replicate( Str, Count ) { ; By SKAN / CD: 01-July-2017 | goo.gl/U84K7J
+  Return StrReplace( Format( "{:0" Count "}", "" ), 0, Str )
+}
+
+sortArray(arr) {
+; Code from https://autohotkey.com/board/topic/93570-sortarray/
+	if	!IsObject(arr)
+		return	0
+	new :=	[]
+	For each, item in arr
+		list .=	item "`n"
+	list :=	Trim(list,"`n")
+	Sort, list, %options%
+	Loop, parse, list, `n, `r
+		new.Insert(A_LoopField)
+	Return new
+}
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; All of the following commented-out hotkeys, etc are here so that the auto-generated documentation includes them
+;---------------------------------------------------------------------------------------------------------------------
 #Include %A_ScriptDir%\My Automations Utilities.ahk
 #Include %A_ScriptDir%\Slack Status Update.ahk
+; /lunch::          ; Slack      |AHK|Set status to "/status :hamburger: At lunch"
+; /mtg::            ; Slack      |AHK|Set status to "/status :spiral_calendar_pad: In a meeting"
+; /wfh::            ; Slack      |AHK|Set status to "/status :house: Working remotely"
+; /status::         ; Slack      |AHK|Clear status
 #Include %A_ScriptDir%\Virtual Desktop Accessor.ahk
-
+; #^1::             ; V. Desktops|AHK|Switch to virtual desktop #1
+; #^2::             ; V. Desktops|AHK|Switch to virtual desktop #2
+; #^3::             ; V. Desktops|AHK|Switch to virtual desktop #3
+; #^4::             ; V. Desktops|AHK|Switch to virtual desktop #4
+; #^5::             ; V. Desktops|AHK|Switch to virtual desktop #5
+; #^6::             ; V. Desktops|AHK|Switch to virtual desktop #6
+; #^7::             ; V. Desktops|AHK|Switch to virtual desktop #7
+; #^8::             ; V. Desktops|AHK|Switch to virtual desktop #8
+; #^9::             ; V. Desktops|AHK|Switch to virtual desktop #9
+; #^+Left::         ; V. Desktops|AHK|Move active window to previous virtual desktop
+; #^+Right::        ; V. Desktops|AHK|Move active window to next virtual desktop
+; ----- Built-In Windows Shortcuts I Use -----
+; #1::              ; Windows    |   |1st app in the task bar
+; #2::              ; Windows    |   |2nd app in the task bar
+; #3::              ; Windows    |   |3rd app in the task bar
+; #4::              ; Windows    |   |4th app in the task bar
+; #5::              ; Windows    |   |5th app in the task bar
+; #6::              ; Windows    |   |6th app in the task bar
+; #7::              ; Windows    |   |7th app in the task bar
+; #8::              ; Windows    |   |8th app in the task bar
+; #9::              ; Windows    |   |9th app in the task bar
+; #a::              ; Windows    |   |Windows Action Center
+; #d::              ; Windows    |   |Windows desktop
+; #e::              ; Windows    |   |Windows Explorer
+; #l::              ; Windows    |   |Lock workstation
+; #p::              ; Windows    |   |Project (duplicate, extend, etc)
+; #up::             ; Windows    |   |Maximize active window
+; #v::              ; Windows    |   |Clipboard
+; +printscreen::    ; Windows    |   |Take screenshot of the whole screen
+; #^left::          ; V. Desktops|   |Switch to previous virtual desktop
+; #^right::         ; V. Desktops|   |Switch to next virtual desktop
 
 
 ;---------------------------------------------------------------------------------------------------------------------
