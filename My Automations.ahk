@@ -9,6 +9,7 @@
 ; -------------
 ;   - Definition of AutoHotKey keys: http://www.autohotkey.com/docs/KeyList.htm
 ;   - Send/SendInput modifiers: ^ = Ctrl, ! = Alt, + = Shift, # = Windows
+;   - This looks helpful: http://www.daviddeley.com/autohotkey/xprxmp/autohotkey_expression_examples.htm
 ;
 ;
 ; Known Issues
@@ -16,12 +17,9 @@
 ;   - None
 ;
 ;
-; To Do List
-; ----------
-; 1. Auto-generate shortcuts in header
-;    NEED TO FIX PROBLEMS WHEN CAN'T OVERWRITE FILE
-;    ***** THIS CODE IS NOT TRUSTWORTHY YET *****
-;    BEWARE OF IT REPLACING TOO MUCH TEXT!!!!, going down to "Upon startup of this script, perform these actions"
+; TO DO
+; ------------
+;   - Backup password databases- not just work passwords
 ;
 ;
 ; Future Ideas
@@ -30,7 +28,6 @@
 ;     "netsh wlan show interfaces | findstr TeleBYOD", which only returns text when I'm connected to that network
 ;   - Any use for text-to-speech? ComObjCreate("SAPI.SpVoice").Speak("Speak this phrase")
 ;   - Popup menus are useful- can I use them elsewhere?
-;       - ADP for entering timesheet?
 ;
 ;
 ; Summary (7/22/2019)
@@ -42,11 +39,11 @@
 ; * Slack Improvements
 ;     - Changing "/lunch" "/status :hamburger: At lunch", etc.
 ;     - Upon Windows login/unlock, set Slack status based on nearby wifi networks
-; * Backup KeePass Database - Upon Windows login/unlock, if a specific USB drive is plugged in, backup KeePass 
+; * Backup password database - Upon Windows login/unlock, if a specific USB drive is plugged in, backup my password 
 ;   database to it
 ;
 ;
-; Shortcuts - Auto-Generated
+; Hotkeys - Auto-Generated
 ; ------------------------------
 ; ^+WheelDown     Chrome (AHK)        Scroll through open tabs
 ; ^+WheelUp       Chrome (AHK)        Scroll through open tabs
@@ -75,9 +72,9 @@
 ; #^+Right        V. Desktops (AHK)   Move active window to next virtual desktop
 ; #^right         V. Desktops         Switch to next virtual desktop
 ;
-; ~$^s            VS Code (AHK)       After save AHK file in VS Code, reload the current script
+; ~$^s            VS Code (AHK)       After save AHK file, autogenerate documentation, reload the current script
 ;
-; (login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks; KeePass backup
+; (login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks; password database backup
 ; #1              Windows             1st app in the task bar
 ; #2              Windows             2nd app in the task bar
 ; #3              Windows             3rd app in the task bar
@@ -111,6 +108,8 @@
 ; #s              Windows (AHK)       Source code (BitBucket)
 ; #t              Windows (AHK)       Typora, with each virtual desktop having a different folder of files
 ; #up             Windows             Maximize active window
+; #^+u            Windows (AHK)       Generate random UUID (uppercase)
+; #^u             Windows (AHK)       Generate random UUID (lowercase)
 ; #^v             Windows (AHK)       Visual Studio Code, smart (paste the selected text into the newly opened window)
 ; #v              Windows (AHK)       Visual Studio Code
 ; #v              Windows             Clipboard
@@ -149,8 +148,8 @@ UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
 ; These come from my own Windows environment variables. See "My Automations Config.bat" for details
 Global BackupDriveSerialNumber
-Global KeePassDBFilename
-Global KeePassDBBackupFilename
+Global PasswordDBFilename
+Global PasswordDBBackupFilename
 EnvGet, JiraUrl, AHK_URL_JIRA
 EnvGet, JiraMyProjectKeys, AHK_MY_PROJECT_KEYS_JIRA
 EnvGet, JiraDefaultProjectKey, AHK_DEFAULT_PROJECT_KEY_JIRA
@@ -163,8 +162,10 @@ EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
 EnvGet, NoiseBrownMP3, AHK_MP3_NOISE_BROWN
 EnvGet, NoiseRailroadMP3, AHK_MP3_NOISE_RAILROAD
 EnvGet, BackupDriveSerialNumber, AHK_BACKUP_DRIVE_SERIAL_NUMBER
-EnvGet, KeePassDBFilename, AHK_KEEPASS_DB_FILENAME
-EnvGet, KeePassDBBackupFilename, AHK_KEEPASS_DB_BACKUP_FILENAME
+EnvGet, PasswordApp, AHK_PASSWRD_APP
+EnvGet, PasswordDBFilename, AHK_PASSWRD_DB_FILENAME
+EnvGet, PasswordDBBackupFilename, AHK_PASSWRD_DB_BACKUP_FILENAME
+
 
 ; Commonly used folders	
 Global MyDocumentsFolder
@@ -229,7 +230,7 @@ StopInterceptingWindowsUnlock()
 {
   DllCall("Wtsapi32.dll\WTSUnRegisterSessionNotification", "uint", hwnd)
 }
-; (login/unlock)::     ; Windows|AHK|Set Slack status based on nearby wifi networks; KeePass backup
+; (login/unlock)::     ; Windows|AHK|Set Slack status based on nearby wifi networks; password database backup
 OnWindowsUnlock(wParam, lParam)
 {
   WTS_SESSION_UNLOCK := 0x8
@@ -237,7 +238,7 @@ OnWindowsUnlock(wParam, lParam)
 	{
 		SendInput #a                                  		  ; Open Windows Action Center to show new notifications from my phone
     SlackStatusUpdate_SetSlackStatusBasedOnNetwork()		; If appropriate, then update my Slack status
-	  BackupKeePass()                                    	; If backup drive is inserted, then backup my KeePass database
+	  BackupPasswordDatabase()                           	; If backup drive is inserted, then backup my password database
 	}
 }
 
@@ -248,6 +249,30 @@ OnWindowsUnlock(wParam, lParam)
 ;---------------------------------------------------------------------------------------------------------------------
 ; Temporary/experimental stuff goes here
 ;---------------------------------------------------------------------------------------------------------------------
+
+#Esc::   ; Run password manager
+	StartPasswordManager()
+  Return
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Start my password manager, minimized, if it is not already running
+;---------------------------------------------------------------------------------------------------------------------
+StartPasswordManager() 
+{
+	Global PasswordApp
+
+	SplitPath, PasswordApp , passwordAppExe,
+	If !ProcessExists(passwordAppExe)
+	{
+	  Run, %ComSpec% /c ""`%AHK_PASSWRD_APP`%""" ""`%AHK_PASSWRD_DB_FILENAME`%" -pw-enc:`%AHK_PASSWRD_DB_PASSWRD`% -minimize,, Min
+	}
+	Return
+}
+
+
+
+
 
 ; Win+Ctrl+V      to open VPN app
 ;^#v::
@@ -293,18 +318,18 @@ OnWindowsUnlock(wParam, lParam)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Backup KeePass database
-;   - If the flash drive I use to backup my KeePass database is inserted, then back it up to that drive
+; Backup password database
+;   - If the flash drive I use to backup my password database is inserted, then back it up to that drive
 ;---------------------------------------------------------------------------------------------------------------------
-BackupKeePass()
+BackupPasswordDatabase()
 {
-	keePassBackupDriveLetter := GetDriveLetter(BackupDriveSerialNumber, "REMOVABLE")
-	If (keePassBackupDriveLetter)
+	backupDriveLetter := GetDriveLetter(BackupDriveSerialNumber, "REMOVABLE")
+	If (backupDriveLetter)
 	{
 	  ; FileCopy - last parameter determines if overwrite
 	  ; MsgBox options: 64 (Info icon) + 4096 (System Modal- always on top)
-		FileCopy, %KeePassDBFilename%, %keePassBackupDriveLetter%:\%KeePassDBBackupFilename%, 1
-		MsgBox, 4160, KeePass Database Backup, %KeePassDBFilename%`nhas been backed up to %keePassBackupDriveLetter%:\%KeePassDBBackupFilename%.
+		FileCopy, %PasswordDBFilename%, %backupDriveLetter%:\%PasswordDBBackupFilename%, 1
+		MsgBox, 4160, Password Database Backup, %PasswordDBFilename%`nhas been backed up to %backupDriveLetter%:\%PasswordDBBackupFilename%.
 	}
 }
 
@@ -312,6 +337,12 @@ BackupKeePass()
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Dark mode
+;
+; In some applications, there is no easy way to determine what the current theme is. There's no textbox (or there is 
+; but AHK can't access it), or the theme is a control that's checked/unchecked in a menu, and it's not persisted 
+; somewhere we can easily get to it (either in the registry or a file). In those cases, I have to get the color of
+; some pixel and if that pixel is a dark color, then I ASSUME we're displaying a dark theme, else I ASSUME that we're 
+; using a light theme.
 ;---------------------------------------------------------------------------------------------------------------------
 #Space::     ; Windows|AHK|Toggle dark mode for active application
 	If WinActive("ahk_exe chrome.exe")
@@ -327,12 +358,10 @@ BackupKeePass()
 	}
 	Else If WinActive("- Visual Studio Code")
 	{
-		; In Visual Studio Code, there is no easy way to see which color theme is active, so I look at the color of a
-		; specific pixel in the window, and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, else I
-		; assume we're using a light theme.
-		PixelGetColor, color, 20, 70
-		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
-		blue:=blue+0                  ; add 0 to convert it to decimal
+		; In Visual Studio Code, have to look at a pixel to determine which theme is active
+		;   "Light+ (default light)" is the light theme
+		;   "Dark+ (default dark)" is the dark theme
+		blue := GetPixelsBlueValue(20, 70)
 		If blue < 55
 		{
 	    SendInput ^k
@@ -352,12 +381,10 @@ BackupKeePass()
 	}
 	Else If WinActive("- IntelliJ IDEA")
 	{
-		; In IntelliJ IDEA, there is no easy way to see which color theme is active, so I look at the color of a specific 
-		; pixel in the window, and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, else I assume 
-		; we're using a light theme.
-		PixelGetColor, color, 17, 80
-		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
-		blue:=blue+0                  ; add 0 to convert it to decimal
+		; In IntelliJ IDEA, have to look at a pixel to determine which theme is active
+		;   "IntelliJ/Default/Light" is the light theme
+		;   "Darcula" is the dark theme
+		blue := GetPixelsBlueValue(17, 80)
 		SendInput ^!s
 		Sleep, 500
 		SendInput theme
@@ -367,9 +394,9 @@ BackupKeePass()
 		SendInput {DOWN}
 		Sleep, 250
 		If blue < 75
-			SendInput {DOWN}{DOWN}      ; Switching to IntelliJ/Default/Light
+			SendInput {DOWN}{DOWN}
 		Else
-			SendInput {UP}{UP}          ; Switching to Darcula
+			SendInput {UP}{UP}
 		SendInput {ENTER}
 		Sleep, 250
 		SendInput {ENTER}
@@ -378,14 +405,16 @@ BackupKeePass()
   {
 	  ; In Notepad++, need VS2015-Dark theme (https://github.com/Dark-Genser/NotepadPP_AHK_VS-theme) and can then go to
 		; Settings => Style Configurator to toggle between themes "Default" and "VS2015-Dark"
+		;   "Default" is the light theme
+		;   "VS2015-Dark" is the dark theme
 		SendInput {ALT}ts{ENTER}
 		WinWaitActive, Style Configurator,, 2
 		ControlGet, currentTheme, Choice,, ComboBox1, Style Configurator
 		ControlFocus, ComboBox1, Style Configurator
 		If InStr(currentTheme, "Dark")
-		  SendInput d    ; Select "Default"
+		  SendInput d
 		Else
-		  SendInput vvv  ; Select "VS2015-Dark"
+		  SendInput vvv
 		SendInput {TAB}{TAB}{TAB}{TAB}{TAB}{TAB}{TAB}{ENTER}
   }	
 	Else If WinActive("- Eclipse IDE")
@@ -393,21 +422,25 @@ BackupKeePass()
 	  ; In Eclipse settings Preferences => Editor => Keys, I MANUALLY added a shortcut for Ctrl+Shift+8 to open 
 		; Preferences => General => Appearance. So this code can use that shortcut to programmatically open
 		; Preferences => Appearance and then toggle the Theme between "Classic" and "Dark".
+		;   "Classic" is the light theme
+		;   "Dark" is the dark theme
 		SendInput ^+{8}     
 		WinWaitActive, Preferences,, 2
 		ControlGet, currentTheme, Choice,, ComboBox1, Preferences
 		ControlFocus, ComboBox1, Preferences
 		If InStr(currentTheme, "Dark")
-			SendInput c        ; Select "Classic"
+			SendInput c
 		Else
-			SendInput d        ; Select "Dark"
+			SendInput d
     SendInput !a         ; Apply changes
     SendInput {Escape}   ; Close dialog saying restart necessary for full effect
     SendInput {Escape}   ; Close Preferences dialog
 	}
 	Else If WinActive("Microsoft Visual Studio")
 	{
-	  ; In Visual Studio, Tools => Options, toggle between "Blue" and "Dark"
+	  ; In Visual Studio, Tools => Options
+		;   "Blue" is the light theme
+		;   "Dark" is the dark theme
     SendInput !to    
 		WinWaitActive, Options,, 2
 		SendInput ^eVisual experience{TAB}
@@ -415,45 +448,38 @@ BackupKeePass()
 		ControlGet, currentTheme, Choice,, ComboBox1, Options
 		ControlFocus, ComboBox1, Options
 		If InStr(currentTheme, "Dark")
-			SendInput b     ; Select "Blue"
+			SendInput b
 		Else
-		  SendInput d     ; Select "Dark"
+		  SendInput d
 		SendInput {ENTER}
 	}
 	Else If WinActive("- Typora")
 	{
-		; In Typora, there is no easy way to see which theme is active:
-		;   - Typora has a custom UI that is not accessible by AHK ControlGet/etc commands
-		;   - I could not find where the name of the current theme is persisted, either in a file in
-		;     C:\Program Files\Typora, or in the registry
-		;   - While Typora uses Chrome to render, and the developer tools (Shift+F12) shows me see
-		;     this in the header: 
-		;       <link rel="stylesheet" href="C:\Users\Brian-Kummer\AppData\Roaming\Typora\themes\night.css" id="theme_css">
-		;     I can't figure out how to access that from AHK
-		; So I look at the color of a specific pixel in the window, and if it's dim (blue < 55) then
-		; I ASSUME we're displaying a dark theme, else I assume we're using a light theme.
-		PixelGetColor, color, 20, 70
-		blue:="0x" SubStr(color,3,2)  ; substr is to get the piece
-		blue:=blue+0                  ; add 0 to convert it to decimal
+		; In Typora, have to look at a pixel to determine which theme is active
+		;   "Pixyll" is the light theme
+		;   "Night" is the dark theme
+		blue := GetPixelsBlueValue(20, 70)
 		SendInput !t
 		Sleep, 100
 		If blue < 55
-			SendInput p                 ; Switch to light theme Pixyll
+			SendInput p
 		Else
-			SendInput nn{ENTER}         ; Switch to dark theme Night
+			SendInput nn{ENTER}
 	}
 	Else If WinActive("ahk_exe explorer.exe")
 	{
 	  ; In Windows Explorer, light and dark mode is controlled by a registry key, and
-		;   0 = dark mode
-		;   1 = light mode
+		;   1 is the light mode
+		;   0 is the dark mode
 		RegRead, appsUseLightTheme, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize, AppsUseLightTheme
 		appsUseLightTheme:=!appsUseLightTheme
 		RegWrite, REG_DWORD, HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize, AppsUseLightTheme, %appsUseLightTheme%
 	}
 	Else If WinActive("ahk_class VirtualConsoleClass")
 	{
-	  ; ConEmu Settings => Features => Colors, toggle between "Tomorrow Night Blue" (light) and "Cobalt2" (dark)
+	  ; ConEmu Settings => Features => Colors
+		;   "Tomorrow Night Blue" is the light theme
+		;   "Cobalt2" is the dark theme
 		SendInput #!p
 		WinWaitActive, Settings.*,, 2
 		SendInput ^fSchemes{ENTER}
@@ -470,26 +496,33 @@ BackupKeePass()
 	}
 	Else If WinActive("ahk_exe OUTLOOK.EXE")
 	{
-		; In Microsoft Outlook, there is no easy way to see which color theme is active, so I look at the color of a
-		; specific pixel in the window, and if it's dim (blue < 55) then I ASSUME we're displaying a dark theme, else
-		; I assume we're using a light theme.
+		; In Microsoft Outlook, have to look at a pixel to determine which theme is active
+		;   "Colorful" is the light theme
+		;   "Black" is the dark theme
 		SendInput !f
 		Sleep, 100
 		SendInput d
 		Sleep, 500
-		PixelGetColor, color, 200, 200
-		blue:="0x" SubStr(color,3,2)   ; substr is to get the piece
-		blue:=blue+0                   ; add 0 to convert it to decimal
+		blue := GetPixelsBlueValue(200, 200)
 		SendInput y1
 		If blue < 55
-			SendInput c                  ; Switch to light theme Colorful
+			SendInput c
 		Else
-			SendInput b                  ; Switch to dark theme Black
+			SendInput b
 		SendInput {ENTER}{ESCAPE}
 	}
   Return
-	
-	
+
+GetPixelsBlueValue(x, y) 
+{
+	PixelGetColor, color, x, y
+	blue:="0x" SubStr(color,3,2)   ; substr is to get the piece
+	blue:=blue+0                   ; add 0 to convert it to decimal
+
+	Return blue
+}
+
+
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Chrome
@@ -502,6 +535,23 @@ BackupKeePass()
 	  SendInput ^{PgDn}
 		Return
 #IfWinActive
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Generate and output a UUID/GUID
+;---------------------------------------------------------------------------------------------------------------------
+#^u::     ; Windows|AHK|Generate random UUID (lowercase)
+  newGUID := CreateGUID()
+	StringLower, newGUID, newGUID
+  SendInput %newGUID%
+	Return
+
+#^+u::    ; Windows|AHK|Generate random UUID (uppercase)
+  newGUID := CreateGUID()
+	StringUpper, newGUID, newGUID
+  SendInput %newGUID%
+	Return
 
 
 
@@ -623,16 +673,14 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 ;                       SQL        SQLinForm     Alt+Shift+f
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive .ahk - Visual Studio Code 
-~$^s::      ; VS Code|AHK|After save AHK file in VS Code, reload the current script
-  ;Reload
+~$^s::      ; VS Code|AHK|After save AHK file, autogenerate documentation, reload the current script
 	AutoGenerateDocumentation(A_ScriptName)
   Reload
   Return
 #IfWinActive
 
 #v::        ; Windows|AHK|Visual Studio Code
-	;Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
-	Run "C:\Users\Brian-Kummer\AppData\Local\Programs\Microsoft VS Code\Code.exe"
+	Run "%WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe"
   Return
 
 #^v::       ; Windows|AHK|Visual Studio Code, smart (paste the selected text into the newly opened window)
@@ -659,8 +707,7 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 	  If Not WinExist("- Visual Studio Code") 
 		{
 		  ; Visual Studio Code isn't open, so start it, and wait up to 2 seconds for it to open
-		  ;Run "%WindowsProgramFilesFolder%\Notepad++\notepad++.exe"
-			Run "C:\Users\Brian-Kummer\AppData\Local\Programs\Microsoft VS Code\Code.exe"
+			Run "%WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe"
 		  WinWaitActive, Visual Studio Code,,2
     
 		  WinGetTitle, notpadTitle, A
@@ -827,9 +874,19 @@ GetTyporaOnThisVirtualDesktop()
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Timesheets website
+;   - Start the password manager in case we have to login
+;   - If the login page appears within 30 seconds then login, else assume I was logged in automatically by Active 
+;     Directory. 
 ;---------------------------------------------------------------------------------------------------------------------
 #+4::             ; Windows|AHK|Timesheet (Shift-4 is $)
+  StartPasswordManager()
 	Run, "%TimesheetUrl%",, Max
+
+	WinWaitActive, Login, , 30
+  If !ErrorLevel
+  {
+		SendInput ^!a
+	}
   Return
 
 	
@@ -1094,151 +1151,9 @@ ActivateOrStartMicrosoftOutlook()
 
 
 
-	
-; AutoGenerateDocumentation() 
-; {
-;   ; Read this script and build a list of shortcut keys
-; 	Sleep, 1000     ; Give VS Code time to save the file before we start
-; 	shortcut_details := []
-; 	shortcut_array_keys := []
-	
-; 	line_num = 1
-; 	Loop
-; 	{
-;     FileReadLine, line, %A_ScriptName%, %A_Index%
-;     if ErrorLevel
-;       break
-; 		; When search for lines in this file, have to explicitly exclude the next line
-; 		If (RegExMatch(line, ".*;?.*::.*;.*[\|].*[\|]") And InStr(line, "RegExMatch") == 0)
-; 		{
-; 			;MsgBox, 4, , Line #%A_Index% MATCHES: %line%. Continue?
-;     	;IfMsgBox, No
-;       ;  break
-; 			current_shortcut_details := {array_key: "", raw_text: "", shortcut_keys: "", group_name: "", is_ahk: "", comments: ""}
-
-; 			; Parse out shortcut keys, the group name, and the comments
-; 			; TODO: Exclude commented code: If line starts with ; and is_ahk then is commented code and skip it
-; 			RegExMatch(line, "[;]?(.*)`:`:.*\;(.*?)\|(.*)\|(.*)", info)
-; 			shortcut_keys_all = %info1%
-; 			group_name = %info2%
-; 			is_ahk = %info3%
-; 			comments = %info4%
-
-; 			; For sorting, want keys to look like this for nice sorting purposes, keeping all varieties of
-; 			; shortcut keys for a single letter together
-; 			;   Windows|j|#^j|JIRA
-; 			;   Windows|j|#j|JIRA
-; 			shortcut_keys_stripped := RegExReplace(shortcut_keys_all, "[#^+!]")
-; 			array_key = %group_name%|%shortcut_keys_stripped%|%shortcut_keys_all%|%line_num%
-; 			current_shortcut_details.array_key := array_key
-; 			shortcut_array_keys.Push(array_key)
-
-;       ; Save the details of this shortcut key
-; 			current_shortcut_details.raw_text := line
-; 			current_shortcut_details.shortcut_keys := shortcut_keys_all
-; 			current_shortcut_details.group_name := group_name
-; 			current_shortcut_details.is_ahk := is_ahk
-; 			current_shortcut_details.comments := comments
-; 			shortcut_details.Push(current_shortcut_details)
-
-; 			current_shortcut_details := ""  ; Release the object
-; 			line_num++
-; 		}
-; 	}
-
-;   shortcut_array_keys := sortArray(shortcut_array_keys)
-
-; 	; Build the output. Use shortcut_array_keys to get shortcut keys in the desired order.
-; 	output := ""
-; 	last_group := ""
-; 	for index, element in shortcut_array_keys
-; 	{
-; 		details_index := StrSplit(element, "|")[4]
-;     details_object := shortcut_details[details_index]
-
-; 		shortcut_keys := details_object.shortcut_keys
-; 		group_name := details_object.group_name
-; 		comments := details_object.comments
-
-; 		padded_shortcut_keys := SubStr(shortcut_keys . "               ", 1, 15)
-; 		padded_group_name := group_name
-; 		If (details_object.is_ahk)
-; 		  padded_group_name = %padded_group_name% (AHK)
-; 	  padded_group_name := SubStr(padded_group_name . "                   ", 1, 19)
-		
-; 		If (last_group != "" And last_group != group_name)
-; 		  output = %output%;`n
-;  		output = %output%; %padded_shortcut_keys% %padded_group_name% %comments%`n
-
-; 		last_group := group_name
-; 	}
-; 	FileDelete, C:\Temp\Out.txt
-; 	FileAppend, %output%, C:\Temp\Out.txt
-
-;   ; Backup our script
-; 	source_filename = %A_ScriptName%
-; 	FormatTime, CurrentDateTime,, yyyy-MM-ddThh-mm-ss
-; 	target_filename = %A_ScriptName%.%CurrentDateTime%.ahk
-;   FileCopy, %source_filename%, %target_filename%
-
-;   ; Replace the "Shortcuts" documentation with our newly generated documentation
-; 	FileRead, my_script, %A_ScriptName%
-; 	title_dashes := Replicate("-", 10)
-; 	end_of_comments_dashes := Replicate("=", 120)
-; 	new_output := "; Shortcuts (Auto-Generated)`r`n; " . title_dashes . "`r`n" . output . ";" . end_of_comments_dashes . "`r`n"
-;   ;test := RegExMatch(my_script, "s); Shortcuts`r`n; -----+`r`n;..*;")
-;   ;msgbox test is %test%
-; 	my_script := RegExReplace(my_script, "s); Shortcuts (Auto-Generated)`r`n; -----+`r`n;..*?;=====+", new_output)
-; 	FileDelete, %source_filename%
-; 	FileAppend, %my_script%, %source_filename%
-; 	;Sleep, 1000
-
-; 	MsgBox, Done regenerating shortcut documentation.
-; 	Return
-; }
-
-; Replicate( Str, Count ) { ; By SKAN / CD: 01-July-2017 | goo.gl/U84K7J
-;   Return StrReplace( Format( "{:0" Count "}", "" ), 0, Str )
-; }
-
-; sortArray(arr) {
-; ; Code from https://autohotkey.com/board/topic/93570-sortarray/
-; 	if	!IsObject(arr)
-; 		return	0
-; 	new :=	[]
-; 	For each, item in arr
-; 		list .=	item "`n"
-; 	list :=	Trim(list,"`n")
-; 	Sort, list, %options%
-; 	Loop, parse, list, `n, `r
-; 		new.Insert(A_LoopField)
-; 	Return new
-; }
-
-
 ;---------------------------------------------------------------------------------------------------------------------
 ; All of the following commented-out hotkeys, etc are here so that the auto-generated documentation includes them
 ;---------------------------------------------------------------------------------------------------------------------
-#Include %A_ScriptDir%\My Automations Utilities.ahk
-#Include %A_ScriptDir%\AutoGenerate Documentation.ahk
-#Include %A_ScriptDir%\Slack Status Update.ahk
-; /lunch::          ; Slack      |AHK|Set status to "/status :hamburger: At lunch"
-; /mtg::            ; Slack      |AHK|Set status to "/status :spiral_calendar_pad: In a meeting"
-; /wfh::            ; Slack      |AHK|Set status to "/status :house: Working remotely"
-; /status::         ; Slack      |AHK|Clear status
-#Include %A_ScriptDir%\Virtual Desktop Accessor.ahk
-; #^1::             ; V. Desktops|AHK|Switch to virtual desktop #1
-; #^2::             ; V. Desktops|AHK|Switch to virtual desktop #2
-; #^3::             ; V. Desktops|AHK|Switch to virtual desktop #3
-; #^4::             ; V. Desktops|AHK|Switch to virtual desktop #4
-; #^5::             ; V. Desktops|AHK|Switch to virtual desktop #5
-; #^6::             ; V. Desktops|AHK|Switch to virtual desktop #6
-; #^7::             ; V. Desktops|AHK|Switch to virtual desktop #7
-; #^8::             ; V. Desktops|AHK|Switch to virtual desktop #8
-; #^9::             ; V. Desktops|AHK|Switch to virtual desktop #9
-; #^+Left::         ; V. Desktops|AHK|Move active window to previous virtual desktop
-; #^+Right::        ; V. Desktops|AHK|Move active window to next virtual desktop
-; ----- Built-In Windows Shortcuts I Use -----
 ; #1::              ; Windows    |   |1st app in the task bar
 ; #2::              ; Windows    |   |2nd app in the task bar
 ; #3::              ; Windows    |   |3rd app in the task bar
@@ -1258,6 +1173,26 @@ ActivateOrStartMicrosoftOutlook()
 ; +printscreen::    ; Windows    |   |Take screenshot of the whole screen
 ; #^left::          ; V. Desktops|   |Switch to previous virtual desktop
 ; #^right::         ; V. Desktops|   |Switch to next virtual desktop
+#Include %A_ScriptDir%\My Automations Utilities.ahk
+#Include %A_ScriptDir%\AutoGenerate Documentation.ahk
+#Include %A_ScriptDir%\Slack Status Update.ahk
+; /lunch::          ; Slack      |AHK|Set status to "/status :hamburger: At lunch"
+; /mtg::            ; Slack      |AHK|Set status to "/status :spiral_calendar_pad: In a meeting"
+; /wfh::            ; Slack      |AHK|Set status to "/status :house: Working remotely"
+; /status::         ; Slack      |AHK|Clear status
+#Include %A_ScriptDir%\Virtual Desktop Accessor.ahk
+; #^1::             ; V. Desktops|AHK|Switch to virtual desktop #1
+; #^2::             ; V. Desktops|AHK|Switch to virtual desktop #2
+; #^3::             ; V. Desktops|AHK|Switch to virtual desktop #3
+; #^4::             ; V. Desktops|AHK|Switch to virtual desktop #4
+; #^5::             ; V. Desktops|AHK|Switch to virtual desktop #5
+; #^6::             ; V. Desktops|AHK|Switch to virtual desktop #6
+; #^7::             ; V. Desktops|AHK|Switch to virtual desktop #7
+; #^8::             ; V. Desktops|AHK|Switch to virtual desktop #8
+; #^9::             ; V. Desktops|AHK|Switch to virtual desktop #9
+; #^+Left::         ; V. Desktops|AHK|Move active window to previous virtual desktop
+; #^+Right::        ; V. Desktops|AHK|Move active window to next virtual desktop
+
 
 
 ;---------------------------------------------------------------------------------------------------------------------

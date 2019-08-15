@@ -290,3 +290,18 @@ WindowsIsLocked()
 {
   Return !DllCall("User32\OpenInputDesktop","int",0*0,"int",0*0,"int",0x0001L*1)
 }
+
+
+ProcessExists(name){
+	Process,Exist,%name%
+	return Errorlevel
+}
+
+
+CreateGUID()
+{
+  newGUID := ComObjCreate("Scriptlet.TypeLib").Guid
+	newGUID := StrReplace(NewGUID, "{")
+	newGUID := StrReplace(NewGUID, "}")
+  Return newGUID
+}
