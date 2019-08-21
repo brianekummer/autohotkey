@@ -19,7 +19,28 @@
 ;
 ; TO DO
 ; ------------
-;   - Backup password databases- not just work passwords
+;   - Backup password databases- not just work passwords.
+;      - Do I backup all with that extension, or have separate var for work and personal?
+;          - Option 1: File extensions - I LIKE THIS OPTION!!!!
+;              MyPersonalDocumentsFolder = %WindowsUserProfile%\Personal\Documents\
+;              EnvGet, BackupDriveSerialNumber, AHK_BACKUP_DRIVE_SERIAL_NUMBER
+;              EnvGet, WindowsUserDomain, USERDOMAIN                                                                  [ex: "TELETRACKING"]
+;              EnvGet, PasswordDBExtension, AHK_PASSWRD_DB_EXTENSION                                                  [ex: ".kdbx"]
+;              EnvGet, PasswordDBFilenameBackupPattern, AHK_PASSWRD_DB_FILENAME_BACKUP_PATTERN                        [ex: "startup%INDEX%.exe"]  => "startup1.exe", "startup2.exe"
+;              Code assumes work password database is %MyPersonalDocumentsFolder%\%UserDomain%.%PasswordDBExtension%  [ex: "C:\Users\Brian-Kummer\Personal\Documents\TELETRACKING.kdbx"] - Windows is NOT case sensitive
+;              *** Get rid of
+;                PasswordDBFilename/AHK_PASSWRD_DB_FILENAME and PasswordDBBackupFilename/AHK_PASSWRD_DB_BACKUP_FILENAME
+;                including Globals
+;                env vars
+;                update list of env vars saved
+;          - Option 2: Separate var for work and home
+;              EnvGet, BackupDriveSerialNumber, AHK_BACKUP_DRIVE_SERIAL_NUMBER
+;              EnvGet, PasswordWorkDBFilename, AHK_PASSWRD_WORK_DB_FILENAME
+;              EnvGet, PasswordPersonalDBFilename, AHK_PASSWRD_PERSONAL_DB_FILENAME        
+;              EnvGet, PasswordDBBackupFilenamePattern, AHK_PASSWRD_DB_BACKUP_FILENAME_PATTERN       [ex: "startup%INDEX%.exe"]  => "startup1.exe", "startup2.exe"
+;   - Finish screen brightness
+;       - Is nircmd ok for laptop screen?
+;       - monitor
 ;
 ;
 ; Future Ideas
@@ -75,6 +96,8 @@
 ; ~$^s            VS Code (AHK)       After save AHK file, autogenerate documentation, reload the current script
 ;
 ; (login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks; password database backup
+; #,              Windows (AHK)       Reduce primary screen's brightness
+; #.              Windows (AHK)       Increase primary screen's brightness
 ; #1              Windows             1st app in the task bar
 ; #2              Windows             2nd app in the task bar
 ; #3              Windows             3rd app in the task bar
@@ -90,6 +113,7 @@
 ; #c              Windows (AHK)       Outlook Calendar
 ; #down           Windows (AHK)       Minimize active window instead of making it unmaximized, then minimize
 ; #d              Windows             Windows desktop
+; #Esc            Windows (AHK)       Open my work password database
 ; #e              Windows             Windows Explorer
 ; #g              Windows (AHK)       gTasks Pro
 ; #i              Windows (AHK)       Outlook Inbox
@@ -142,14 +166,13 @@ EnvGet, WindowsLocalAppDataFolder, LOCALAPPDATA
 EnvGet, WindowsProgramFilesX86Folder, PROGRAMFILES(X86)
 EnvGet, WindowsProgramFilesFolder, PROGRAMFILES
 EnvGet, WindowsUserName, USERNAME
+EnvGet, WindowsUserDomain, USERDOMAIN
 EnvGet, WindowsDnsDomain, USERDNSDOMAIN
 EnvGet, WindowsUserProfile, USERPROFILE
 UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
 ; These come from my own Windows environment variables. See "My Automations Config.bat" for details
 Global BackupDriveSerialNumber
-Global PasswordDBFilename
-Global PasswordDBBackupFilename
 EnvGet, JiraUrl, AHK_URL_JIRA
 EnvGet, JiraMyProjectKeys, AHK_MY_PROJECT_KEYS_JIRA
 EnvGet, JiraDefaultProjectKey, AHK_DEFAULT_PROJECT_KEY_JIRA
@@ -163,15 +186,23 @@ EnvGet, NoiseBrownMP3, AHK_MP3_NOISE_BROWN
 EnvGet, NoiseRailroadMP3, AHK_MP3_NOISE_RAILROAD
 EnvGet, BackupDriveSerialNumber, AHK_BACKUP_DRIVE_SERIAL_NUMBER
 EnvGet, PasswordApp, AHK_PASSWRD_APP
-EnvGet, PasswordDBFilename, AHK_PASSWRD_DB_FILENAME
-EnvGet, PasswordDBBackupFilename, AHK_PASSWRD_DB_BACKUP_FILENAME
-
+EnvGet, PasswordDBExtension, AHK_PASSWRD_DB_EXTENSION
+EnvGet, PasswordDBFilenameBackupPattern, AHK_PASSWRD_DB_FILENAME_BACKUP_PATTERN
 
 ; Commonly used folders	
 Global MyDocumentsFolder
 Global MyPersonalFolder
+Global MyPersonalDocumentsFolder
 MyDocumentsFolder = %WindowsUserProfile%\Documents\
 MyPersonalFolder = %WindowsUserProfile%\Personal\
+MyPersonalDocumentsFolder = %WindowsUserProfile%\Personal\Documents\
+
+; Standardize user-defined environment variables
+If SubStr(MyPersonalDocumentsFolder, 0) != "\"
+	MyPersonalDocumentsFolder = %MyPersonalDocumentsFolder%\
+If SubStr(PasswordDBExtension, 1, 1) != "."
+	PasswordDBExtension = .%PasswordDBExtension%
+
 
 
 
@@ -238,7 +269,7 @@ OnWindowsUnlock(wParam, lParam)
 	{
 		SendInput #a                                  		  ; Open Windows Action Center to show new notifications from my phone
     SlackStatusUpdate_SetSlackStatusBasedOnNetwork()		; If appropriate, then update my Slack status
-	  BackupPasswordDatabase()                           	; If backup drive is inserted, then backup my password database
+	  BackupPasswordDatabases()                           ; If backup drive is inserted, then backup my password databases
 	}
 }
 
@@ -249,31 +280,6 @@ OnWindowsUnlock(wParam, lParam)
 ;---------------------------------------------------------------------------------------------------------------------
 ; Temporary/experimental stuff goes here
 ;---------------------------------------------------------------------------------------------------------------------
-
-#Esc::   ; Run password manager
-	StartPasswordManager()
-  Return
-
-
-;---------------------------------------------------------------------------------------------------------------------
-; Start my password manager, minimized, if it is not already running
-;---------------------------------------------------------------------------------------------------------------------
-StartPasswordManager() 
-{
-	Global PasswordApp
-
-	SplitPath, PasswordApp , passwordAppExe,
-	If !ProcessExists(passwordAppExe)
-	{
-	  Run, %ComSpec% /c ""`%AHK_PASSWRD_APP`%""" ""`%AHK_PASSWRD_DB_FILENAME`%" -pw-enc:`%AHK_PASSWRD_DB_PASSWRD`% -minimize,, Min
-	}
-	Return
-}
-
-
-
-
-
 ; Win+Ctrl+V      to open VPN app
 ;^#v::
 ;  Run, "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Palo Alto Networks\GlobalProtect\GlobalProtect.lnk"
@@ -318,18 +324,97 @@ StartPasswordManager()
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Backup password database
-;   - If the flash drive I use to backup my password database is inserted, then back it up to that drive
+; Open my work password database, minimized, if it is not already running
 ;---------------------------------------------------------------------------------------------------------------------
-BackupPasswordDatabase()
+#Esc::         ; Windows|AHK|Open my work password database
+	StartPasswordManager()
+  Return
+
+StartPasswordManager() 
+{
+	Global PasswordApp
+	Global MyPersonalDocumentsFolder
+	Global WindowsUserDomain
+	Global PasswordDBExtension
+
+	SplitPath, PasswordApp , passwordAppExe,
+	If !ProcessExists(passwordAppExe)
+	{
+		WorkPasswordDatabase = %MyPersonalDocumentsFolder%%WindowsUserDomain%%PasswordDBExtension%
+	  Run, %ComSpec% /c ""`%AHK_PASSWRD_APP`%""" ""%WorkPasswordDatabase%" -pw-enc:`%AHK_PASSWRD_DB_PASSWRD`% -minimize,, Hide
+	}
+	Return
+}
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Control screen brightness
+;   - Monitor controlled using NirSoft's ControlMyMonitor- https://www.nirsoft.net/utils/control_my_monitor.html
+;       - Only works on monitors, not laptop screen
+;   - Laptop screen controlled using NirSoft's NirCmd- https://nircmd.nirsoft.net/changebrightness.html
+;   - I WANT to use 
+;       - #,/#. to update the PRIMARY screen so that most of the time I can do that and not have one command if I'm on
+;         my laptop screen and another command if I'm on an external monitor.
+;       - #^,/#^. to update a SECONDARY screen
+;       - THIS WILL LIKELY NEED ADJUSTED WHEN I GO BACK TO
+;   - Miscellaneous notes
+;       - BrightnessSetter works GREAT on laptop screen, shows on-screen display, but is a LOT of code, which I
+;         just included in my lib folder. https://github.com/qwerty12/AutoHotkeyScripts/tree/master/LaptopBrightnessSetter
+;---------------------------------------------------------------------------------------------------------------------
+#,::        ; Windows|AHK|Reduce primary screen's brightness
+ 	If (ExternalMonitorIsConnected())
+    Run, %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /ChangeValue Primary 10 -10 
+	Else
+  	Run, %MyPersonalFolder%PortableApps\nircmd\nircmdc.exe changebrightness -10,, Hide
+  Return
+  
+#.::        ; Windows|AHK|Increase primary screen's brightness
+ 	If (ExternalMonitorIsConnected())
+    Run, %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /ChangeValue Primary 10 10 
+	Else
+  	Run, %MyPersonalFolder%PortableApps\nircmd\nircmdc.exe changebrightness 10,, Hide
+	Return
+  
+
+;---------------------------------------------------------------------------------------------------------------------
+; Returns true if an external monitor is connected and false if not
+;   - Uses NirSoft's ControlMyMonitor to get the VCP version # of the primary monitor. If it returns 0, then the 
+;     primary monitor is the laptop screen.
+;---------------------------------------------------------------------------------------------------------------------
+ExternalMonitorIsConnected() {
+  RunWait, %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /GetValue Primary DF,, UseErrorLevel
+	Return (ErrorLevel != "0")
+}
+
+
+
+;---------------------------------------------------------------------------------------------------------------------
+; Backup password databases
+;   - If the flash drive I use to backup my password database is inserted, then back them up to that drive
+;---------------------------------------------------------------------------------------------------------------------
+BackupPasswordDatabases()
 {
 	backupDriveLetter := GetDriveLetter(BackupDriveSerialNumber, "REMOVABLE")
 	If (backupDriveLetter)
 	{
-	  ; FileCopy - last parameter determines if overwrite
-	  ; MsgBox options: 64 (Info icon) + 4096 (System Modal- always on top)
-		FileCopy, %PasswordDBFilename%, %backupDriveLetter%:\%PasswordDBBackupFilename%, 1
-		MsgBox, 4160, Password Database Backup, %PasswordDBFilename%`nhas been backed up to %backupDriveLetter%:\%PasswordDBBackupFilename%.
+    ;***** OLD CODE *****
+	  ; ;FileCopy - last parameter determines if overwrite
+	  ; ;MsgBox options: 64 (Info icon) + 4096 (System Modal- always on top)
+		; FileCopy, %PasswordDBFilename%, %backupDriveLetter%:\%PasswordDBBackupFilename%, 1
+		; MsgBox, 4160, Password Database Backup, %PasswordDBFilename%`nhas been backed up to %backupDriveLetter%:\%PasswordDBBackupFilename%.
+
+		; Pseudo-code
+		; index = 1
+		; Loop Files, %MyPersonalDocumentsFolder%\*%PasswordDBExtension%
+    ; {
+		;   destinationFilename = %backupDriveLetter%:\%PasswordDBFilenameBackupPattern%
+		;   destinationFilename := StrReplace(destinationFilename, "%INDEX%"", index")
+    ;
+		;   ;FileCopy - last parameter determines if overwrite
+    ;   FileCopy, %A_LoopFileFullPath%, %destinationFilename%, 1
+	  ;   index++
+    ; }
 	}
 }
 
