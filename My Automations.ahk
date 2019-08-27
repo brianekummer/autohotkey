@@ -984,10 +984,10 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 ;
 ; TODO: Transition away from Notepad++ to VS Code
 ; 
-;   - By default, trying to open another instance of VS Code generates an error about unable to iopen a second instance 
-;     as an administrator. The workaround is to force VS Code to always run as administrator by right clicking on the
-;     exe (probably in someplace like C:\Users\xxxxx\AppData\Local\Programs\Microsoft VS Code), going to Properties, 
-;     clicking on the Compatibility tab and check the box labeled "Run this program as an administrator".
+;   - If VS Code is running as administrator and I right-click a file and choose "Open with Code", the open fails with
+;     the message "A second instance of Code is already running as Administrator." The problem is that the instance
+;     of VS Code being opened by the shell is running as a standard user. The solution I have is to have AHK start
+;     VS Code as a standard user, and to manually open VS Code as administratorin the very few cases that's necessary.
 ;   - When editing any AutoHotKey script in Visual Studio Code, clicking Ctrl-S to save the script also causes 
 ;     AutoHotKey to reload the current script. This eliminates the need to right-click the AutoHotKey system tray icon
 ;     and select "Reload This Script".
@@ -1005,6 +1005,16 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 ;                       HTML/XML   XML Tools     Ctrl+Shift+Alt+b   Also sets Notepad++ language to "XML" to enable folding
 ;                       JSON       JSTool        Ctrl+Alt+m
 ;                       SQL        SQLinForm     Alt+Shift+f
+;
+; COMMAND LINE OPTIONS - https://code.visualstudio.com/docs/editor/command-line
+;   -n or --new-window	  				Opens a new session of VS Code instead of restoring the previous session (default).
+;   -r or --reuse-window					Forces opening a file or folder in the last active window.
+;   --install-extension <ext>			Install an extension. Provide the full extension name publisher.extension as an argument. Use --force argument to avoid prompts.
+;   --uninstall-extension <ext>		Uninstall an extension. Provide the full extension name publisher.extension as an argument.
+;   --disable-extensions					Disable all installed extensions. Extensions will still be visible in the Disabled section of the Extensions view but they will never be activated.
+;   --list-extensions							List the installed extensions.
+;   --show-versions								Show versions of installed extensions, when using --list-extensions
+;   --enable-proposed-api <ext>		Enables proposed api features for an extension. Provide the full extension name publisher.extension as an argument.
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive .ahk - Visual Studio Code 
 ~$^s::      ; VS Code|AHK|After save AHK file, autogenerate documentation, reload the current script
@@ -1014,7 +1024,10 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 #IfWinActive
 
 #v::        ; Windows|AHK|Visual Studio Code
-	Run "%WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe"
+	;Run "%WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe"
+
+  vsCodeExe = %WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe
+  ShellRun(vsCodeExe)
   Return
 
 #^v::       ; Windows|AHK|Visual Studio Code, smart (paste the selected text into the newly opened window)
