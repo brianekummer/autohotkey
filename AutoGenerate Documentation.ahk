@@ -129,7 +129,7 @@ BuildNewHotkeyDescriptions(sorting_keys, hotkey_details) {
 		group_name := details_object.group_name
 		comments := details_object.comments
 
-		padded_shortcut_keys := SubStr(shortcut_keys . "               ", 1, 15)
+		padded_shortcut_keys := SubStr(shortcut_keys . "                  ", 1, 18)
 		padded_group_name := group_name
 		If (details_object.is_ahk)
 		  padded_group_name = %padded_group_name% (AHK)

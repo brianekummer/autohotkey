@@ -31,7 +31,6 @@
 ;
 ; To Do
 ; ------------
-;   - Fix VS Code so can use it instead of Notepad++
 ;   - Package for Ed (simple and full-featured versions)
 ;   - Finish screen brightness
 ;       - Handle multiple monitors
@@ -51,97 +50,97 @@
 ; Decisions
 ; ---------
 ;   - For Chrome extensions
-;       - I decided not to use "Add URL to Window Title" because there is no whitelist option, and having
-;         URL on every toolbar is ugly. Adding the input field id and name is cool and could be useful for
-;         multi-page logins (like timesheet) but that is not REQUIRED for what I need (yet).
+;       - I decided not to use "Add URL to Window Title" because there is no whitelist option, and having URL on every
+;         toolbar is ugly. Adding the input field id and name is cool and could be useful for multi-page logins (like
+;         timesheet) but that is not REQUIRED for what I need (yet).
 ;         https://github.com/erichgoldman/add-url-to-window-title
 ;
 ;
 ; Hotkeys - Auto-Generated
 ; ------------------------------
-; ^+WheelDown     Chrome (AHK)        Scroll through open tabs
-; ^+WheelUp       Chrome (AHK)        Scroll through open tabs
+; ^+wheeldown        Chrome (AHK)        Scroll through open tabs
+; ^+wheelup          Chrome (AHK)        Scroll through open tabs
 ;
-; /lunch          Slack (AHK)         Set status to "/status :hamburger: At lunch"
-; /mtg            Slack (AHK)         Set status to "/status :spiral_calendar_pad: In a meeting"
-; /status         Slack (AHK)         Clear status
-; /wfh            Slack (AHK)         Set status to "/status :house: Working remotely"
-; ^WheelDown      Slack (AHK)         Decrease font size
-; ^WheelUp        Slack (AHK)         Increase font size
+; /lunch             Slack (AHK)         Set status to "/status :hamburger: At lunch"
+; /mtg               Slack (AHK)         Set status to "/status :spiral_calendar_pad: In a meeting"
+; /status            Slack (AHK)         Clear status
+; /wfh               Slack (AHK)         Set status to "/status :house: Working remotely"
+; ^wheeldown         Slack (AHK)         Decrease font size
+; ^wheelup           Slack (AHK)         Increase font size
 ;
-; ^WheelDown      Typora (AHK)        Decrease font size
-; ^WheelUp        Typora (AHK)        Increase font size
+; ^wheeldown         Typora (AHK)        Decrease font size
+; ^wheelup           Typora (AHK)        Increase font size
 ;
-; #^1             V. Desktops (AHK)   Switch to virtual desktop #1
-; #^2             V. Desktops (AHK)   Switch to virtual desktop #2
-; #^3             V. Desktops (AHK)   Switch to virtual desktop #3
-; #^4             V. Desktops (AHK)   Switch to virtual desktop #4
-; #^5             V. Desktops (AHK)   Switch to virtual desktop #5
-; #^6             V. Desktops (AHK)   Switch to virtual desktop #6
-; #^7             V. Desktops (AHK)   Switch to virtual desktop #7
-; #^8             V. Desktops (AHK)   Switch to virtual desktop #8
-; #^9             V. Desktops (AHK)   Switch to virtual desktop #9
-; #^+Left         V. Desktops (AHK)   Move active window to previous virtual desktop
-; #^left          V. Desktops         Switch to previous virtual desktop
-; #^+Right        V. Desktops (AHK)   Move active window to next virtual desktop
-; #^right         V. Desktops         Switch to next virtual desktop
+; #^1                V. Desktops (AHK)   Switch to virtual desktop #1
+; #^2                V. Desktops (AHK)   Switch to virtual desktop #2
+; #^3                V. Desktops (AHK)   Switch to virtual desktop #3
+; #^4                V. Desktops (AHK)   Switch to virtual desktop #4
+; #^5                V. Desktops (AHK)   Switch to virtual desktop #5
+; #^6                V. Desktops (AHK)   Switch to virtual desktop #6
+; #^7                V. Desktops (AHK)   Switch to virtual desktop #7
+; #^8                V. Desktops (AHK)   Switch to virtual desktop #8
+; #^9                V. Desktops (AHK)   Switch to virtual desktop #9
+; #^+left            V. Desktops (AHK)   Move active window to previous virtual desktop
+; #^left             V. Desktops         Switch to previous virtual desktop
+; #^+right           V. Desktops (AHK)   Move active window to next virtual desktop
+; #^right            V. Desktops         Switch to next virtual desktop
 ;
-; ~$^s            VS Code (AHK)       After save AHK file, autogenerate documentation, reload the current script
+; ~$^s               VS Code (AHK)       After save AHK file, autogenerate documentation, reload current script
 ;
-; (login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks
-; (on device chan Windows (AHK)       Backup passwords databases when insert backup flash drive
-; #,              Windows (AHK)       Reduce primary screen's brightness
-; #.              Windows (AHK)       Increase primary screen's brightness
-; #1              Windows             1st app in the task bar
-; #2              Windows             2nd app in the task bar
-; #3              Windows             3rd app in the task bar
-; #+4             Windows (AHK)       Timesheet (Shift-4 is $)
-; #4              Windows             4th app in the task bar
-; #5              Windows             5th app in the task bar
-; #6              Windows             6th app in the task bar
-; #7              Windows             7th app in the task bar
-; #8              Windows             8th app in the task bar
-; #9              Windows             9th app in the task bar
-; #a              Windows             Windows Action Center
-; #b              Windows (AHK)       git Bash (as admin)
-; #Capslock       Windows (AHK)       Toggle selected text between lower/upper/sentence/title case
-; #c              Windows (AHK)       Outlook Calendar
-; #down           Windows (AHK)       Minimize active window instead of making it unmaximized, then minimize
-; #d              Windows             Windows desktop
-; #Esc            Windows (AHK)       Open my work password database
-; #e              Windows             Windows Explorer
-; #^+g            Windows (AHK)       Grammarly (in browser)
-; #^g             Windows (AHK)       Google phrase fix
-; #g              Windows (AHK)       Simple Google search
-; #i              Windows (AHK)       Outlook Inbox
-; #^j             Windows (AHK)       JIRA, smart (open a specific story)
-; #j              Windows (AHK)       JIRA, current board
-; #^k             Windows (AHK)       Slack, "jump to" dialog
-; #k              Windows (AHK)       Slack
-; #l              Windows             Lock workstation
-; #m              Windows (AHK)       Music/media app
-; #NumpadSub      Windows (AHK)       TEMP - price checks
-; +printscreen    Windows             Take screenshot of the whole screen
-; printscreen     Windows (AHK)       Start Windows snipping tool in rectangle mode
-; #^p             Windows (AHK)       Personal cloud, smart (on 2nd virtual desktop in Edge)
-; #p              Windows             Project (duplicate, extend, etc)
-; #Space          Windows (AHK)       Toggle dark mode for active application
-; #^+s            Windows (AHK)       Schema
-; #^s             Windows (AHK)       Schema source code
-; #s              Windows (AHK)       Source code
-; #t              Windows (AHK)       Typora, with each virtual desktop having a different folder of files
-; #up             Windows             Maximize active window
-; #^+u            Windows (AHK)       Generate random UUID (uppercase)
-; #^u             Windows (AHK)       Generate random UUID (lowercase)
-; #^v             Windows (AHK)       Visual Studio Code, smart (paste the selected text into the newly opened window)
-; #v              Windows (AHK)       Visual Studio Code
-; #v              Windows             Clipboard
-; +WheelDown      Windows (AHK)       Turn system volume down
-; +WheelUp        Windows (AHK)       Turn system volume up
-; #w              Windows (AHK)       Wiki- Confluence
-; XButton1        Windows (AHK)       Minimize current application
-; XButton2        Windows (AHK)       Minimize app or close window/tab or close app
-; #z              Windows (AHK)       noiZe
+; (on device change) Windows (AHK)       Backup passwords databases when insert backup flash drive
+; (on login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks
+; #,                 Windows (AHK)       Reduce primary screen's brightness
+; #.                 Windows (AHK)       Increase primary screen's brightness
+; #1                 Windows             1st app in the task bar
+; #2                 Windows             2nd app in the task bar
+; #3                 Windows             3rd app in the task bar
+; #+4                Windows (AHK)       Timesheet (Shift-4 is $)
+; #4                 Windows             4th app in the task bar
+; #5                 Windows             5th app in the task bar
+; #6                 Windows             6th app in the task bar
+; #7                 Windows             7th app in the task bar
+; #8                 Windows             8th app in the task bar
+; #9                 Windows             9th app in the task bar
+; #a                 Windows             Windows Action Center
+; #b                 Windows (AHK)       git Bash (as admin)
+; #capslock          Windows (AHK)       Toggle selected text between lower/upper/sentence/title case
+; #c                 Windows (AHK)       Outlook Calendar
+; #down              Windows (AHK)       Minimize active window (instead of unmaximize, then minimize)
+; #d                 Windows             Windows desktop
+; #esc               Windows (AHK)       Open my work password database
+; #e                 Windows             Windows Explorer
+; #^+g               Windows (AHK)       Grammarly (in browser)
+; #^g                Windows (AHK)       Google phrase fix
+; #g                 Windows (AHK)       Simple Google search
+; #i                 Windows (AHK)       Outlook Inbox
+; #^j                Windows (AHK)       JIRA, smart (open a specific story)
+; #j                 Windows (AHK)       JIRA, current board
+; #^k                Windows (AHK)       Slack, "jump to" dialog
+; #k                 Windows (AHK)       Slack
+; #l                 Windows             Lock workstation
+; #m                 Windows (AHK)       Music/media app
+; #numpadsub         Windows (AHK)       TEMP - price checks
+; +printscreen       Windows             Take screenshot of the whole screen
+; printscreen        Windows (AHK)       Start Windows snipping tool in rectangle mode
+; #^p                Windows (AHK)       Personal cloud, smart (on 2nd virtual desktop in Edge)
+; #p                 Windows             Project (duplicate, extend, etc)
+; #space             Windows (AHK)       Toggle dark mode for active application
+; #^+s               Windows (AHK)       Schema
+; #^s                Windows (AHK)       Schema source code
+; #s                 Windows (AHK)       Source code
+; #t                 Windows (AHK)       Typora, with each virtual desktop having a different folder of files
+; #up                Windows             Maximize active window
+; #^+u               Windows (AHK)       Generate random UUID (uppercase)
+; #^u                Windows (AHK)       Generate random UUID (lowercase)
+; #^v                Windows (AHK)       VS Code, smart (creates new document, pastes selected text into it, tries to format it)
+; #v                 Windows (AHK)       VS Code
+; #v                 Windows             Clipboard
+; +wheeldown         Windows (AHK)       Turn system volume down
+; +wheelup           Windows (AHK)       Turn system volume up
+; #w                 Windows (AHK)       Wiki- Confluence
+; xbutton1           Windows (AHK)       Minimize current application
+; xbutton2           Windows (AHK)       Minimize app or close window/tab or close app
+; #z                 Windows (AHK)       noiZe
 ;========================================================================================================================
 
 #NoEnv
@@ -272,9 +271,9 @@ StopInterceptingWindowsUnlock()
 }
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Windows Event- login or unlock (WM_WTSSESSION_CHANGE)
+; Windows Event- Login or unlock (WM_WTSSESSION_CHANGE)
 ;---------------------------------------------------------------------------------------------------------------------
-; (login/unlock)::      ; Windows|AHK|Set Slack status based on nearby wifi networks
+; (on login/unlock)::     ; Windows|AHK|Set Slack status based on nearby wifi networks
 OnWindowsUnlock(wParam, lParam)
 {
   WTS_SESSION_UNLOCK := 0x8
@@ -287,12 +286,12 @@ OnWindowsUnlock(wParam, lParam)
 }
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Windows Event- device change (WM_DEVICECHANGE)
+; Windows Event- Device change (WM_DEVICECHANGE)
 ;
 ; This message is generated by docking/undocking a laptop, adding/removing a monitor, inserting/removing removable 
-; media, and a few other events.
+; media, etc.
 ;---------------------------------------------------------------------------------------------------------------------
-; (on device change)::  ; Windows|AHK|Backup passwords databases when insert backup flash drive
+; (on device change)::    ; Windows|AHK|Backup passwords databases when insert backup flash drive
 OnDeviceChange(wParam, lParam)
 {
   ; DEBUGGING- Log this to a file so I can decide if I should my code to only certain values of wParam 
@@ -358,7 +357,7 @@ OnDeviceChange(wParam, lParam)
 ;	Return
 
 
-#NumpadSub::     ; Windows|AHK|TEMP - price checks
+#numpadsub::     ; Windows|AHK|TEMP - price checks
 	; Dr Seuss's The Grinch (Illumination)
 	Run, "https://www.amazon.com/Illumination-Presents-Dr-Seuss-Grinch/dp/B07JYR54B7/ref=sr_1_1?ie=UTF8&qid=1550496790&sr=8-1&keywords=dvd+illumination+grinch",, Max
 	Run, "https://www.walmart.com/ip/Illumination-Presents-Dr-Seuss-The-Grinch-DVD/577298400",, Max
@@ -399,7 +398,7 @@ OnDeviceChange(wParam, lParam)
 ;---------------------------------------------------------------------------------------------------------------------
 ; Convert case
 ;---------------------------------------------------------------------------------------------------------------------
-#Capslock::       ; Windows|AHK|Toggle selected text between lower/upper/sentence/title case
+#capslock::       ; Windows|AHK|Toggle selected text between lower/upper/sentence/title case
   ConvertCase()
 	Return
 
@@ -434,7 +433,8 @@ OnDeviceChange(wParam, lParam)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Use Google search to fix text
+; Use Google search to try to fix the selected text
+;   - For example, changes "Where is you're house?" to "Where is your house?"
 ;   - Code adapted from https://jacksautohotkeyblog.wordpress.com/2016/09/22/fixing-grammar-problems-with-google-search-intermediate-autohotkey-tip/
 ;---------------------------------------------------------------------------------------------------------------------
 #^g::       ; Windows|AHK|Google phrase fix
@@ -458,7 +458,7 @@ OnDeviceChange(wParam, lParam)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Paste the selected text into a new document on Grammarly's web site
+; Grammarly - Create a new document on Grammarly.com and paste the selected text into it
 ;
 ; To create a new document in Grammarly.com, navigate to https://app.grammarly.com/docs/new.
 ;   - It takes a few seconds to load
@@ -500,7 +500,7 @@ OnDeviceChange(wParam, lParam)
 ;---------------------------------------------------------------------------------------------------------------------
 ; Open my work password database, minimized, if it is not already running
 ;---------------------------------------------------------------------------------------------------------------------
-#Esc::         ; Windows|AHK|Open my work password database
+#esc::         ; Windows|AHK|Open my work password database
 	StartPasswordManager()
   Return
 
@@ -646,8 +646,8 @@ BackupPasswordDatabases()
 ; some pixel and if that pixel is a dark color, then I ASSUME we're displaying a dark theme, else I ASSUME that we're 
 ; using a light theme.
 ;---------------------------------------------------------------------------------------------------------------------
-#Space::     ; Windows|AHK|Toggle dark mode for active application
-	If WinActive("ahk_exe chrome.exe")
+#space::     ; Windows|AHK|Toggle dark mode for active application
+	If WinActive("ahk_exe i)chrome.exe")
 	{
 		; In Chrome, extension Dark Reader has an existing shortcut Alt+Shift+D that toggles between dark/light
 		; Dependencies: Chrome extension Dark Reader (https://darkreader.org)
@@ -659,7 +659,7 @@ BackupPasswordDatabases()
 	  ; Dependencies: KeePass plugin KeeTheme (https://github.com/xatupal/KeeTheme)
 	  SendInput ^t   
 	}
-	Else If WinActive("- Visual Studio Code")
+	Else If WinActive("ahk_exe i)code.exe")
 	{
 		; In Visual Studio Code, have to look at a pixel to determine which theme is active
 		;   "Light+ (default light)" is the light theme
@@ -788,7 +788,7 @@ BackupPasswordDatabases()
 		Else
 			SendInput nn{ENTER}
 	}
-	Else If WinActive("ahk_exe explorer.exe")
+	Else If WinActive("ahk_exe i)explorer.exe")
 	{
 	  ; In Windows Explorer, light and dark mode is controlled by a registry key, and
 		;   1 is the light mode
@@ -816,7 +816,7 @@ BackupPasswordDatabases()
 		ControlFocus, Save settings, Settings.*
 		SendInput, {ENTER}
 	}
-	Else If WinActive("ahk_exe OUTLOOK.EXE")
+	Else If WinActive("ahk_exe i)outlook.exe")
 	{
 		; In Microsoft Outlook, have to look at a pixel to determine which theme is active
 		;   "Colorful" is the light theme
@@ -849,11 +849,11 @@ GetPixelsBlueValue(x, y)
 ;---------------------------------------------------------------------------------------------------------------------
 ; Chrome
 ;---------------------------------------------------------------------------------------------------------------------
-#IfWinActive ahk_exe chrome.exe
-  ^+WheelUp::     ; Chrome|AHK|Scroll through open tabs
+#IfWinActive ahk_exe i)chrome.exe
+  ^+wheelup::     ; Chrome|AHK|Scroll through open tabs
 	  SendInput ^{PgUp}
 		Return
-  ^+WheelDown::   ; Chrome|AHK|Scroll through open tabs
+  ^+wheeldown::   ; Chrome|AHK|Scroll through open tabs
 	  SendInput ^{PgDn}
 		Return
 #IfWinActive
@@ -889,10 +889,10 @@ GetPixelsBlueValue(x, y)
 ;   - upon login/unlock   Upon Windows login/unlock, set Slack status based on nearby wifi networks
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive ahk_group SlackStatusUpdate_WindowTitles
-  ^WheelUp::     ; Slack|AHK|Increase font size
+  ^wheelup::     ; Slack|AHK|Increase font size
     SendInput ^{+}
 		Return
-  ^WheelDown::   ; Slack|AHK|Decrease font size
+  ^wheeldown::   ; Slack|AHK|Decrease font size
 	  SendInput ^{-}
 		Return
 #IfWinActive
@@ -925,10 +925,10 @@ OpenSlack()
 ; Adjust system volume
 ;   - Other keystroke combinations (Win+mousewheel, or Ctrl+mousewheel) affected the current window
 ;---------------------------------------------------------------------------------------------------------------------
-+WheelUp::     ; Windows|AHK|Turn system volume up
++wheelup::     ; Windows|AHK|Turn system volume up
 	SendInput {Volume_Up 1}
 	Return
-+WheelDown::   ; Windows|AHK|Turn system volume down
++wheeldown::   ; Windows|AHK|Turn system volume down
   SendInput {Volume_Down 1}
 	Return
 
@@ -944,23 +944,23 @@ OpenSlack()
 ; title is "How to Use Slack".  Also, Microsoft Edge browser is more complex than a single process, so detecting it is
 ; more complex.
 ;---------------------------------------------------------------------------------------------------------------------
-XButton1::     ; Windows|AHK|Minimize current application
+xbutton1::     ; Windows|AHK|Minimize current application
   WinMinimize, A
 	Return
 
-XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
+xbutton2::     ; Windows|AHK|Minimize app or close window/tab or close app
   WinGet, processName, ProcessName, A
   SplitPath, processName,,,, processNameNoExtension
 
 	If RegExMatch(processNameNoExtension, "i)skype|outlook|wmplayer|slack|typora") 
-	  or WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
-	  or WinActive("iHeartRadio ahk_exe ApplicationFrameHost.exe")
-    or WinActive("ahk_exe Google Play Music Desktop Player.exe")
+	  or WinActive("gTasks Pro ahk_exe i)ApplicationFrameHost.exe") 
+	  or WinActive("iHeartRadio ahk_exe i)ApplicationFrameHost.exe")
+    or WinActive("ahk_exe i)google play music desktop player.exe")
 	{
 		WinMinimize, A     ; Do not want to close these apps
 	}
   Else If RegExMatch(processNameNoExtension, "i)chrome|iexplore|firefox|notepad++|ssms|devenv|eclipse|winmergeu|robo3t|code|idea64") 
-	  or WinActive("Microsoft Edge ahk_exe ApplicationFrameHost.exe")
+	  or WinActive("Microsoft Edge ahk_exe i)ApplicationFrameHost.exe")
 	{
     SendInput ^{f4}    ; Close a WINDOW/TAB/DOCUMENT
 	}
@@ -973,70 +973,39 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 	
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Visual Studio Code
+; VS Code
+;   - ~$^s     After VS Code saves the AHK file, autogenerate documentation, and reload the current script
+;                - When editing any AutoHotKey script in VS Code, clicking Ctrl-S to save the script fires this
+;                  AutoHotKey code that reloads the current script, eliminating the need to right-click the AutoHotKey 
+;                  system tray icon and select "Reload This Script"
+;   - #v       Open VS Code
+;   - #^v      Open VS Code, smart (creates new document, pastes selected text into it, tries to format it)
+;                - To avoid accidentally pasting into an existing unsaved document, ALWAYS create a new document
 ;
-; TODO: Transition away from Notepad++ to VS Code
-; 
+; Notes
 ;   - If VS Code is running as administrator and I right-click a file and choose "Open with Code", the open fails with
 ;     the message "A second instance of Code is already running as Administrator." The problem is that the instance
 ;     of VS Code being opened by the shell is running as a standard user. The solution I'm using is for AHK to start
 ;     VS Code as a standard user, and to manually open VS Code as administrator in the very few cases that's necessary.
-;   - When editing any AutoHotKey script in VS Code, clicking Ctrl-S to save the script also causes AutoHotKey to 
-;     reload the current script. This eliminates the need to right-click the AutoHotKey system tray icon and select 
-;     "Reload This Script".
-;   - #v       Open Visual Studio Code
-;   - #^v      Open Visual Studio Code and paste the selected text into the new Visual Studio Code window
+;   - VS Code has language formatters that are invoked by Shift-Alt-f. If you don't have installed a formatter for that
+;     language, VS Code prompts you to install one.
 ;
-; TODO:
-;                   - I could have copied the selected text into a variable and done a "Send %variableName%", which 
-;                     would send each character as if it was typed, which would be very SLOW. Instead, I paste the 
-;                     selected text into the Notepad++ window.
-;                   - If the pasted text looks like a recognized type of text, format it using a Notepad++ plugin.
-;                     THESE PLUGINS -= MUST =- BE INSTALLED VIA PLUGINS => PLUGIN MANAGERS => SHOW PLUGIN MANAGER
-;                       Type       Plugin Name   Plugin Hot Key     Comments
-;                       --------   -----------   ----------------   ------------------------------------------------------
-;                       HTML/XML   XML Tools     Ctrl+Shift+Alt+b   Also sets Notepad++ language to "XML" to enable folding
-;                       JSON       JSTool        Ctrl+Alt+m
-;                       SQL        SQLinForm     Alt+Shift+f
-;
-; COMMAND LINE OPTIONS - https://code.visualstudio.com/docs/editor/command-line
-;   -n or --new-window	  				Opens a new session of VS Code instead of restoring the previous session (default).
-;   -r or --reuse-window					Forces opening a file or folder in the last active window.
-;   --install-extension <ext>			Install an extension. Provide the full extension name publisher.extension as an argument. Use --force argument to avoid prompts.
-;   --uninstall-extension <ext>		Uninstall an extension. Provide the full extension name publisher.extension as an argument.
-;   --disable-extensions					Disable all installed extensions. Extensions will still be visible in the Disabled section of the Extensions view but they will never be activated.
-;   --list-extensions							List the installed extensions.
-;   --show-versions								Show versions of installed extensions, when using --list-extensions
-;   --enable-proposed-api <ext>		Enables proposed api features for an extension. Provide the full extension name publisher.extension as an argument.
+; Decisions
+;   - I could have copied the selected text into a variable and done a "Send %variableName%", which would send each
+;     character as if it was typed, which would be very SLOW. Instead, I paste the selected text into the window.
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive .ahk - Visual Studio Code 
-~$^s::      ; VS Code|AHK|After save AHK file, autogenerate documentation, reload the current script
+~$^s::      ; VS Code|AHK|After save AHK file, autogenerate documentation, reload current script
 	AutoGenerateDocumentation(A_ScriptName)
   Reload
   Return
 #IfWinActive
 
-#v::        ; Windows|AHK|Visual Studio Code
-	;Run "%WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe"
-
-  vsCodeExe = %WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe
-  ShellRun(vsCodeExe)
+#v::        ; Windows|AHK|VS Code
+	RunVSCode()
   Return
 
-#^v::       ; Windows|AHK|Visual Studio Code, smart (paste the selected text into the newly opened window)
-  ; Define the regular expression patterns to recognize different types of text
-  ;   - Identifying SQL is complex. As a rough guess, look for any one of the following:
-  ;       CREATE|ALTER...FUNCTION|PROCEDURE|VIEW|INDEX...AS BEGIN
-  ;       DROP...FUNCTION|PROCEDURE|VIEW|INDEX
-  ;       SELECT...FROM
-  regExHtmlOrXml = s)<.*>.*/.*>
-  regExJson = s)^\s*\[?\{.*\:.*\,.*\}
-  regExSql = is)
-  regExSql = %regExSql%((\b(create|alter)\b.*\b(function|procedure|view|index)\b.*\bas\s+begin\b)|
-  regExSql = %regExSql%(\bdrop\b.*\b(function|procedure|view|index)\b)|
-  regExSql = %regExSql%(\bselect\b.*\bfrom\b))+
-
-	; Save the selected text to the clipboard
+#^v::       ; Windows|AHK|VS Code, smart (creates new document, pastes selected text into it, tries to format it)
   ClipSaved := ClipboardAll
   Clipboard = 
   SendInput ^c
@@ -1044,59 +1013,76 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 	
   If (!ErrorLevel)
   {
-	  If Not WinExist("- Visual Studio Code") 
+	  If Not WinExist("Visual Studio Code") 
 		{
-		  ; Visual Studio Code isn't open, so start it, and wait up to 2 seconds for it to open
-			Run "%WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe"
-		  WinWaitActive, Visual Studio Code,,2
-    
-		  WinGetTitle, notpadTitle, A
-			foundPos := RegExMatch(notpadTitle, "i)Untitled-\d+ - Visual Studio Code")
-		  If (foundPos == 0)
-			  ; The active Visual Studio Code document is not new, so we need to create a new document to paste our text into
-		    SendInput ^n
+			RunVSCode()
+		  WinWaitActive, Visual Studio Code,,10
+			Sleep, 1000
 		}
 		Else
 		{
-		  ; Visual Studio Code is already open, so activate it and create a new document
 		  WinActivate, Visual Studio Code
-		  SendInput ^n
+			Sleep, 250
 		}
-		
-		; Paste in our text
+		SendInput ^n
+
     SendInput ^v
     Sleep, 750
-		
-		; TODO: Fix this with VS Code
-    ; We can do some extra formatting of some types of data using Notepad++ plugins, 
-    ; based on the type of the data we're viewing
-    ;newText := Clipboard
-    ;If RegExMatch(newText, regExHtmlOrXml)
-    ;{
-    ;  SendInput ^+!{b}    ; Plugins => XML Tools => Pretty print...
-    ;  SendInput !{l}x     ; Language => XML
-    ;}
-    ;Else If RegExMatch(newText, regExJson)
-    ;{
-    ;  SendInput ^!{m}     ; Pluginx => JSTool =>    JSFormat
-    ;}
-    ;Else If RegExMatch(newText, regExSql)
-    ;{
-    ;  SendInput !+{f}     ; Plugins => SQLinForm => Format Selected SQL 
-    ;}
+
+		; Define the regular expression patterns to recognize different types of text
+		;   - Identifying SQL is complex. As a rough guess, look for any one of the following:
+		;       CREATE|ALTER...FUNCTION|PROCEDURE|VIEW|INDEX...AS BEGIN
+		;       DROP...FUNCTION|PROCEDURE|VIEW|INDEX
+		;       SELECT...FROM
+		regExHtml = s).*<html>.*/.*>
+		regExXml = s)^\s*<.*>.*/.*>
+		regExJson = s)^\s*\[?\{.*\:.*\,.*\}
+		regExSql = is)
+		regExSql = %regExSql%((\b(create|alter)\b.*\b(function|procedure|view|index)\b.*\bas\s+begin\b)|
+		regExSql = %regExSql%(\bdrop\b.*\b(function|procedure|view|index)\b)|
+		regExSql = %regExSql%(\bselect\b.*\bfrom\b))+
+
+    newText := Clipboard
+    If RegExMatch(newText, regExHtml)
+			VSCodeFormatLanguage("html")
+    Else If RegExMatch(newText, regExXml)
+			VSCodeFormatLanguage("xml")
+    Else If RegExMatch(newText, regExJson)
+			VSCodeFormatLanguage("json")
+    Else If RegExMatch(newText, regExSql)
+			VSCodeFormatLanguage("sql")
   }
-  Clipboard := ClipSaved	 ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll)
-  ClipSaved =			       ; Free the memory in case the clipboard was very large
+	
+  Clipboard := ClipSaved
+  ClipSaved =
   Return	
 
-	
+RunVSCode() 
+{
+	; Run as standard user
+  vsCodeExe = %WindowsLocalAppDataFolder%\Programs\Microsoft VS Code\Code.exe
+  ShellRun(vsCodeExe)
+  Return
+}
+
+VSCodeFormatLanguage(language)
+{
+	; Specify what language this is
+	SendInput ^{k}m
+	Sleep, 100
+	SendInput %language%{ENTER}
+	Sleep, 100
+
+	; Format it using the language's default formatter
+	SendInput +!{f}
+}	
 	
 ;---------------------------------------------------------------------------------------------------------------------
 ; Personal cloud
 ;   - Open or activate my personal cloud website on the 2nd virtual desktop in Microsoft Edge
 ;---------------------------------------------------------------------------------------------------------------------
 #^p::     ; Windows|AHK|Personal cloud, smart (on 2nd virtual desktop in Edge)
-  If WinExist(".*Kummer Cloud ahk_exe ApplicationFrameHost.exe")
+  If WinExist(".*Kummer Cloud ahk_exe i)ApplicationFrameHost.exe")
   {
 	  WinActivate, Kummer Cloud
   }
@@ -1120,10 +1106,10 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 ;                       of files.
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive - Typora 
-  ^WheelUp::        ; Typora|AHK|Increase font size
+  ^wheelup::        ; Typora|AHK|Increase font size
 	  SendInput ^+{=}
 		Return
-  ^WheelDown::      ; Typora|AHK|Decrease font size
+  ^wheeldown::      ; Typora|AHK|Decrease font size
 	  SendInput ^+{-}
 		Return
 #IfWinActive
@@ -1172,7 +1158,7 @@ GetTyporaOnThisVirtualDesktop()
 ;---------------------------------------------------------------------------------------------------------------------
 ;#g::   
 ;           ; Windows|AHK|gTasks Pro
-;  If Not WinActive("gTasks Pro ahk_exe ApplicationFrameHost.exe") 
+;  If Not WinActive("gTasks Pro ahk_exe i)ApplicationFrameHost.exe") 
 ;	{
 ;    ; Note that Windows store apps are more complex than simple exe's
 ;	  Run, "%MyPersonalFolder%\WindowsStoreAppLinks\gTasks Pro.lnk"
@@ -1273,17 +1259,17 @@ printscreen::     ; Windows|AHK|Start Windows snipping tool in rectangle mode
 ; Music/media
 ;---------------------------------------------------------------------------------------------------------------------
 #m::              ; Windows|AHK|Music/media app
-  If WinExist("ahk_exe Google Play Music Desktop Player.exe")
+  If WinExist("ahk_exe i)google play music desktop player.exe")
 	{
 	  WinActivate ahk_class Chrome_WidgetWin_1 ahk_exe i)google play music desktop player.exe
 	}
-  Else If WinExist("iHeartRadio ahk_exe ApplicationFrameHost.exe")
+  Else If WinExist("iHeartRadio ahk_exe i)ApplicationFrameHost.exe")
 	{
-	  WinActivate iHeartRadio ahk_exe ApplicationFrameHost.exe
+	  WinActivate iHeartRadio ahk_exe i)ApplicationFrameHost.exe
 	}
-  Else If WinExist("White Noise ahk_exe ApplicationFrameHost.exe")
+  Else If WinExist("White Noise ahk_exe i)ApplicationFrameHost.exe")
 	{
-	  WinActivate White Noise ahk_exe ApplicationFrameHost.exe
+	  WinActivate White Noise ahk_exe i)ApplicationFrameHost.exe
 	}
   Else If WinExist("ahk_class WMPlayerApp")
 	{
@@ -1484,7 +1470,7 @@ ActivateOrStartMicrosoftOutlook()
 ;   - First time you use it, un-maximizes (restores) the window
 ;   - Second second time you use it, it minimizes the window
 ;---------------------------------------------------------------------------------------------------------------------
-#down::           ; Windows|AHK|Minimize active window instead of making it unmaximized, then minimize
+#down::           ; Windows|AHK|Minimize active window (instead of unmaximize, then minimize)
   WinMinimize, A
   Return
 
@@ -1538,8 +1524,8 @@ ActivateOrStartMicrosoftOutlook()
 ; #^7::             ; V. Desktops|AHK|Switch to virtual desktop #7
 ; #^8::             ; V. Desktops|AHK|Switch to virtual desktop #8
 ; #^9::             ; V. Desktops|AHK|Switch to virtual desktop #9
-; #^+Left::         ; V. Desktops|AHK|Move active window to previous virtual desktop
-; #^+Right::        ; V. Desktops|AHK|Move active window to next virtual desktop
+; #^+left::         ; V. Desktops|AHK|Move active window to previous virtual desktop
+; #^+right::        ; V. Desktops|AHK|Move active window to next virtual desktop
 #include %A_ScriptDir%\Lib\BrightnessSetter.ahk
 #include %A_ScriptDir%\Lib\Convert Case.ahk
 
