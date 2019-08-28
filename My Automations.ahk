@@ -2,11 +2,24 @@
 ; Brian Kummer's AutoHotKey script
 ;
 ;
-; Near the bottom of this script are a number of #include statements to include libraries of utility functions
+; Summary (7/22/2019)
+; -------------------
+; * Hotkeys to start or switch to applications and websites
+; * Zooming of font size in multiple applications
+; * Auto-Correct for every application (http://www.biancolo.com/articles/autocorrect)
+; * Windows Virtual Desktop Improvements - Enhancements around Windows virtual desktops, such as assigning specific 
+;   wallpapers to specific virtual desktops.  Based on code: https://github.com/Ciantic/VirtualDesktopAccessor
+; * Slack Improvements
+;     - Changing "/lunch" "/status :hamburger: At lunch", etc.
+;     - Upon Windows login/unlock, set Slack status based on nearby wifi networks
+; * Automatic backup of password databases when insert specific USB drive
+; * Screen brightness controls for laptop and/or monitor
+; * Toggling of dark mode in some applications
 ;
 ;
-; Miscellaneous
+; Notes
 ; -------------
+;   - Near the bottom of this script are a number of #include statements to include libraries of utility functions
 ;   - Definition of AutoHotKey keys: http://www.autohotkey.com/docs/KeyList.htm
 ;   - Send/SendInput modifiers: ^ = Ctrl, ! = Alt, + = Shift, # = Windows
 ;   - This looks helpful: http://www.daviddeley.com/autohotkey/xprxmp/autohotkey_expression_examples.htm
@@ -14,17 +27,12 @@
 ;
 ; Known Issues
 ; ------------
-;   - When device is inserted/removed, laptop is docked/undocked, etc, black DOS command box briefly
-;     appears while list of connected monitors is retrieved. Can be eliminated if can refactor
-;     screen brightness code tr not require the ControlMyMonitor utility.
 ;
 ;
 ; To Do
 ; ------------
-;   - Reduce when get DOS black box
-;   - Finish adding dependencies as comments
 ;   - Fix VS Code so can use it instead of Notepad++
-;   - Package for Ed
+;   - Package for Ed (simple and full-featured versions)
 ;   - Finish screen brightness
 ;       - Handle multiple monitors
 ;       - Try to use PowerShell and WMI instead of NirSoft utilities and ScreenBrightness AHK code
@@ -40,31 +48,13 @@
 ;   - Are timed tooltips usefull somewhere?
 ;
 ;
-; Notes
-; -----
+; Decisions
+; ---------
 ;   - For Chrome extensions
-;       - I decided not to use "Add URL to Window Title" because no whitelist option, and it was ugly. 
-;         Adding the input field id and name is cool and could be useful, but not REQUIRED for me so far.
-;           - https://chrome.google.com/webstore/detail/add-url-to-window-title/ndiaggkadcioihmhghipjmgfeamgjeoi?hl=en
-;
-;
-; Dependencies
-; ------------
-;   - Chrome extensions
-;       - https://chrome.google.com/webstore/detail/url-in-title/ignpacbgnbnkaiooknalneoeladjnfgb
-; 
-;
-; Summary (7/22/2019)
-; -------------------
-; * Implements zooming of font size in multiple applications
-; * Add Auto-Correct to every application (http://www.biancolo.com/articles/autocorrect)
-; * Windows Virtual Desktop Improvements - Enhancements around Windows virtual desktops, such as assigning specific 
-;   wallpapers to specific virtual desktops.  Based on code: https://github.com/Ciantic/VirtualDesktopAccessor
-; * Slack Improvements
-;     - Changing "/lunch" "/status :hamburger: At lunch", etc.
-;     - Upon Windows login/unlock, set Slack status based on nearby wifi networks
-; * Backup password database - Upon Windows login/unlock, if a specific USB drive is plugged in, backup my password 
-;   database to it
+;       - I decided not to use "Add URL to Window Title" because there is no whitelist option, and having
+;         URL on every toolbar is ugly. Adding the input field id and name is cool and could be useful for
+;         multi-page logins (like timesheet) but that is not REQUIRED for what I need (yet).
+;         https://github.com/erichgoldman/add-url-to-window-title
 ;
 ;
 ; Hotkeys - Auto-Generated
@@ -98,7 +88,8 @@
 ;
 ; ~$^s            VS Code (AHK)       After save AHK file, autogenerate documentation, reload the current script
 ;
-; (login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks; password database backup
+; (login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks
+; (on device chan Windows (AHK)       Backup passwords databases when insert backup flash drive
 ; #,              Windows (AHK)       Reduce primary screen's brightness
 ; #.              Windows (AHK)       Increase primary screen's brightness
 ; #1              Windows             1st app in the task bar
@@ -136,8 +127,8 @@
 ; #p              Windows             Project (duplicate, extend, etc)
 ; #Space          Windows (AHK)       Toggle dark mode for active application
 ; #^+s            Windows (AHK)       Schema
-; #^s             Windows (AHK)       Schema (source - BitBucket)
-; #s              Windows (AHK)       Source code (BitBucket)
+; #^s             Windows (AHK)       Schema source code
+; #s              Windows (AHK)       Source code
 ; #t              Windows (AHK)       Typora, with each virtual desktop having a different folder of files
 ; #up             Windows             Maximize active window
 ; #^+u            Windows (AHK)       Generate random UUID (uppercase)
@@ -279,67 +270,75 @@ StopInterceptingWindowsUnlock()
 {
   DllCall("Wtsapi32.dll\WTSUnRegisterSessionNotification", "uint", hwnd)
 }
-; (login/unlock)::     ; Windows|AHK|Set Slack status based on nearby wifi networks; password database backup
+
+;---------------------------------------------------------------------------------------------------------------------
+; Windows Event- login or unlock (WM_WTSSESSION_CHANGE)
+;---------------------------------------------------------------------------------------------------------------------
+; (login/unlock)::      ; Windows|AHK|Set Slack status based on nearby wifi networks
 OnWindowsUnlock(wParam, lParam)
 {
   WTS_SESSION_UNLOCK := 0x8
   If (wParam = WTS_SESSION_UNLOCK)
 	{
 		SendInput #a                                  		  ; Open Windows Action Center to show new notifications from my phone
-		MonitorIds := GetMonitorIds()                       ; Get the list of monitors that are connected
+		MonitorIds := GetMonitorIds()                       ; Get list of connected monitors
     SlackStatusUpdate_SetSlackStatusBasedOnNetwork()		; If appropriate, then update my Slack status
 	}
 }
+
+;---------------------------------------------------------------------------------------------------------------------
+; Windows Event- device change (WM_DEVICECHANGE)
+;
+; This message is generated by docking/undocking a laptop, adding/removing a monitor, inserting/removing removable 
+; media, and a few other events.
+;---------------------------------------------------------------------------------------------------------------------
+; (on device change)::  ; Windows|AHK|Backup passwords databases when insert backup flash drive
 OnDeviceChange(wParam, lParam)
 {
-	; The WM_DEVICECHANGE message is generated by docking/undocking a laptop, adding/removing a monitor,
-	; inserting/removing removable media, and a few other events.
-
-
-  ; I should log to a file every time this happens and the params, so I can reduce it
+  ; DEBUGGING- Log this to a file so I can decide if I should my code to only certain values of wParam 
 	;   What are:
 	;     - Insert/remove USB drive:  DBT_DEVNODES_CHANGED
 	;     - Dock/undock:
 	;     - Plugin/remove monitor:
-  DBT_CONFIGCHANGECANCELED    := 0x0019  ; A request to change the current configuration (dock or undock) has been canceled.
-  DBT_CONFIGCHANGED           := 0x0018  ; The current configuration has changed, due to a dock or undock.
-  DBT_CUSTOMEVENT             := 0x8006  ; A custom event has occurred.
-  DBT_DEVICEARRIVAL           := 0x8000  ; A device or piece of media has been inserted and is now available.
-  DBT_DEVICEQUERYREMOVE       := 0x8001  ; Permission is requested to remove a device or piece of media. Any application can deny this request and cancel the removal.
-  DBT_DEVICEQUERYREMOVEFAILED := 0x8002  ; A request to remove a device or piece of media has been canceled.
-  DBT_DEVICEREMOVECOMPLETE    := 0x8004  ; A device or piece of media has been removed.
-  DBT_DEVICEREMOVEPENDING     := 0x8003  ; A device or piece of media is about to be removed. Cannot be denied.
-  DBT_DEVICETYPESPECIFIC      := 0x8005  ; A device-specific event has occurred.
-  DBT_DEVNODES_CHANGED        := 0x0007  ; A device has been added to or removed from the system. [Kummer- add/remove usb drive]
-  DBT_QUERYCHANGECONFIG       := 0x0017  ; Permission is requested to change the current configuration (dock or undock).
-  DBT_USERDEFINED             := 0xFFFF  ; The meaning of this message is user-defined.
-	If (wParam == DBT_CONFIGCHANGECANCELED)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGECANCELED`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_CONFIGCHANGED)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGED`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_CUSTOMEVENT)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CUSTOMEVENT`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_DEVICEARRIVAL)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEARRIVAL`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_DEVICEQUERYREMOVE)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVE`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_DEVICEQUERYREMOVEFAILED)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVEFAILED`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_DEVICEREMOVECOMPLETE)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVECOMPLETE`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_DEVICEREMOVEPENDING)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVEPENDING`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_DEVICETYPESPECIFIC)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICETYPESPECIFIC`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_DEVNODES_CHANGED)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVNODES_CHANGED`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_QUERYCHANGECONFIG)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_QUERYCHANGECONFIG`n, C:\Temp\AHK_OnDeviceChange.log
-	Else If (wParam == DBT_USERDEFINED)
-	  FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_USERDEFINED`n, C:\Temp\AHK_OnDeviceChange.log
+  ; DBT_CONFIGCHANGECANCELED    := 0x0019  ; A request to change the current configuration (dock or undock) has been canceled.
+  ; DBT_CONFIGCHANGED           := 0x0018  ; The current configuration has changed, due to a dock or undock.
+  ; DBT_CUSTOMEVENT             := 0x8006  ; A custom event has occurred.
+  ; DBT_DEVICEARRIVAL           := 0x8000  ; A device or piece of media has been inserted and is now available.
+  ; DBT_DEVICEQUERYREMOVE       := 0x8001  ; Permission is requested to remove a device or piece of media. Any application can deny this request and cancel the removal.
+  ; DBT_DEVICEQUERYREMOVEFAILED := 0x8002  ; A request to remove a device or piece of media has been canceled.
+  ; DBT_DEVICEREMOVECOMPLETE    := 0x8004  ; A device or piece of media has been removed.
+  ; DBT_DEVICEREMOVEPENDING     := 0x8003  ; A device or piece of media is about to be removed. Cannot be denied.
+  ; DBT_DEVICETYPESPECIFIC      := 0x8005  ; A device-specific event has occurred.
+  ; DBT_DEVNODES_CHANGED        := 0x0007  ; A device has been added to or removed from the system. [Kummer- add/remove usb drive]
+  ; DBT_QUERYCHANGECONFIG       := 0x0017  ; Permission is requested to change the current configuration (dock or undock).
+  ; DBT_USERDEFINED             := 0xFFFF  ; The meaning of this message is user-defined.
+	; If (wParam == DBT_CONFIGCHANGECANCELED)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGECANCELED`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_CONFIGCHANGED)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGED`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_CUSTOMEVENT)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CUSTOMEVENT`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_DEVICEARRIVAL)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEARRIVAL`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_DEVICEQUERYREMOVE)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVE`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_DEVICEQUERYREMOVEFAILED)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVEFAILED`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_DEVICEREMOVECOMPLETE)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVECOMPLETE`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_DEVICEREMOVEPENDING)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVEPENDING`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_DEVICETYPESPECIFIC)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICETYPESPECIFIC`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_DEVNODES_CHANGED)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVNODES_CHANGED`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_QUERYCHANGECONFIG)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_QUERYCHANGECONFIG`n, C:\Temp\AHK_OnDeviceChange.log
+	; Else If (wParam == DBT_USERDEFINED)
+	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_USERDEFINED`n, C:\Temp\AHK_OnDeviceChange.log
 
-	MonitorIds := GetMonitorIds()                         ; Get the list of monitors that are connected
-  BackupPasswordDatabases()                             ; If backup drive is inserted, then backup my password databases
+	MonitorIds := GetMonitorIds()    ; Get list of connected monitors
+  BackupPasswordDatabases()        ; If backup drive is inserted, then backup my password databases
 }
 
 
@@ -412,7 +411,7 @@ OnDeviceChange(wParam, lParam)
 ; I could just search for the selected text using this command:
 ;   Run, "https://www.google.com/search?q=%clipboard%"
 ; But I almost always want to add some qualifier or something to my searches, so instead, open Google, prefill the 
-; search with the selected text and a space, and wait for me to enter something else or to execute the search.
+; search with the selected text and a space, and let me take it from there.
 ;---------------------------------------------------------------------------------------------------------------------
 #g::        ; Windows|AHK|Simple Google search
   clipback := ClipboardAll
@@ -459,22 +458,26 @@ OnDeviceChange(wParam, lParam)
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Paste the selected text into Grammarly's web site
+; Paste the selected text into a new document on Grammarly's web site
 ;
 ; To create a new document in Grammarly.com, navigate to https://app.grammarly.com/docs/new.
 ;   - It takes a few seconds to load
 ;   - When it is almost ready to allow editing, it changes the URL to something like this:
 ;     https://app.grammarly.com/ddocs/565623631. 
 ;   - Recent versions of Chrome don't allow us to easily or reliably get the URL from code
-;   - I could press !d/^i/f6 to get to the Chrome omnibar so I can copy the URL, but there 
-;     is no easy/consistent way to get back to the page content
-;   - My solution is to use the Chrome extension called "Url in title" by Guillaume Ryder,1
-;     which adds the URL to the title of the webpage, so AHK can watch for it. You can specify
-;     a whitelist so that only those sites display the URL in the title. 
-;     https://chrome.google.com/webstore/detail/url-in-title/ignpacbgnbnkaiooknalneoeladjnfgb
-;     I confligured the extension like this:
+;   - I could press !d/^i/f6 to get to the Chrome omnibar so I can copy the URL, but there is no easy/consistent 
+;     way to get back to the page content
+;   - My solution is to use the Chrome extension called "Url in Title" by Guillaume Ryder, which adds the URL to the
+;     title of the webpage, so AHK can watch for it. You can specify a whitelist so that only the whitelisted sites
+;     display the URL in the title. I confligured the extension like this:
 ;       Tab title format: {title} - {protocol}://{hostname}{port}/{path}
 ;       Whitelist: https://app.grammarly.com
+;
+; Decisions
+;   - Grammarly Windows app was my first choice, but is very keyboard unfriendly, so had to use the web page
+;
+; Dependencies
+;   - Chrome extension "URL in Title". https://github.com/erichgoldman/add-url-to-window-title
 ;---------------------------------------------------------------------------------------------------------------------
 #^+g::    ; Windows|AHK|Grammarly (in browser)
 	clipback := ClipboardAll
@@ -521,27 +524,17 @@ StartPasswordManager()
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Control screen brightness
-;   - Monitor controlled using NirSoft's ControlMyMonitor- https://www.nirsoft.net/utils/control_my_monitor.html
-;       - Only works on monitors, not laptop screen
-;   - BrightnessSetter works GREAT on laptop screen, shows on-screen display, but is a LOT of code, which I
-;     just included in my lib folder. https://github.com/qwerty12/AutoHotkeyScripts/tree/master/LaptopBrightnessSetter
-;   
 ;   - I WANT to use 
 ;       - #,/#. to update the PRIMARY screen so that most of the time I can do that and not have one command if I'm on
 ;         my laptop screen and another command if I'm on an external monitor.
 ;       - #^,/#^. to update a SECONDARY screen
 ;       - THIS WILL LIKELY NEED ADJUSTED WHEN I GO BACK TO MY MULTIPLE MONITORS SETUP
 ;
-;   - Miscellaneous notes
-;       - NirSoft's NirCmd isn't bad for changing laptop screen's brightness, just no on-screen display.
-;         https://nircmd.nirsoft.net/changebrightness.html
-;         Run, %MyPersonalFolder%PortableApps\nircmd\nircmdc.exe changebrightness %changeValue%,, Hide
-;       - Will try to subscript to Windows WM_DEVICECHANGE message to set the number of monitors then, and upon 
-;         unlock/login, so am not checking every time you increase/reduce brightness
-;         https://docs.microsoft.com/en-us/windows/win32/devio/wm-devicechange
-;         https://autohotkey.com/board/topic/29767-wm-devicechange/
-;         https://github.com/jNizM/AHK_Scripts/blob/master/src/messages/WM_DEVICECHANGE.ahk
-;         https://amp.reddit.com/r/AutoHotkey/comments/cmdgfj/problem_with_wm_devicechange/
+; Decisions
+; ---------
+;   - NirSoft's NirCmd isn't bad for changing laptop screen's brightness, just no on-screen display.
+;     https://nircmd.nirsoft.net/changebrightness.html
+;     Run, %MyPersonalFolder%PortableApps\nircmd\nircmdc.exe changebrightness %changeValue%,, Hide
 ;
 ; The Future 
 ; ----------
@@ -549,6 +542,12 @@ StartPasswordManager()
 ;   - Get-WmiObject win32_pnpentity | Where{$_.service -match "monitor"} | Select DeviceID, HardwareID, Name
 ;   - Get-WmiObject win32_desktopmonitor | Select Name, DeviceID, PNPDeviceID
 ;   - Get-WmiObject is discontinued!!!
+;
+; Dependencies: 
+;   - BrightnessSetter. Only works on laptop screen.
+;       https://github.com/qwerty12/AutoHotkeyScripts/tree/master/LaptopBrightnessSetter
+;   - NirSoft's ControlMyMonitor. Only works on monitors.
+;       https://www.nirsoft.net/utils/control_my_monitor.html
 ;---------------------------------------------------------------------------------------------------------------------
 #,::        ; Windows|AHK|Reduce primary screen's brightness
 	AdjustBrightness(-10)
@@ -559,29 +558,38 @@ StartPasswordManager()
 	Return
 
 ; TODO: Move this and AdjustBrightness to utilities class
+;---------------------------------------------------------------------------------------------------------------------
+; Get the list of monitor ids currently connected to the system
+;   - Uses NirSoft's ControlMyMonitor- https://www.nirsoft.net/utils/control_my_monitor.html
+;   - Instead of writing the list of monitors to a file, can specify an empty string and contents will be written to 
+;     standard output. But that generates a black DOS box and I don't like it.
+;       %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /smonitors "" | more | findstr /c:"Monitor ID"
+;---------------------------------------------------------------------------------------------------------------------
 GetMonitorIds()
 {
-	; I don't like that this generates a black DOS cmd box, but it'll be OK
-  cmd = %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /smonitors "" | more | findstr /c:"Monitor ID"
-  monitors := RunWaitOne(cmd)
-
 	monitorIds := []
-	Loop, parse, monitors, `n,
-  {
-    RegExMatch(A_LoopField, """(.*)""", monitorId)
-		If (monitorId1 != "") 
-		{
-			monitorIds.Push(monitorId1)
-		}
-  }
 
-  ;Msgbox GETTING MONITOR IDS
+  Run, %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /smonitors "monitors.txt"
+	Loop, Read, monitors.txt
+  {
+    RegExMatch(A_LoopReadLine, "Monitor ID: ""(.*)""", monitorId)
+	 	If (monitorId1 != "") 
+	 	{
+	 		monitorIds.Push(monitorId1)
+	 	}
+  }
+  FileDelete monitors.txt
+
   ;for index, element in MonitorIds
   ;  MsgBox % "Element number " . index . " is " . element
 
 	Return monitorIds
 }  
 
+;---------------------------------------------------------------------------------------------------------------------
+; Adjust the brightness of the primary screen
+;   - Uses NirSoft's ControlMyMonitor- https://www.nirsoft.net/utils/control_my_monitor.html
+;---------------------------------------------------------------------------------------------------------------------
 AdjustBrightness(adjustment) {
   RunWait, %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /GetValue Primary DF,, UseErrorLevel
 	If (ErrorLevel == "0")
@@ -641,13 +649,14 @@ BackupPasswordDatabases()
 #Space::     ; Windows|AHK|Toggle dark mode for active application
 	If WinActive("ahk_exe chrome.exe")
 	{
-		; In Chrome, need Dark Reader extension, which has an existing shortcut Alt+Shift+D that toggles between dark/light
+		; In Chrome, extension Dark Reader has an existing shortcut Alt+Shift+D that toggles between dark/light
+		; Dependencies: Chrome extension Dark Reader (https://darkreader.org)
 	  SendInput !+D   
 	}
 	Else If WinActive("- KeePass")
 	{
-	  ; In KeePass, need KeeTheme plugin (https://github.com/xatupal/KeeTheme), which has an existing shortcut Ctrl+T 
-		; that toggles Dark Theme on and off.
+	  ; KeePass plugin KeeTheme has an existing shortcut Ctrl+T that toggles Dark Theme on and off.
+	  ; Dependencies: KeePass plugin KeeTheme (https://github.com/xatupal/KeeTheme)
 	  SendInput ^t   
 	}
 	Else If WinActive("- Visual Studio Code")
@@ -712,31 +721,14 @@ BackupPasswordDatabases()
 			Sleep, 250
 			SendInput {ENTER}
 	  }
-
-
-
-
-		; Sleep, 500
-		; SendInput theme
-		; Sleep, 250
-		; SendInput {ENTER}
-		; Sleep, 250
-		; SendInput {DOWN}
-		; Sleep, 250
-		; If blue < 75
-		; 	SendInput {DOWN}{DOWN}
-		; Else
-		; 	SendInput {UP}{UP}
-		; SendInput {ENTER}
-		; Sleep, 250
-		; SendInput {ENTER}
 	}
 	Else If WinActive("ahk_class Notepad++")
   {
-	  ; In Notepad++, need VS2015-Dark theme (https://github.com/Dark-Genser/NotepadPP_AHK_VS-theme) and can then go to
-		; Settings => Style Configurator to toggle between themes "Default" and "VS2015-Dark"
+
+	  ; In Notepad++, go to Settings => Style Configurator to toggle between themes
 		;   "Default" is the light theme
 		;   "VS2015-Dark" is the dark theme
+		; Dependencies: Notepad++ theme VS2015-Dark
 		SendInput {ALT}ts{ENTER}
 		WinWaitActive, Style Configurator,, 2
 		ControlGet, currentTheme, Choice,, ComboBox1, Style Configurator
@@ -918,7 +910,8 @@ OpenSlack()
 {
   If Not WinExist("ahk_group SlackStatusUpdate_WindowTitles")
   {
-    Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
+    ;Run, "%WindowsLocalAppDataFolder%\slack\slack.exe"
+		Run, "%WindowsProgramFilesFolder%\Slack\Slack.exe"
 	  WinWaitActive, Slack,, 2
   }
  	WinActivate, ahk_group SlackStatusUpdate_WindowTitles
@@ -986,11 +979,11 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 ; 
 ;   - If VS Code is running as administrator and I right-click a file and choose "Open with Code", the open fails with
 ;     the message "A second instance of Code is already running as Administrator." The problem is that the instance
-;     of VS Code being opened by the shell is running as a standard user. The solution I have is to have AHK start
-;     VS Code as a standard user, and to manually open VS Code as administratorin the very few cases that's necessary.
-;   - When editing any AutoHotKey script in Visual Studio Code, clicking Ctrl-S to save the script also causes 
-;     AutoHotKey to reload the current script. This eliminates the need to right-click the AutoHotKey system tray icon
-;     and select "Reload This Script".
+;     of VS Code being opened by the shell is running as a standard user. The solution I'm using is for AHK to start
+;     VS Code as a standard user, and to manually open VS Code as administrator in the very few cases that's necessary.
+;   - When editing any AutoHotKey script in VS Code, clicking Ctrl-S to save the script also causes AutoHotKey to 
+;     reload the current script. This eliminates the need to right-click the AutoHotKey system tray icon and select 
+;     "Reload This Script".
 ;   - #v       Open Visual Studio Code
 ;   - #^v      Open Visual Studio Code and paste the selected text into the new Visual Studio Code window
 ;
@@ -1136,7 +1129,6 @@ XButton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 #IfWinActive
 
 #t::                ; Windows|AHK|Typora, with each virtual desktop having a different folder of files
-  ; Determine if Typora is running in this virtual desktop
 	typoraIdOnThisDesktop := GetTyporaOnThisVirtualDesktop()
 	If (typoraIdOnThisDesktop == 0)
 	{
@@ -1242,11 +1234,11 @@ GetTyporaOnThisVirtualDesktop()
 ;---------------------------------------------------------------------------------------------------------------------
 ; Source code, schema (source), and schema vault
 ;---------------------------------------------------------------------------------------------------------------------
-#s::              ; Windows|AHK|Source code (BitBucket)
+#s::              ; Windows|AHK|Source code
 	Run, "%SourceCodeUrl%",, Max
   Return
 
-#^s::             ; Windows|AHK|Schema (source - BitBucket)
+#^s::             ; Windows|AHK|Schema source code
 	Run, "%SourceSchemaUrl%",, Max
   Return
 
