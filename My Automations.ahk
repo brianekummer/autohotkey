@@ -31,7 +31,6 @@
 ;
 ; To Do
 ; ------------
-;   - Package for Ed (simple and full-featured versions)
 ;   - Finish screen brightness
 ;       - Handle multiple monitors
 ;       - Try to use PowerShell and WMI instead of NirSoft utilities and ScreenBrightness AHK code
@@ -109,11 +108,11 @@
 ; #d                 Windows             Windows desktop
 ; #esc               Windows (AHK)       Open my work password database
 ; #e                 Windows             Windows Explorer
-; #^+g               Windows (AHK)       Grammarly (in browser)
-; #^g                Windows (AHK)       Google phrase fix
-; #g                 Windows (AHK)       Simple Google search
+; #^+g               Windows (AHK)       Paste selected text into new document on Grammarly.com
+; #^g                Windows (AHK)       Google search to fix selected text
+; #g                 Windows (AHK)       Google search for selected text
 ; #i                 Windows (AHK)       Outlook Inbox
-; #^j                Windows (AHK)       JIRA, smart (open a specific story)
+; #^j                Windows (AHK)       JIRA, smart (tries to open selected text as story)
 ; #j                 Windows (AHK)       JIRA, current board
 ; #^k                Windows (AHK)       Slack, "jump to" dialog
 ; #k                 Windows (AHK)       Slack
@@ -134,7 +133,6 @@
 ; #^u                Windows (AHK)       Generate random UUID (lowercase)
 ; #^v                Windows (AHK)       VS Code, smart (creates new document, pastes selected text into it, tries to format it)
 ; #v                 Windows (AHK)       VS Code
-; #v                 Windows             Clipboard
 ; +wheeldown         Windows (AHK)       Turn system volume down
 ; +wheelup           Windows (AHK)       Turn system volume up
 ; #w                 Windows (AHK)       Wiki- Confluence
@@ -408,57 +406,48 @@ OnDeviceChange(wParam, lParam)
 ; Simple Google search for selected text
 ;
 ; I could just search for the selected text using this command:
-;   Run, "https://www.google.com/search?q=%clipboard%"
-; But I almost always want to add some qualifier or something to my searches, so instead, open Google, prefill the 
-; search with the selected text and a space, and let me take it from there.
+;   Run, "https://www.google.com/search?q=%selectedText%"
+; But I almost always want to add some qualifier or something to my searches, so instead, open Google and prefill the 
+; search with the selected text and let me take it from there.
 ;---------------------------------------------------------------------------------------------------------------------
-#g::        ; Windows|AHK|Simple Google search
-  clipback := ClipboardAll
-  clipboard=
-  Send ^c
-  ClipWait, 0
-	
-	Run, "https://www.google.com"
-	WinWaitActive, Google, , 5
-	If !ErrorLevel
-  {
-	  Sleep, 1250
-    Send ^v{Space}
-		Sleep, 500
-  }
-	
-	clipboard := clipback
+#g::        ; Windows|AHK|Google search for selected text
+	selectedText := GetSelectedTextUsingClipboard()
+	Run, "https://www.google.com?q=%selectedText%"
+
+	; This isn't reliable, especially when Chrome is already open
+	;WinWaitActive, Google, , 5
+	;If !ErrorLevel
+  ;{
+	;  Sleep, 1250
+  ;  SendInput {END}{SPACE}
+  ;}
   Return
 
 
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Use Google search to try to fix the selected text
-;   - For example, changes "Where is you're house?" to "Where is your house?"
+;   - For example, this changes "Where is you're house?" to "Where is your house?"
 ;   - Code adapted from https://jacksautohotkeyblog.wordpress.com/2016/09/22/fixing-grammar-problems-with-google-search-intermediate-autohotkey-tip/
 ;---------------------------------------------------------------------------------------------------------------------
-#^g::       ; Windows|AHK|Google phrase fix
-  clipback := ClipboardAll
-  clipboard=
-  Send ^c
-  ClipWait, 0
-  UrlDownloadToFile % "https://www.google.com/search?q=" . clipboard, temp
+#^g::       ; Windows|AHK|Google search to fix selected text
+	selectedText := GetSelectedTextUsingClipboard()
+  UrlDownloadToFile % "https://www.google.com/search?q=" . selectedText, temp
   FileRead, contents, temp
   FileDelete temp
   If (RegExMatch(contents, "Showing results for <a.*?>(.*?)</a>", match))
   {
-    StringReplace, clipboard, match1, <b><i>,, All
-    StringReplace, clipboard, clipboard, </i></b>,, All
+    StringReplace, selectedText, match1, <b><i>,, All
+    StringReplace, selectedText, selectedText, </i></b>,, All
   }
-  Send ^v
+  SendInput %selectedText%
   Sleep, 500
-  clipboard := clipback
   Return
 
 
 
 ;---------------------------------------------------------------------------------------------------------------------
-; Grammarly - Create a new document on Grammarly.com and paste the selected text into it
+; Grammarly - Paste the selected text into a new document on Grammarly.com
 ;
 ; To create a new document in Grammarly.com, navigate to https://app.grammarly.com/docs/new.
 ;   - It takes a few seconds to load
@@ -479,20 +468,16 @@ OnDeviceChange(wParam, lParam)
 ; Dependencies
 ;   - Chrome extension "URL in Title". https://github.com/erichgoldman/add-url-to-window-title
 ;---------------------------------------------------------------------------------------------------------------------
-#^+g::    ; Windows|AHK|Grammarly (in browser)
-	clipback := ClipboardAll
-  clipboard=
-  Send ^c
-  ClipWait, 0
+#^+g::    ; Windows|AHK|Paste selected text into new document on Grammarly.com
+	selectedText := GetSelectedTextUsingClipboard()
   Run, "https://app.grammarly.com/docs/new"
 	WinWaitActive, Grammarly - https://app.grammarly.com/ddocs, , 15
 	If !ErrorLevel
   {
 	  Sleep, 1250
-    Send ^v
+    SendInput %selectedText%
     Sleep, 500
   }
-  clipboard := clipback
   Return
 
 
@@ -814,7 +799,7 @@ BackupPasswordDatabases()
 		  SendInput <Cobalt2>{DOWN}
 		Sleep, 500
 		ControlFocus, Save settings, Settings.*
-		SendInput, {ENTER}
+		SendInput {ENTER}
 	}
 	Else If WinActive("ahk_exe i)outlook.exe")
 	{
@@ -936,6 +921,7 @@ OpenSlack()
 
 ;---------------------------------------------------------------------------------------------------------------------
 ; Extra mouse buttons
+;   - I have a Logitech M510 5 button mouse
 ;   - XButton1 (front button) minimizes the current window
 ;   - XButton2 (rear button) depending on the active window, closes the active TAB/WINDOW, or minimizes or closes the 
 ;     active APPLICATION.
@@ -1006,11 +992,7 @@ xbutton2::     ; Windows|AHK|Minimize app or close window/tab or close app
   Return
 
 #^v::       ; Windows|AHK|VS Code, smart (creates new document, pastes selected text into it, tries to format it)
-  ClipSaved := ClipboardAll
-  Clipboard = 
-  SendInput ^c
-  ClipWait, 2
-	
+	selectedText := GetSelectedTextUsingClipboard()
   If (!ErrorLevel)
   {
 	  If Not WinExist("Visual Studio Code") 
@@ -1026,7 +1008,7 @@ xbutton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 		}
 		SendInput ^n
 
-    SendInput ^v
+    SendInput %selectedText%
     Sleep, 750
 
 		; Define the regular expression patterns to recognize different types of text
@@ -1042,19 +1024,15 @@ xbutton2::     ; Windows|AHK|Minimize app or close window/tab or close app
 		regExSql = %regExSql%(\bdrop\b.*\b(function|procedure|view|index)\b)|
 		regExSql = %regExSql%(\bselect\b.*\bfrom\b))+
 
-    newText := Clipboard
-    If RegExMatch(newText, regExHtml)
+    If RegExMatch(selectedText, regExHtml)
 			VSCodeFormatLanguage("html")
-    Else If RegExMatch(newText, regExXml)
+    Else If RegExMatch(selectedText, regExXml)
 			VSCodeFormatLanguage("xml")
-    Else If RegExMatch(newText, regExJson)
+    Else If RegExMatch(selectedText, regExJson)
 			VSCodeFormatLanguage("json")
-    Else If RegExMatch(newText, regExSql)
+    Else If RegExMatch(selectedText, regExSql)
 			VSCodeFormatLanguage("sql")
   }
-	
-  Clipboard := ClipSaved
-  ClipSaved =
   Return	
 
 RunVSCode() 
@@ -1076,7 +1054,9 @@ VSCodeFormatLanguage(language)
 	; Format it using the language's default formatter
 	SendInput +!{f}
 }	
-	
+
+
+
 ;---------------------------------------------------------------------------------------------------------------------
 ; Personal cloud
 ;   - Open or activate my personal cloud website on the 2nd virtual desktop in Microsoft Edge
@@ -1367,7 +1347,7 @@ MediaPlayerMenuHandler:
 	Run, %JiraUrl%%pathDefaultBoard%
 	Return
 
-#^j::             ; Windows|AHK|JIRA, smart (open a specific story)
+#^j::             ; Windows|AHK|JIRA, smart (tries to open selected text as story)
   regexStoryNumberWithoutProject = \b\d{1,5}\b
   regexStoryNumberWithProject = i)\b(%JiraMyProjectKeys%)([-_ ]|( - ))?\d{1,5}\b
 	pathBrowse = /browse/
@@ -1477,7 +1457,7 @@ ActivateOrStartMicrosoftOutlook()
 
 	
 ;---------------------------------------------------------------------------------------------------------------------
-; Noise
+; noiZe
 ;---------------------------------------------------------------------------------------------------------------------
 #z::              ; Windows|AHK|noiZe
 	PlayNoiseFile(NoiseBrownMP3)
@@ -1503,7 +1483,6 @@ ActivateOrStartMicrosoftOutlook()
 ; #l::              ; Windows    |   |Lock workstation
 ; #p::              ; Windows    |   |Project (duplicate, extend, etc)
 ; #up::             ; Windows    |   |Maximize active window
-; #v::              ; Windows    |   |Clipboard
 ; +printscreen::    ; Windows    |   |Take screenshot of the whole screen
 ; #^left::          ; V. Desktops|   |Switch to previous virtual desktop
 ; #^right::         ; V. Desktops|   |Switch to next virtual desktop
