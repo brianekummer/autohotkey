@@ -190,17 +190,28 @@ WaitForBrowserCursor()
 ;---------------------------------------------------------------------------------------------------------------------
 GetSelectedTextUsingClipboard()
 {
+  ; SelectedText =
+  ; ClipSaved := ClipboardAll	 ; Save the entire clipboard to a variable of your choice
+  ; Clipboard = 
+  ; Send, ^c
+  ; ClipWait, 1
+  ; SelectedText := Clipboard
+  ; Clipboard := ClipSaved	   ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
+  ; ClipSaved =			           ; Free the memory in case the clipboard was very large
+
   SelectedText =
-  ClipSaved := ClipboardAll	; Save the entire clipboard to a variable of your choice
+  ClipSaved := Clipboard  
   Clipboard = 
-  Send, ^c
+  SendInput ^c
   ClipWait, 1
   SelectedText := Clipboard
-  Clipboard := ClipSaved	; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
-  ClipSaved =			    ; Free the memory in case the clipboard was very large
+ 	Sleep, 250                 ; This seems to get rid of weird behavior
+  Clipboard := ClipSaved     ; Restore the original clipboard. Note the use of Clipboard (not ClipboardAll).
+  ClipSaved =			           ; Free the memory in case the clipboard was very large
   
   Return SelectedText
 }
+
 
 
 ;---------------------------------------------------------------------------------------------------------------------

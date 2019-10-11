@@ -31,10 +31,12 @@
 ;
 ; To Do
 ; ------------
+;   - Why does changing case of text SOMETIMES move cursor incorrectly? Have tried in notepad, word, and 
+;     a web page in chrome. Wonder if it's related to CPU load? Dunno.
 ;   - Finish screen brightness
 ;       - Handle multiple monitors
 ;       - Try to use PowerShell and WMI instead of NirSoft utilities and ScreenBrightness AHK code
-;   - What do, if anything, with gTasks Pro? Is useful, but do I need it on a hotkey?
+;   - Get rid of logging in OnDeviceChange
 ;
 ;
 ; Future Ideas
@@ -89,6 +91,7 @@
 ; (on device change) Windows (AHK)       Backup passwords databases when insert backup flash drive
 ; (on login/unlock)  Windows (AHK)       Set Slack status based on nearby wifi networks
 ; #,                 Windows (AHK)       Reduce primary screen's brightness
+; #-                 Windows             Windows Magnifier -
 ; #.                 Windows (AHK)       Increase primary screen's brightness
 ; #1                 Windows             1st app in the task bar
 ; #2                 Windows             2nd app in the task bar
@@ -100,6 +103,7 @@
 ; #7                 Windows             7th app in the task bar
 ; #8                 Windows             8th app in the task bar
 ; #9                 Windows             9th app in the task bar
+; #=                 Windows             Windows Magnifier +
 ; #a                 Windows             Windows Action Center
 ; #b                 Windows (AHK)       git Bash (as admin)
 ; #capslock          Windows (AHK)       Toggle selected text between lower/upper/sentence/title case
@@ -233,6 +237,17 @@ If SubStr(PasswordDBExtension, 1, 1) != "."
   Global MonitorIds
 	MonitorIds := GetMonitorIds()
 
+
+	; I assume this is what I want: https://pastebin.com/raw/DB1Mn9BY
+	; 
+	; TEST_OSD.AHK IS WHAT I WANT. WORK ON IT.
+	;Gui, Add, Progress, w150 h600 cBlue Vertical vMyProgress
+  ;Gui, Color, EEAA99
+	;Gui +LastFound  ; Make the GUI window the last found window for use by the line below.
+	;WinSet, TransColor, EEAA99
+	;Gui, Add, text, 		xp 		yp+2 	wp			 		BackgroundTrans +center vProgBarTxt
+  VolOSDInit()
+
   Return
 
 	
@@ -243,6 +258,9 @@ If SubStr(PasswordDBExtension, 1, 1) != "."
 ExitFunc(ExitReason, ExitCode)
 {
   StopInterceptingWindowsUnlock()
+  VolOSDShutdown()
+
+  Gui, Destroy
 }
 
 
@@ -309,30 +327,30 @@ OnDeviceChange(wParam, lParam)
   ; DBT_DEVNODES_CHANGED        := 0x0007  ; A device has been added to or removed from the system. [Kummer- add/remove usb drive]
   ; DBT_QUERYCHANGECONFIG       := 0x0017  ; Permission is requested to change the current configuration (dock or undock).
   ; DBT_USERDEFINED             := 0xFFFF  ; The meaning of this message is user-defined.
-	; If (wParam == DBT_CONFIGCHANGECANCELED)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGECANCELED`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_CONFIGCHANGED)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGED`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_CUSTOMEVENT)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CUSTOMEVENT`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_DEVICEARRIVAL)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEARRIVAL`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_DEVICEQUERYREMOVE)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVE`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_DEVICEQUERYREMOVEFAILED)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVEFAILED`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_DEVICEREMOVECOMPLETE)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVECOMPLETE`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_DEVICEREMOVEPENDING)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVEPENDING`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_DEVICETYPESPECIFIC)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICETYPESPECIFIC`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_DEVNODES_CHANGED)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVNODES_CHANGED`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_QUERYCHANGECONFIG)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_QUERYCHANGECONFIG`n, C:\Temp\AHK_OnDeviceChange.log
-	; Else If (wParam == DBT_USERDEFINED)
-	;   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_USERDEFINED`n, C:\Temp\AHK_OnDeviceChange.log
+	 If (wParam == DBT_CONFIGCHANGECANCELED)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGECANCELED`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_CONFIGCHANGED)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CONFIGCHANGED`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_CUSTOMEVENT)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_CUSTOMEVENT`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_DEVICEARRIVAL)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEARRIVAL`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_DEVICEQUERYREMOVE)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVE`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_DEVICEQUERYREMOVEFAILED)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEQUERYREMOVEFAILED`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_DEVICEREMOVECOMPLETE)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVECOMPLETE`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_DEVICEREMOVEPENDING)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICEREMOVEPENDING`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_DEVICETYPESPECIFIC)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVICETYPESPECIFIC`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_DEVNODES_CHANGED)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_DEVNODES_CHANGED`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_QUERYCHANGECONFIG)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_QUERYCHANGECONFIG`n, C:\Temp\AHK_OnDeviceChange.log
+	 Else If (wParam == DBT_USERDEFINED)
+	   FileAppend, %A_YYYY%-%A_MM%-%A_DD% %A_Hour%:%A_Min% - DBT_USERDEFINED`n, C:\Temp\AHK_OnDeviceChange.log
 
 	MonitorIds := GetMonitorIds()    ; Get list of connected monitors
   BackupPasswordDatabases()        ; If backup drive is inserted, then backup my password databases
@@ -386,6 +404,13 @@ OnDeviceChange(wParam, lParam)
   ;   - Animaniacs
 	;   - Tiny Toons
 
+  ; Raspberry Pi 4. HAS to have
+	;  - Fan. Ideally able to run only on-demand when required
+  ;  - Want official Pi power supply
+	Run, "https://www.amazon.com/Miuzei-Raspberry-Cooling-Heat-Sinks-Included/dp/B07TTN1M7G",, Max
+	;Run, "https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TC2BK1X/ref=sr_1_17?keywords=raspberry%2Bpi%2B4%2B4gb&qid=1568599105&s=electronics&sr=1-17&th=1",, Max
+	Run, "https://www.canakit.com/raspberry-pi-4-4gb.html",, Max
+	
 	Return
 
 
@@ -514,25 +539,14 @@ StartPasswordManager()
 ;         my laptop screen and another command if I'm on an external monitor.
 ;       - #^,/#^. to update a SECONDARY screen
 ;       - THIS WILL LIKELY NEED ADJUSTED WHEN I GO BACK TO MY MULTIPLE MONITORS SETUP
-;
-; Decisions
-; ---------
-;   - NirSoft's NirCmd isn't bad for changing laptop screen's brightness, just no on-screen display.
-;     https://nircmd.nirsoft.net/changebrightness.html
-;     Run, %MyPersonalFolder%PortableApps\nircmd\nircmdc.exe changebrightness %changeValue%,, Hide
-;
-; The Future 
-; ----------
-;   - Instead of using custom AHK code and NirSoft utilities, use Powershell and WMI
-;   - Get-WmiObject win32_pnpentity | Where{$_.service -match "monitor"} | Select DeviceID, HardwareID, Name
-;   - Get-WmiObject win32_desktopmonitor | Select Name, DeviceID, PNPDeviceID
-;   - Get-WmiObject is discontinued!!!
-;
+;   - My current combination of laptop and monitor cannot use WMI to adjust screen brightness
+;;
 ; Dependencies: 
 ;   - BrightnessSetter. Only works on laptop screen.
-;       https://github.com/qwerty12/AutoHotkeyScripts/tree/master/LaptopBrightnessSetter
-;   - NirSoft's ControlMyMonitor. Only works on monitors.
-;       https://www.nirsoft.net/utils/control_my_monitor.html
+;     https://github.com/qwerty12/AutoHotkeyScripts/tree/master/LaptopBrightnessSetter
+;   - ControlMyMonitor. Only works on monitors. Sometimes if jumps and doesn't properly detect the correct brightness,
+;     but it works GOOD ENOUGH for now.
+;     https://www.nirsoft.net/utils/control_my_monitor.html
 ;---------------------------------------------------------------------------------------------------------------------
 #,::        ; Windows|AHK|Reduce primary screen's brightness
 	AdjustBrightness(-10)
@@ -580,15 +594,35 @@ AdjustBrightness(adjustment) {
 	If (ErrorLevel == "0")
 	{
     ; No external monitors
+		;Sleep, 250
 		BrightnessSetter.SetBrightness(adjustment)
 	}
 	Else
 	{
     ; TODO- Loop through MonitorIds and replace Primary with monitor id
+		;Sleep, 250
     Run, %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /ChangeValue "Primary" 10 %adjustment% 
+		;Sleep, 250
+	  DisplayBrightness("Primary")
 	}
 }
 
+DisplayBrightness(monitor) {
+	RunWait, %MyPersonalFolder%PortableApps\ControlMyMonitor\ControlMyMonitor.exe /GetValue %monitor% 10,, UseErrorLevel
+	brightness := ErrorLevel
+
+  StartOSD(brightness)
+	;Progress, b w200, My SubText, My MainText, My Title
+  ;Progress, %brightness% 
+  ;Sleep, 2000
+  ;Progress, Off
+
+	;Gui, Show
+  ;GuiControl,, MyProgress, %brightness%
+	;WinSet, Transparent, 100, A
+  ;Sleep, 2000
+	;Gui, Hide
+}
 
 
 ;---------------------------------------------------------------------------------------------------------------------
@@ -811,7 +845,9 @@ BackupPasswordDatabases()
 		SendInput d
 		Sleep, 500
 		blue := GetPixelsBlueValue(200, 200)
-		SendInput y1
+		SendInput y
+		Sleep, 250
+		SendInput 1
 		If blue < 55
 			SendInput c
 		Else
@@ -875,7 +911,7 @@ GetPixelsBlueValue(x, y)
 ;---------------------------------------------------------------------------------------------------------------------
 #IfWinActive ahk_group SlackStatusUpdate_WindowTitles
   ^wheelup::     ; Slack|AHK|Increase font size
-    SendInput ^{+}
+    SendInput ^+{=}
 		Return
   ^wheeldown::   ; Slack|AHK|Decrease font size
 	  SendInput ^{-}
@@ -1468,6 +1504,8 @@ ActivateOrStartMicrosoftOutlook()
 ;---------------------------------------------------------------------------------------------------------------------
 ; All of the following commented-out hotkeys, etc are here so that the auto-generated documentation includes them
 ;---------------------------------------------------------------------------------------------------------------------
+; #=::              ; Windows    |   |Windows Magnifier +
+; #-::              ; Windows    |   |Windows Magnifier -
 ; #1::              ; Windows    |   |1st app in the task bar
 ; #2::              ; Windows    |   |2nd app in the task bar
 ; #3::              ; Windows    |   |3rd app in the task bar
@@ -1505,6 +1543,7 @@ ActivateOrStartMicrosoftOutlook()
 ; #^9::             ; V. Desktops|AHK|Switch to virtual desktop #9
 ; #^+left::         ; V. Desktops|AHK|Move active window to previous virtual desktop
 ; #^+right::        ; V. Desktops|AHK|Move active window to next virtual desktop
+#Include %A_ScriptDir%\Lib\VolOSD.ahk
 #include %A_ScriptDir%\Lib\BrightnessSetter.ahk
 #include %A_ScriptDir%\Lib\Convert Case.ahk
 
