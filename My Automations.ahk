@@ -173,17 +173,17 @@ UserEmailAddress = %WindowsUserName%@%WindowsDnsDomain%
 
 ; These come from my own Windows environment variables. See "My Automations Config.bat" for details
 Global BackupDriveSerialNumber
-EnvGet, JiraUrl, AHK_URL_JIRA
-EnvGet, JiraMyProjectKeys, AHK_MY_PROJECT_KEYS_JIRA
-EnvGet, JiraDefaultProjectKey, AHK_DEFAULT_PROJECT_KEY_JIRA
-EnvGet, JiraDefaultRapidKey, AHK_DEFAULT_RAPID_KEY_JIRA
-EnvGet, JiraDefaultSprint, AHK_DEFAULT_SPRINT_JIRA
-EnvGet, SourceCodeUrl, AHK_URL_SOURCE_CODE
-EnvGet, SourceSchemaUrl, AHK_URL_SOURCE_SCHEMA
-EnvGet, SchemaVaultUrl, AHK_URL_SCHEMA_VAULT
-EnvGet, TimesheetUrl, AHK_URL_TIMESHEET
-EnvGet, WikiUrl, AHK_URL_WIKI
-EnvGet, PersonalCloudUrl, AHK_URL_PERSONAL_CLOUD
+EnvGet, JiraUrl, AHK_JIRA_URL
+EnvGet, JiraMyProjectKeys, AHK_JIRA_MY_PROJECT_KEYS
+EnvGet, JiraDefaultProjectKey, AHK_JIRA_DEFAULT_PROJECT_KEY
+EnvGet, JiraDefaultRapidKey, AHK_JIRA_DEFAULT_RAPID_KEY
+EnvGet, JiraDefaultSprint, AHK_JIRA_DEFAULT_SPRINT
+EnvGet, SourceCodeUrl, AHK_SOURCE_CODE_URL
+EnvGet, SourceSchemaUrl, AHK_SOURCE_SCHEMA_URL
+EnvGet, SchemaVaultUrl, AHK_SCHEMA_VAULT_URL
+EnvGet, TimesheetUrl, AHK_TIMESHEET_URL
+EnvGet, WikiUrl, AHK_WIKI_URL
+EnvGet, PersonalCloudUrl, AHK_PERSONAL_CLOUD_URL
 EnvGet, NoiseBrownMP3, AHK_MP3_NOISE_BROWN
 EnvGet, NoiseRailroadMP3, AHK_MP3_NOISE_RAILROAD
 EnvGet, BackupDriveSerialNumber, AHK_BACKUP_DRIVE_SERIAL_NUMBER
